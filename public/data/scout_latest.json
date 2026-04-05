@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-04-03T14:25:00Z",
+  "query": "Recent smart money movements on Solana DEXes",
+  "summary": "Over the past 48 hours, a cluster of 12 high-grade wallets (S/A tier) have been aggressively accumulating POPCAT and WIF across Jupiter and Raydium, with combined inflows exceeding $10M. Simultaneously, several institutional-grade wallets have begun rotating out of VIRTUAL positions on Base, suggesting a broader risk-off sentiment toward AI agent tokens in favor of established Solana memecoins.",
+  "key_findings": [
+    "7 S-tier wallets converged on POPCAT within the same 6-hour window, a pattern historically correlated with 40-80% price moves within 72 hours",
+    "Smart money net outflows from VIRTUAL exceeded $2.3M this week, the largest sustained sell pressure since its January peak",
+    "Jupiter DEX volume spiked 340% on Wednesday, driven primarily by WIF/SOL and JUP/SOL pairs from wallets with >80 accumulation scores",
+    "Three previously dormant whale wallets (inactive 90+ days) reactivated and took large ONDO positions on Ethereum, totaling $4.8M in buys",
+    "DRIFT Protocol saw unusual options activity from sniper-cluster wallets, suggesting potential catalyst awareness ahead of their v2 launch"
+  ],
+  "tokens_mentioned": ["POPCAT", "WIF", "VIRTUAL", "JUP", "ONDO", "DRIFT", "SOL"],
+  "risk_assessment": "moderate",
+  "credits_used": 23
+}

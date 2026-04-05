@@ -1,0 +1,648 @@
+{
+  "timestamp": "2026-04-03T14:30:00Z",
+  "credits_used": 847,
+  "tokens": [
+    {
+      "symbol": "PEPE",
+      "name": "Pepe",
+      "chain": "ethereum",
+      "contract": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "mcap": 3840000000,
+      "mcap_formatted": "$3.84B",
+      "price": 0.00000914,
+      "price_change_24h": 12.4,
+      "sm_inflow_7d": 8700000,
+      "sm_inflow_7d_formatted": "$8.7M",
+      "sm_traders": 47,
+      "accumulation_grade": "S",
+      "accumulation_score": 94,
+      "risk_score": 4,
+      "risk_tier": "medium",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": true,
+        "holder_growth": true,
+        "whale_accumulation": true,
+        "smart_money_consensus": true
+      },
+      "top_wallets": [
+        {
+          "address": "0x7a16fF8270133F063aAb6C9977183D9e72835428",
+          "grade": "S",
+          "score": 97,
+          "position_size": 2340000,
+          "entry_price": 0.0000071,
+          "pnl_percent": 28.7
+        },
+        {
+          "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          "grade": "A",
+          "score": 88,
+          "position_size": 1120000,
+          "entry_price": 0.0000082,
+          "pnl_percent": 11.5
+        },
+        {
+          "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
+          "grade": "A",
+          "score": 85,
+          "position_size": 890000,
+          "entry_price": 0.0000076,
+          "pnl_percent": 20.3
+        }
+      ]
+    },
+    {
+      "symbol": "WIF",
+      "name": "dogwifhat",
+      "chain": "solana",
+      "contract": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+      "mcap": 1920000000,
+      "mcap_formatted": "$1.92B",
+      "price": 1.87,
+      "price_change_24h": -3.2,
+      "sm_inflow_7d": 4200000,
+      "sm_inflow_7d_formatted": "$4.2M",
+      "sm_traders": 31,
+      "accumulation_grade": "A",
+      "accumulation_score": 82,
+      "risk_score": 5,
+      "risk_tier": "medium",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": false,
+        "holder_growth": true,
+        "whale_accumulation": true,
+        "smart_money_consensus": false
+      },
+      "top_wallets": [
+        {
+          "address": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+          "grade": "S",
+          "score": 93,
+          "position_size": 780000,
+          "entry_price": 1.42,
+          "pnl_percent": 31.7
+        },
+        {
+          "address": "3Kzh9qAqVWQhEsfQSwGbL3cKS8ARTKQ1Sn9voJrp7uDN",
+          "grade": "A",
+          "score": 86,
+          "position_size": 540000,
+          "entry_price": 1.65,
+          "pnl_percent": 13.3
+        }
+      ]
+    },
+    {
+      "symbol": "JUP",
+      "name": "Jupiter",
+      "chain": "solana",
+      "contract": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "mcap": 1450000000,
+      "mcap_formatted": "$1.45B",
+      "price": 1.07,
+      "price_change_24h": 5.8,
+      "sm_inflow_7d": 3100000,
+      "sm_inflow_7d_formatted": "$3.1M",
+      "sm_traders": 28,
+      "accumulation_grade": "A",
+      "accumulation_score": 79,
+      "risk_score": 3,
+      "risk_tier": "low",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": false,
+        "holder_growth": true,
+        "whale_accumulation": false,
+        "smart_money_consensus": true
+      },
+      "top_wallets": [
+        {
+          "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+          "grade": "A",
+          "score": 87,
+          "position_size": 420000,
+          "entry_price": 0.89,
+          "pnl_percent": 20.2
+        },
+        {
+          "address": "FGYgFJSxZTGzaLwzUL9YZqK2yUZ8seofCwGkBa71hNpn",
+          "grade": "B",
+          "score": 74,
+          "position_size": 310000,
+          "entry_price": 0.95,
+          "pnl_percent": 12.6
+        }
+      ]
+    },
+    {
+      "symbol": "ONDO",
+      "name": "Ondo Finance",
+      "chain": "ethereum",
+      "contract": "0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3",
+      "mcap": 2100000000,
+      "mcap_formatted": "$2.1B",
+      "price": 1.52,
+      "price_change_24h": 8.1,
+      "sm_inflow_7d": 5600000,
+      "sm_inflow_7d_formatted": "$5.6M",
+      "sm_traders": 39,
+      "accumulation_grade": "S",
+      "accumulation_score": 91,
+      "risk_score": 2,
+      "risk_tier": "low",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": true,
+        "holder_growth": true,
+        "whale_accumulation": true,
+        "smart_money_consensus": true
+      },
+      "top_wallets": [
+        {
+          "address": "0x51C72848c68a965f66FA7a88855F9f7784502a7F",
+          "grade": "S",
+          "score": 96,
+          "position_size": 1850000,
+          "entry_price": 1.18,
+          "pnl_percent": 28.8
+        },
+        {
+          "address": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8",
+          "grade": "A",
+          "score": 89,
+          "position_size": 920000,
+          "entry_price": 1.31,
+          "pnl_percent": 16.0
+        },
+        {
+          "address": "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503",
+          "grade": "A",
+          "score": 84,
+          "position_size": 670000,
+          "entry_price": 1.25,
+          "pnl_percent": 21.6
+        }
+      ]
+    },
+    {
+      "symbol": "RENDER",
+      "name": "Render Token",
+      "chain": "solana",
+      "contract": "rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof",
+      "mcap": 3200000000,
+      "mcap_formatted": "$3.2B",
+      "price": 6.18,
+      "price_change_24h": -1.4,
+      "sm_inflow_7d": 2800000,
+      "sm_inflow_7d_formatted": "$2.8M",
+      "sm_traders": 22,
+      "accumulation_grade": "B",
+      "accumulation_score": 68,
+      "risk_score": 3,
+      "risk_tier": "low",
+      "signals": {
+        "wallet_convergence": false,
+        "volume_anomaly": false,
+        "holder_growth": true,
+        "whale_accumulation": true,
+        "smart_money_consensus": false
+      },
+      "top_wallets": [
+        {
+          "address": "DfMxre4cKmvogbLrPigxmibVTTQDuzjdXojWzjCXXhzj",
+          "grade": "A",
+          "score": 82,
+          "position_size": 510000,
+          "entry_price": 5.72,
+          "pnl_percent": 8.0
+        }
+      ]
+    },
+    {
+      "symbol": "PENDLE",
+      "name": "Pendle",
+      "chain": "ethereum",
+      "contract": "0x808507121B80c02388fAd14726482e061B8da827",
+      "mcap": 680000000,
+      "mcap_formatted": "$680M",
+      "price": 4.32,
+      "price_change_24h": 15.7,
+      "sm_inflow_7d": 1900000,
+      "sm_inflow_7d_formatted": "$1.9M",
+      "sm_traders": 18,
+      "accumulation_grade": "A",
+      "accumulation_score": 84,
+      "risk_score": 4,
+      "risk_tier": "medium",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": true,
+        "holder_growth": false,
+        "whale_accumulation": true,
+        "smart_money_consensus": true
+      },
+      "top_wallets": [
+        {
+          "address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+          "grade": "S",
+          "score": 91,
+          "position_size": 380000,
+          "entry_price": 3.45,
+          "pnl_percent": 25.2
+        },
+        {
+          "address": "0x1DB3439a222C519ab44bb1144fC28167b4Fa6EE6",
+          "grade": "B",
+          "score": 73,
+          "position_size": 190000,
+          "entry_price": 3.88,
+          "pnl_percent": 11.3
+        }
+      ]
+    },
+    {
+      "symbol": "POPCAT",
+      "name": "Popcat",
+      "chain": "solana",
+      "contract": "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+      "mcap": 420000000,
+      "mcap_formatted": "$420M",
+      "price": 0.43,
+      "price_change_24h": 34.2,
+      "sm_inflow_7d": 6300000,
+      "sm_inflow_7d_formatted": "$6.3M",
+      "sm_traders": 52,
+      "accumulation_grade": "S",
+      "accumulation_score": 96,
+      "risk_score": 7,
+      "risk_tier": "high",
+      "signals": {
+        "wallet_convergence": true,
+        "volume_anomaly": true,
+        "holder_growth": true,
+        "whale_accumulation": true,
+        "smart_money_consensus": true
+      },
+      "top_wallets": [
+        {
+          "address": "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+          "grade": "S",
+          "score": 98,
+          "position_size": 890000,
+          "entry_price": 0.18,
+          "pnl_percent": 138.9
+        },
+        {
+          "address": "CuieVDEDtLo7FypA9SbLM9saXFdb1dsshEkyErMqkRQq",
+          "grade": "A",
+          "score": 87,
+          "position_size": 620000,
+          "entry_price": 0.24,
+          "pnl_percent": 79.2
+        },
+        {
+          "address": "HN7cABqLq46Es1jh92dQQisAi5YqRux2oqbCr1CLRHAS",
+          "grade": "B",
+          "score": 71,
+          "position_size": 210000,
+          "entry_price": 0.31,
+          "pnl_percent": 38.7
+        }
+      ]
+    },
+    {
+      "symbol": "AERO",
+      "name": "Aerodrome Finance",
+      "chain": "base",
+      "contract": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+      "mcap": 890000000,
+      "mcap_formatted": "$890M",
+      "price": 1.24,
+      "price_change_24h": -5.3,
+      "sm_inflow_7d": 1200000,
+      "sm_inflow_7d_formatted": "$1.2M",
+      "sm_traders": 14,
+      "accumulation_grade": "C",
+      "accumulation_score": 52,
+      "risk_score": 5,
+      "risk_tier": "medium",
+      "signals": {
+        "wallet_convergence": false,
+        "volume_anomaly": false,
+        "holder_growth": false,
+        "whale_accumulation": true,
+        "smart_money_consensus": false
+      },
+      "top_wallets": [
+        {
+          "address": "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+          "grade": "B",
+          "score": 76,
+          "position_size": 340000,
+          "entry_price": 1.41,
+          "pnl_percent": -12.1
+        }
+      ]
+    },
+    {
+      "symbol": "DRIFT",
+      "name": "Drift Protocol",
+      "chain": "solana",
+      "contract": "DriFtupJYLTosbwoN8koMbEYSx54aFAVLddWsbksjwg7",
+      "mcap": 310000000,
+      "mcap_formatted": "$310M",
+      "price": 0.94,
+      "price_change_24h": 2.1,
+      "sm_inflow_7d": 870000,
+      "sm_inflow_7d_formatted": "$870K",
+      "sm_traders": 11,
+      "accumulation_grade": "B",
+      "accumulation_score": 64,
+      "risk_score": 6,
+      "risk_tier": "medium",
+      "signals": {
+        "wallet_convergence": false,
+        "volume_anomaly": true,
+        "holder_growth": true,
+        "whale_accumulation": false,
+        "smart_money_consensus": false
+      },
+      "top_wallets": [
+        {
+          "address": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+          "grade": "A",
+          "score": 81,
+          "position_size": 270000,
+          "entry_price": 0.78,
+          "pnl_percent": 20.5
+        },
+        {
+          "address": "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+          "grade": "B",
+          "score": 69,
+          "position_size": 145000,
+          "entry_price": 0.86,
+          "pnl_percent": 9.3
+        }
+      ]
+    },
+    {
+      "symbol": "VIRTUAL",
+      "name": "Virtuals Protocol",
+      "chain": "base",
+      "contract": "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+      "mcap": 1680000000,
+      "mcap_formatted": "$1.68B",
+      "price": 2.61,
+      "price_change_24h": -8.7,
+      "sm_inflow_7d": 940000,
+      "sm_inflow_7d_formatted": "$940K",
+      "sm_traders": 9,
+      "accumulation_grade": "D",
+      "accumulation_score": 34,
+      "risk_score": 8,
+      "risk_tier": "high",
+      "signals": {
+        "wallet_convergence": false,
+        "volume_anomaly": false,
+        "holder_growth": false,
+        "whale_accumulation": false,
+        "smart_money_consensus": false
+      },
+      "top_wallets": [
+        {
+          "address": "0xF977814e90dA44bFA03b6295A0616a897441aceC",
+          "grade": "B",
+          "score": 72,
+          "position_size": 410000,
+          "entry_price": 3.15,
+          "pnl_percent": -17.1
+        }
+      ]
+    }
+  ],
+  "wallet_leaderboard": [
+    {
+      "address": "0x7a16fF8270133F063aAb6C9977183D9e72835428",
+      "grade": "S",
+      "score": 97,
+      "win_rate": 0.89,
+      "total_pnl": 4720000,
+      "total_pnl_formatted": "+$4.72M",
+      "trades_count": 312,
+      "convergence_score": 0.94,
+      "cluster": "alpha"
+    },
+    {
+      "address": "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+      "grade": "S",
+      "score": 98,
+      "win_rate": 0.92,
+      "total_pnl": 8340000,
+      "total_pnl_formatted": "+$8.34M",
+      "trades_count": 187,
+      "convergence_score": 0.91,
+      "cluster": "sniper"
+    },
+    {
+      "address": "0x51C72848c68a965f66FA7a88855F9f7784502a7F",
+      "grade": "S",
+      "score": 96,
+      "win_rate": 0.85,
+      "total_pnl": 6110000,
+      "total_pnl_formatted": "+$6.11M",
+      "trades_count": 478,
+      "convergence_score": 0.88,
+      "cluster": "institution"
+    },
+    {
+      "address": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "grade": "S",
+      "score": 93,
+      "win_rate": 0.87,
+      "total_pnl": 3250000,
+      "total_pnl_formatted": "+$3.25M",
+      "trades_count": 204,
+      "convergence_score": 0.86,
+      "cluster": "alpha"
+    },
+    {
+      "address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+      "grade": "A",
+      "score": 91,
+      "win_rate": 0.82,
+      "total_pnl": 2870000,
+      "total_pnl_formatted": "+$2.87M",
+      "trades_count": 156,
+      "convergence_score": 0.83,
+      "cluster": "whale"
+    },
+    {
+      "address": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8",
+      "grade": "A",
+      "score": 89,
+      "win_rate": 0.79,
+      "total_pnl": 1940000,
+      "total_pnl_formatted": "+$1.94M",
+      "trades_count": 523,
+      "convergence_score": 0.81,
+      "cluster": "institution"
+    },
+    {
+      "address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      "grade": "A",
+      "score": 88,
+      "win_rate": 0.76,
+      "total_pnl": 1520000,
+      "total_pnl_formatted": "+$1.52M",
+      "trades_count": 891,
+      "convergence_score": 0.78,
+      "cluster": "whale"
+    },
+    {
+      "address": "CuieVDEDtLo7FypA9SbLM9saXFdb1dsshEkyErMqkRQq",
+      "grade": "A",
+      "score": 87,
+      "win_rate": 0.81,
+      "total_pnl": 1380000,
+      "total_pnl_formatted": "+$1.38M",
+      "trades_count": 267,
+      "convergence_score": 0.79,
+      "cluster": "degen"
+    },
+    {
+      "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      "grade": "A",
+      "score": 87,
+      "win_rate": 0.74,
+      "total_pnl": 980000,
+      "total_pnl_formatted": "+$980K",
+      "trades_count": 345,
+      "convergence_score": 0.76,
+      "cluster": "alpha"
+    },
+    {
+      "address": "3Kzh9qAqVWQhEsfQSwGbL3cKS8ARTKQ1Sn9voJrp7uDN",
+      "grade": "A",
+      "score": 86,
+      "win_rate": 0.78,
+      "total_pnl": 1120000,
+      "total_pnl_formatted": "+$1.12M",
+      "trades_count": 198,
+      "convergence_score": 0.74,
+      "cluster": "sniper"
+    },
+    {
+      "address": "0x28C6c06298d514Db089934071355E5743bf21d60",
+      "grade": "A",
+      "score": 85,
+      "win_rate": 0.73,
+      "total_pnl": 2310000,
+      "total_pnl_formatted": "+$2.31M",
+      "trades_count": 1204,
+      "convergence_score": 0.71,
+      "cluster": "institution"
+    },
+    {
+      "address": "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503",
+      "grade": "A",
+      "score": 84,
+      "win_rate": 0.71,
+      "total_pnl": 870000,
+      "total_pnl_formatted": "+$870K",
+      "trades_count": 412,
+      "convergence_score": 0.72,
+      "cluster": "whale"
+    },
+    {
+      "address": "DfMxre4cKmvogbLrPigxmibVTTQDuzjdXojWzjCXXhzj",
+      "grade": "A",
+      "score": 82,
+      "win_rate": 0.69,
+      "total_pnl": 640000,
+      "total_pnl_formatted": "+$640K",
+      "trades_count": 178,
+      "convergence_score": 0.68,
+      "cluster": "degen"
+    },
+    {
+      "address": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+      "grade": "A",
+      "score": 81,
+      "win_rate": 0.72,
+      "total_pnl": 520000,
+      "total_pnl_formatted": "+$520K",
+      "trades_count": 93,
+      "convergence_score": 0.65,
+      "cluster": "sniper"
+    },
+    {
+      "address": "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+      "grade": "B",
+      "score": 76,
+      "win_rate": 0.64,
+      "total_pnl": 310000,
+      "total_pnl_formatted": "+$310K",
+      "trades_count": 567,
+      "convergence_score": 0.61,
+      "cluster": "degen"
+    },
+    {
+      "address": "FGYgFJSxZTGzaLwzUL9YZqK2yUZ8seofCwGkBa71hNpn",
+      "grade": "B",
+      "score": 74,
+      "win_rate": 0.62,
+      "total_pnl": 190000,
+      "total_pnl_formatted": "+$190K",
+      "trades_count": 234,
+      "convergence_score": 0.58,
+      "cluster": "degen"
+    },
+    {
+      "address": "0x1DB3439a222C519ab44bb1144fC28167b4Fa6EE6",
+      "grade": "B",
+      "score": 73,
+      "win_rate": 0.61,
+      "total_pnl": 145000,
+      "total_pnl_formatted": "+$145K",
+      "trades_count": 312,
+      "convergence_score": 0.55,
+      "cluster": "whale"
+    },
+    {
+      "address": "0xF977814e90dA44bFA03b6295A0616a897441aceC",
+      "grade": "B",
+      "score": 72,
+      "win_rate": 0.58,
+      "total_pnl": -42000,
+      "total_pnl_formatted": "-$42K",
+      "trades_count": 89,
+      "convergence_score": 0.52,
+      "cluster": "degen"
+    },
+    {
+      "address": "HN7cABqLq46Es1jh92dQQisAi5YqRux2oqbCr1CLRHAS",
+      "grade": "B",
+      "score": 71,
+      "win_rate": 0.59,
+      "total_pnl": 87000,
+      "total_pnl_formatted": "+$87K",
+      "trades_count": 145,
+      "convergence_score": 0.49,
+      "cluster": "degen"
+    },
+    {
+      "address": "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+      "grade": "B",
+      "score": 69,
+      "win_rate": 0.57,
+      "total_pnl": 63000,
+      "total_pnl_formatted": "+$63K",
+      "trades_count": 201,
+      "convergence_score": 0.47,
+      "cluster": "alpha"
+    }
+  ]
+}
