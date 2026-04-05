@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# repo hygiene
+CONTRACT.md
+SKILL.md
+public/SKILL.md

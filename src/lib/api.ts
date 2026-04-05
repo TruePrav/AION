@@ -1,9 +1,82 @@
-const API = process.env.NEXT_PUBLIC_API_URL || "http://178.128.253.120:5001";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
   return res.json();
+}
+
+export interface CopyTradeResult {
+  success: boolean;
+  trade_id?: string;
+  amount?: number;
+  chain?: string;
+  tx_hash?: string;
+  dry_run?: boolean;
+  error?: string;
+}
+
+export async function copyTrade(token: {
+  address: string;
+  chain: string;
+  symbol: string;
+  market_cap?: number;
+  token_age_days?: number;
+}, amountUsd: number): Promise<CopyTradeResult> {
+  const res = await fetch(`${API}/api/trade/copy`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      token_address: token.address,
+      chain: token.chain,
+      amount_usd: amountUsd,
+      symbol: token.symbol,
+      market_cap: token.market_cap,
+      token_age_days: token.token_age_days,
+    }),
+  });
+  return res.json();
+}
+
+export interface OpenPosition {
+  id: string;
+  token: string;
+  chain: string;
+  side: string;
+  entry_price: number;
+  size_usdc: number;
+  pnl_usd?: number;
+  pnl_pct?: number;
+  timestamp: string;
+  tx_hash?: string;
+  trailing_stop_triggered?: boolean;
+  stop_reason?: string;
+  status: string;
+}
+
+export interface PositionsResponse {
+  positions: OpenPosition[];
+  count: number;
+}
+
+export interface Settings {
+  trailing_stop_pct: number;
+  take_profit_tiers: number[];
+  max_position_pct: number;
+  min_convergence_wallets: number;
+  scan_interval_minutes: number;
+  mode: string;
+}
+
+export interface BlocklistEntry {
+  address: string;
+  votes: number;
+  voters: string[];
+}
+
+export interface BlocklistResponse {
+  blocklist: BlocklistEntry[];
+  total_listed: number;
 }
 
 // ---- Types ----
