@@ -148,7 +148,7 @@ export default function WalletPage() {
                 {wallet.label}
               </p>
             )}
-            <p className="text-[11px] text-foreground/70 font-mono break-all rounded-lg bg-white/50 border border-foreground/10 px-3 py-2 inline-block">
+            <p className="text-[11px] text-foreground/70 font-mono break-all rounded-lg bg-foreground/5 border border-foreground/10 px-3 py-2 inline-block">
               {wallet.address}
             </p>
           </div>
@@ -245,7 +245,7 @@ export default function WalletPage() {
                       "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
                       selectedToken?.address === t.address
                         ? "bg-primary/30 border border-primary/60 text-foreground"
-                        : "bg-white/60 border border-foreground/10 text-foreground/70 hover:bg-white/80"
+                        : "bg-foreground/5 border border-foreground/10 text-foreground/70 hover:bg-foreground/10"
                     )}
                   >
                     <span className="font-semibold">{t.symbol}</span>
@@ -271,7 +271,7 @@ export default function WalletPage() {
                           "px-4 py-1.5 rounded-full text-xs font-semibold font-mono tabular-nums transition-all",
                           tradeAmount === amt
                             ? "bg-accent/50 border border-accent/70 text-foreground"
-                            : "bg-white/60 border border-foreground/10 text-foreground/70 hover:bg-white/80"
+                            : "bg-foreground/5 border border-foreground/10 text-foreground/70 hover:bg-foreground/10"
                         )}
                       >
                         ${amt}
@@ -371,7 +371,7 @@ export default function WalletPage() {
               </thead>
               <tbody className="divide-y divide-foreground/5">
                 {holdings.map((t: WalletTopToken) => (
-                  <tr key={t.address} className="hover:bg-white/40 transition-colors">
+                  <tr key={t.address} className="hover:bg-foreground/5 transition-colors">
                     <td className="py-3 px-5">
                       <div className="flex items-center gap-2">
                         <div>
@@ -415,7 +415,7 @@ export default function WalletPage() {
                         href={nansenToken(t.address, wallet.chain || "solana")}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-0.5 rounded-full bg-white/60 border border-foreground/10 px-2 py-0.5 text-[10px] font-semibold text-foreground/80 hover:bg-white/90 transition-colors"
+                        className="inline-flex items-center gap-0.5 rounded-full bg-foreground/5 border border-foreground/10 px-2 py-0.5 text-[10px] font-semibold text-foreground/80 hover:bg-foreground/10 transition-colors"
                       >
                         Nansen <ExternalLink className="h-2.5 w-2.5" />
                       </a>
@@ -442,7 +442,7 @@ export default function WalletPage() {
               </thead>
               <tbody className="divide-y divide-foreground/5">
                 {closedTrades.map((t: WalletTopToken) => (
-                  <tr key={t.address} className="hover:bg-white/40 transition-colors">
+                  <tr key={t.address} className="hover:bg-foreground/5 transition-colors">
                     <td className="py-3 px-5">
                       <div className="flex items-center gap-2">
                         <div>
@@ -508,7 +508,7 @@ export default function WalletPage() {
               </thead>
               <tbody className="divide-y divide-foreground/5">
                 {topTokens.map((t: WalletTopToken) => (
-                  <tr key={t.address} className="hover:bg-white/40 transition-colors">
+                  <tr key={t.address} className="hover:bg-foreground/5 transition-colors">
                     <td className="py-3 px-5">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-foreground text-sm">{t.symbol}</span>
@@ -592,7 +592,7 @@ function TokenSection({
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <h2 className="text-lg font-semibold text-foreground tracking-tight">{title}</h2>
-        <span className="inline-flex items-center rounded-full bg-white/60 border border-foreground/10 px-2 py-0.5 text-[10px] font-semibold font-mono text-foreground/70">
+        <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/10 px-2 py-0.5 text-[10px] font-semibold font-mono text-foreground/70">
           {count}
         </span>
         {footer && (

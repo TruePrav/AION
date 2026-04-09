@@ -262,7 +262,7 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
 
   if (nodes.length === 0) {
     return (
-      <div className="flex items-center justify-center text-zinc-500 text-sm" style={{ minHeight: 400 }}>
+      <div className="flex items-center justify-center text-foreground/50 text-sm" style={{ minHeight: 400 }}>
         No graph data available
       </div>
     );
@@ -332,7 +332,7 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
               y1={from.y}
               x2={to.x}
               y2={to.y}
-              stroke={isHighlighted ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.08)"}
+              stroke={isHighlighted ? "hsl(var(--foreground) / 0.35)" : "hsl(var(--foreground) / 0.12)"}
               strokeWidth={isHighlighted ? 2 : 1}
               style={{ transition: "stroke 0.2s, stroke-width 0.2s" }}
             />
@@ -486,9 +486,8 @@ function Tooltip({
       }}
     >
       <div
-        className="rounded-xl border border-zinc-700/80 px-4 py-3 shadow-2xl backdrop-blur-sm"
+        className="rounded-xl border border-foreground/15 bg-background/95 px-4 py-3 shadow-2xl backdrop-blur-md"
         style={{
-          background: "rgba(24, 24, 27, 0.95)",
           minWidth: 180,
           maxWidth: 260,
         }}
@@ -505,22 +504,22 @@ function Tooltip({
           >
             {node.data.grade}
           </span>
-          <span className="text-sm font-semibold text-zinc-100 truncate">
+          <span className="text-sm font-semibold text-foreground truncate">
             {label}
           </span>
         </div>
 
         {/* Address */}
         {node.data.label && (
-          <div className="text-xs text-zinc-500 font-mono mb-1.5">
+          <div className="text-xs text-foreground/50 font-mono mb-1.5">
             {truncAddr(node.data.address)}
           </div>
         )}
 
         {/* Score bar */}
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-xs text-zinc-400">Score</span>
-          <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+          <span className="text-xs text-foreground/60">Score</span>
+          <div className="flex-1 h-1.5 rounded-full bg-foreground/10 overflow-hidden">
             <div
               className="h-full rounded-full"
               style={{
@@ -535,9 +534,9 @@ function Tooltip({
         </div>
 
         {/* Depth */}
-        <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
+        <div className="flex items-center justify-between text-xs text-foreground/50 mb-1">
           <span>Depth</span>
-          <span className="text-zinc-300">{node.data.depth}</span>
+          <span className="text-foreground/80">{node.data.depth}</span>
         </div>
 
         {/* Target badge */}
@@ -549,12 +548,12 @@ function Tooltip({
 
         {/* Connected edge labels */}
         {uniqueLabels.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-zinc-700/50">
-            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">
+          <div className="mt-2 pt-2 border-t border-foreground/10">
+            <div className="text-[10px] text-foreground/50 uppercase tracking-wider mb-1">
               Connections
             </div>
             {uniqueLabels.map((lbl, i) => (
-              <div key={i} className="text-xs text-zinc-400 truncate">
+              <div key={i} className="text-xs text-foreground/70 truncate">
                 {lbl}
               </div>
             ))}

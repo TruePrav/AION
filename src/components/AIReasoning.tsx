@@ -114,7 +114,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
               AION AI Analysis
             </h2>
             {reasoning && (
-              <span className="inline-flex items-center rounded-full bg-white/60 border border-foreground/10 px-2 py-0 text-[10px] font-semibold font-mono text-foreground/70">
+              <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/10 px-2 py-0 text-[10px] font-semibold font-mono text-foreground/70">
                 {reasoning.length}
               </span>
             )}
@@ -166,7 +166,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
                 <button
                   type="button"
                   onClick={() => toggle(r.address)}
-                  className="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-white/40"
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-foreground/5"
                 >
                   <ChevronRight
                     className={cn(
@@ -228,7 +228,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
                           {r.factors.map((f, i) => (
                             <div
                               key={i}
-                              className="flex items-start gap-2.5 rounded-lg bg-white/50 border border-foreground/8 px-3 py-2"
+                              className="flex items-start gap-2.5 rounded-lg bg-foreground/5 border border-foreground/10 px-3 py-2"
                             >
                               <SignalPill signal={f.signal} />
                               <div className="flex-1 min-w-0">

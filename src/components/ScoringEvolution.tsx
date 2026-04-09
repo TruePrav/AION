@@ -56,7 +56,7 @@ const WEIGHT_KEYS = [
 function SkeletonBar({ width = "100%" }: { width?: string }) {
   return (
     <div
-      className="h-4 rounded bg-zinc-800 animate-pulse"
+      className="h-4 rounded bg-foreground/10 animate-pulse"
       style={{ width }}
     />
   );
@@ -109,10 +109,10 @@ export default function ScoringEvolution({
     return (
       <div className="card p-8 flex flex-col items-center justify-center text-center space-y-3">
         <div className="w-10 h-10 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
-        <p className="text-zinc-400 text-sm">
+        <p className="text-foreground/60 text-sm">
           Evolution system initializing...
         </p>
-        <p className="text-zinc-600 text-xs">
+        <p className="text-foreground/40 text-xs">
           Waiting for scoring engine to come online
         </p>
       </div>
@@ -130,14 +130,14 @@ export default function ScoringEvolution({
       {/* Section 1: Scoring Weights */}
       <div className="card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-zinc-200 tracking-wide uppercase">
+          <h3 className="text-sm font-semibold text-foreground tracking-wide uppercase">
             Scoring Weights
           </h3>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-400/25">
               v{weights.version}
             </span>
-            <span className="text-[10px] text-zinc-600">
+            <span className="text-[10px] text-foreground/40">
               {formatDate(weights.updated_at)}
             </span>
           </div>
@@ -149,10 +149,10 @@ export default function ScoringEvolution({
             const pct = (value / maxWeight) * 100;
             return (
               <div key={key} className="flex items-center gap-3">
-                <span className="text-xs text-zinc-400 w-[130px] shrink-0 text-right tabular-nums">
+                <span className="text-xs text-foreground/60 w-[130px] shrink-0 text-right tabular-nums">
                   {WEIGHT_LABELS[key]}
                 </span>
-                <div className="flex-1 h-[18px] rounded-full bg-zinc-800/60 overflow-hidden relative">
+                <div className="flex-1 h-[18px] rounded-full bg-foreground/8 overflow-hidden relative">
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
@@ -162,7 +162,7 @@ export default function ScoringEvolution({
                     }}
                   />
                 </div>
-                <span className="text-xs text-zinc-300 font-mono w-[48px] text-right tabular-nums">
+                <span className="text-xs text-foreground/80 font-mono w-[48px] text-right tabular-nums">
                   {value.toFixed(2)}
                 </span>
               </div>
@@ -171,7 +171,7 @@ export default function ScoringEvolution({
         </div>
 
         {weights.update_reason && (
-          <p className="mt-3 text-[11px] text-zinc-600 italic leading-relaxed">
+          <p className="mt-3 text-[11px] text-foreground/40 italic leading-relaxed">
             Last update: {weights.update_reason}
           </p>
         )}
@@ -181,7 +181,7 @@ export default function ScoringEvolution({
       {latest_evaluation && (
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-zinc-200 tracking-wide uppercase">
+            <h3 className="text-sm font-semibold text-foreground tracking-wide uppercase">
               Performance
             </h3>
             <div className="flex items-center gap-2">
@@ -225,13 +225,13 @@ export default function ScoringEvolution({
           {/* Comparison Cards */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             {/* High vs Low Score */}
-            <div className="rounded-lg bg-zinc-900/60 border border-zinc-800/80 p-3">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">
+            <div className="rounded-lg bg-foreground/5 border border-foreground/10 p-3">
+              <p className="text-[10px] text-foreground/50 uppercase tracking-wider mb-2">
                 High Score (&ge;60) vs Low Score (&lt;60)
               </p>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-[10px] text-zinc-500 mb-0.5">High</p>
+                  <p className="text-[10px] text-foreground/50 mb-0.5">High</p>
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.high_score_avg_return >= 0
@@ -243,7 +243,7 @@ export default function ScoringEvolution({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-zinc-500 mb-0.5">Low</p>
+                  <p className="text-[10px] text-foreground/50 mb-0.5">Low</p>
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.low_score_avg_return >= 0
@@ -258,13 +258,13 @@ export default function ScoringEvolution({
             </div>
 
             {/* Tier Passed vs Failed */}
-            <div className="rounded-lg bg-zinc-900/60 border border-zinc-800/80 p-3">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">
+            <div className="rounded-lg bg-foreground/5 border border-foreground/10 p-3">
+              <p className="text-[10px] text-foreground/50 uppercase tracking-wider mb-2">
                 Tier Passed vs Tier Failed
               </p>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-[10px] text-zinc-500 mb-0.5">Passed</p>
+                  <p className="text-[10px] text-foreground/50 mb-0.5">Passed</p>
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.tier_passed_avg_return >= 0
@@ -276,7 +276,7 @@ export default function ScoringEvolution({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-zinc-500 mb-0.5">Failed</p>
+                  <p className="text-[10px] text-foreground/50 mb-0.5">Failed</p>
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.tier_failed_avg_return >= 0
@@ -293,7 +293,7 @@ export default function ScoringEvolution({
 
           {/* Win/Loss Bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between text-[10px] text-zinc-500 mb-1">
+            <div className="flex items-center justify-between text-[10px] text-foreground/50 mb-1">
               <span>
                 Winners{" "}
                 <span className="text-emerald-400 font-medium">
@@ -307,7 +307,7 @@ export default function ScoringEvolution({
                 </span>
               </span>
             </div>
-            <div className="h-2 rounded-full bg-zinc-800/60 overflow-hidden flex">
+            <div className="h-2 rounded-full bg-foreground/8 overflow-hidden flex">
               {(latest_evaluation.winners + latest_evaluation.losers > 0) && (
                 <>
                   <div
@@ -341,15 +341,15 @@ export default function ScoringEvolution({
           <div className="flex items-center gap-4 mb-4 text-[11px]">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-zinc-500">Winner Avg Score</span>
-              <span className="text-zinc-300 font-mono">
+              <span className="text-foreground/50">Winner Avg Score</span>
+              <span className="text-foreground/80 font-mono">
                 {latest_evaluation.winner_avg_accum_score.toFixed(1)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-400" />
-              <span className="text-zinc-500">Loser Avg Score</span>
-              <span className="text-zinc-300 font-mono">
+              <span className="text-foreground/50">Loser Avg Score</span>
+              <span className="text-foreground/80 font-mono">
                 {latest_evaluation.loser_avg_accum_score.toFixed(1)}
               </span>
             </div>
@@ -361,7 +361,7 @@ export default function ScoringEvolution({
               <p className="text-[10px] text-cyan-400/60 uppercase tracking-wider mb-1 font-semibold">
                 Recommendation
               </p>
-              <p className="text-xs text-zinc-300 leading-relaxed">
+              <p className="text-xs text-foreground/80 leading-relaxed">
                 {latest_evaluation.recommendation}
               </p>
             </div>
@@ -371,39 +371,39 @@ export default function ScoringEvolution({
 
       {/* Section 3: Tracking */}
       <div className="card p-5">
-        <h3 className="text-sm font-semibold text-zinc-200 tracking-wide uppercase mb-4">
+        <h3 className="text-sm font-semibold text-foreground tracking-wide uppercase mb-4">
           Tracking
         </h3>
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-zinc-900/60 border border-zinc-800/80 p-3 text-center">
-            <p className="text-xl font-bold text-zinc-200 tabular-nums">
+          <div className="rounded-lg bg-foreground/5 border border-foreground/10 p-3 text-center">
+            <p className="text-xl font-bold text-foreground tabular-nums">
               {total_snapshots.toLocaleString()}
             </p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
+            <p className="text-[10px] text-foreground/50 mt-0.5">
               Discovery Runs
             </p>
           </div>
-          <div className="rounded-lg bg-zinc-900/60 border border-zinc-800/80 p-3 text-center">
-            <p className="text-xl font-bold text-zinc-200 tabular-nums">
+          <div className="rounded-lg bg-foreground/5 border border-foreground/10 p-3 text-center">
+            <p className="text-xl font-bold text-foreground tabular-nums">
               {total_tracked_tokens.toLocaleString()}
             </p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
+            <p className="text-[10px] text-foreground/50 mt-0.5">
               Tracked Tokens
             </p>
           </div>
-          <div className="rounded-lg bg-zinc-900/60 border border-zinc-800/80 p-3 text-center">
-            <p className="text-xl font-bold text-zinc-200 tabular-nums">
+          <div className="rounded-lg bg-foreground/5 border border-foreground/10 p-3 text-center">
+            <p className="text-xl font-bold text-foreground tabular-nums">
               {history.length.toLocaleString()}
             </p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
+            <p className="text-[10px] text-foreground/50 mt-0.5">
               Evaluations Run
             </p>
           </div>
         </div>
 
         {!latest_evaluation && (
-          <div className="mt-4 rounded-lg bg-zinc-900/40 border border-zinc-800/60 px-4 py-3 text-center">
-            <p className="text-xs text-zinc-500">
+          <div className="mt-4 rounded-lg bg-foreground/5 border border-foreground/10 px-4 py-3 text-center">
+            <p className="text-xs text-foreground/50">
               Run an evaluation after tracking enough tokens
             </p>
           </div>
@@ -417,8 +417,8 @@ export default function ScoringEvolution({
           disabled={total_tracked_tokens < 5}
           className={`w-full py-3 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 ${
             total_tracked_tokens >= 5
-              ? "bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_28px_rgba(16,185,129,0.35)] cursor-pointer"
-              : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+              ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_28px_rgba(16,185,129,0.35)] cursor-pointer"
+              : "bg-foreground/10 text-foreground/40 cursor-not-allowed"
           }`}
         >
           Run Evaluation

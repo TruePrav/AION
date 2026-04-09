@@ -14,7 +14,7 @@ export default function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={copy}
-      className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"
+      className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-foreground/50 hover:bg-foreground/10 hover:text-foreground/80 transition-colors"
       title="Copy to clipboard"
     >
       {copied ? (

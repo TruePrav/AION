@@ -310,6 +310,23 @@ export default function TradesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/5">
+                {sortedTrades.length === 0 && (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <BarChart3 className="h-8 w-8 text-foreground/20" strokeWidth={1.5} />
+                        <p className="text-sm font-semibold text-foreground/60">
+                          {trades.length === 0 ? "No trades yet" : "No trades match your filters"}
+                        </p>
+                        <p className="text-xs text-foreground/40">
+                          {trades.length === 0
+                            ? "Trades will appear here once the pipeline executes signals"
+                            : "Try adjusting the filters above to see more results"}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {sortedTrades.map((trade) => (
                   <tr key={trade.id} className="hover:bg-foreground/[0.04] transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
