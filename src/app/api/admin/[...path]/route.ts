@@ -19,6 +19,25 @@ const BACKEND = process.env.ORACLE_BACKEND_URL || process.env.NEXT_PUBLIC_API_UR
 const KEY = process.env.ORACLE_API_KEY || "";
 const MUTATIONS_ENABLED = process.env.ADMIN_ALLOW_MUTATIONS === "1";
 
+/**
+ * Allowlist of backend paths the proxy is permitted to forward to.
+ * Prevents SSRF-style abuse where an attacker uses the authenticated proxy
+ * to hit arbitrary backend endpoints. Add new entries here as features land.
+ *
+ * Matches against the path AFTER `/api/admin/` — so an entry of
+ * "trade/copy" matches a client request to `/api/admin/trade/copy`.
+ */
+const PATH_ALLOWLIST: RegExp[] = [
+  /^trade\/copy$/,
+  /^settings$/,
+  /^positions\/[^/]+\/targets$/,
+  /^positions\/[^/]+\/close$/,
+];
+
+function isAllowedPath(joined: string): boolean {
+  return PATH_ALLOWLIST.some((re) => re.test(joined));
+}
+
 async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
   if (!KEY) {
     return NextResponse.json(
@@ -35,7 +54,17 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   }
 
   const { path } = await ctx.params;
-  const url = `${BACKEND}/api/${path.join("/")}${req.nextUrl.search}`;
+  const joined = path.join("/");
+
+  // Reject path-traversal attempts and anything not on the allowlist.
+  if (joined.includes("..") || !isAllowedPath(joined)) {
+    return NextResponse.json(
+      { success: false, error: "Path not allowed" },
+      { status: 403 }
+    );
+  }
+
+  const url = `${BACKEND}/api/${joined}${req.nextUrl.search}`;
 
   const body = req.method === "GET" || req.method === "HEAD" ? undefined : await req.text();
 
