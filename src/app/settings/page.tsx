@@ -1,7 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiPost, READONLY_MODE } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check } from "lucide-react";
+
+interface RiskTierSettings {
+  preset: "degen" | "balanced" | "conservative" | "custom";
+  min_mcap: number;
+  min_age_days: number;
+  min_sm_traders: number;
+  min_accum_score: number;
+  min_sm_buyers: number;
+}
 
 interface Settings {
   trailing_stop_pct: number;
@@ -10,26 +24,44 @@ interface Settings {
   min_convergence_wallets: number;
   scan_interval_minutes: number;
   mode: string;
+  risk_tier: RiskTierSettings;
 }
 
-const MODE_CONFIG = {
-  live: { label: "Live Trading", desc: "Trades execute automatically with real funds. Use with caution.", color: "emerald" },
-  approval: { label: "Approval Mode", desc: "Trades are queued for your approval before execution.", color: "amber" },
-  dry_run: { label: "Dry Run", desc: "Trades are simulated — no real funds used.", color: "blue" },
+const MODES = [
+  { key: "live", label: "Live trading", desc: "Trades execute automatically with real funds." },
+  { key: "approval", label: "Approval mode", desc: "Trades queued for manual approval before execution." },
+  { key: "dry_run", label: "Dry run", desc: "Trades simulated — no real funds used." },
+];
+
+const TIER_PRESETS: Record<string, Omit<RiskTierSettings, "preset">> = {
+  degen: { min_mcap: 10_000, min_age_days: 0, min_sm_traders: 0, min_accum_score: 0, min_sm_buyers: 0 },
+  balanced: { min_mcap: 1_000_000, min_age_days: 7, min_sm_traders: 3, min_accum_score: 40, min_sm_buyers: 0 },
+  conservative: { min_mcap: 10_000_000, min_age_days: 30, min_sm_traders: 5, min_accum_score: 60, min_sm_buyers: 3 },
 };
 
-const COLOR_MAP: Record<string, { active: string; idle: string }> = {
-  emerald: { active: "border-emerald-500 bg-emerald-500/10 text-emerald-400", idle: "border-white/10 bg-white/5 text-gray-400 hover:border-white/20" },
-  amber: { active: "border-amber-500 bg-amber-500/10 text-amber-400", idle: "border-white/10 bg-white/5 text-gray-400 hover:border-white/20" },
-  blue: { active: "border-blue-500 bg-blue-500/10 text-blue-400", idle: "border-white/10 bg-white/5 text-gray-400 hover:border-white/20" },
+const TIERS = [
+  { key: "degen" as const, label: "Degen", desc: "Minimal filters. New launches, any mcap." },
+  { key: "balanced" as const, label: "Balanced", desc: "Age 7d+, mcap $1M+, 3+ SM traders." },
+  { key: "conservative" as const, label: "Conservative", desc: "Age 30d+, mcap $10M+, 5+ SM." },
+  { key: "custom" as const, label: "Custom", desc: "Set your own thresholds below." },
+];
+
+const DEFAULT_SETTINGS: Settings = {
+  trailing_stop_pct: 0.15,
+  take_profit_tiers: [0.5, 1.0, 2.0],
+  max_position_pct: 0.1,
+  min_convergence_wallets: 3,
+  scan_interval_minutes: 360, // 6 hours
+  mode: "dry_run",
+  risk_tier: { preset: "balanced", ...TIER_PRESETS.balanced },
 };
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const [, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -41,10 +73,8 @@ export default function SettingsPage() {
       setSettings(data);
       setLocalSettings(data);
     } catch {
-      const res = await fetch("http://178.128.253.120:5001/api/settings");
-      const data = await res.json();
-      setSettings(data);
-      setLocalSettings(data);
+      setError("Could not load settings from API — showing defaults. Save to push to backend.");
+      setLocalSettings(DEFAULT_SETTINGS);
     } finally {
       setLoading(false);
     }
@@ -53,258 +83,363 @@ export default function SettingsPage() {
   async function saveSettings() {
     if (!localSettings) return;
     setSaving(true);
-    setSaved(false);
     try {
-      const res = await fetch("http://178.128.253.120:5001/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(localSettings),
-      });
-      const result = await res.json();
+      const result = await apiPost<{ success: boolean }>("/api/settings", localSettings);
       if (result.success) {
         setSettings(localSettings);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        toast.success("Settings saved", { description: "Next scan cycle will use new values" });
       } else {
-        alert(`Save failed: ${JSON.stringify(result)}`);
+        toast.error("Save failed");
       }
     } catch (e) {
-      alert(`Error: ${e}`);
+      toast.error("Save failed", { description: e instanceof Error ? e.message : String(e) });
     } finally {
       setSaving(false);
     }
   }
 
-  function update(key: keyof Settings, value: number | string | number[]) {
+  function update<K extends keyof Settings>(key: K, value: Settings[K]) {
     if (!localSettings) return;
     setLocalSettings({ ...localSettings, [key]: value });
-    setSaved(false);
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-gray-400">
-        <div className="h-10 w-10 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-4" />
-        <p className="text-sm text-gray-500">Loading settings...</p>
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
+        <div className="h-10 w-10 border-2 border-foreground/20 border-t-primary rounded-full animate-spin mb-4" />
+        <p className="text-sm text-foreground/60">Loading settings...</p>
       </div>
     );
   }
-
   if (!localSettings) return null;
 
   return (
-    <div className="gradient-mesh min-h-screen">
+    <div className="glass-bg min-h-screen">
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-
-        {/* ── Page Header ── */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-gray-900/80 to-gray-900/40 p-8 backdrop-blur-sm">
-          <div className="absolute right-0 top-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="relative flex items-center gap-3 mb-1">
-            <svg className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="text-xs font-medium text-purple-400/70 uppercase tracking-wider">Configuration</span>
+        {/* ── Header ── */}
+        <div className="flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {READONLY_MODE ? "View-only on public deployment — edits disabled" : "Changes apply on next scan cycle"}
+            </p>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tight">Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">Changes apply on next scan cycle</p>
+          {READONLY_MODE && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/60 bg-accent/25 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+              <Lock className="h-3 w-3" />
+              View only
+            </span>
+          )}
         </div>
 
+        {error && (
+          <div className="glass-card border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            {error}
+          </div>
+        )}
+
         {/* ── Trading Mode ── */}
-        <div className="glass-card p-6">
-          <h2 className="text-sm font-semibold text-white mb-1">Trading Mode</h2>
-          <p className="text-xs text-gray-500 mb-5">Controls how Oracle executes trades.</p>
-          <div className="flex gap-3 flex-wrap">
-            {(Object.keys(MODE_CONFIG) as Array<keyof typeof MODE_CONFIG>).map((mode) => {
-              const cfg = MODE_CONFIG[mode];
-              const colors = COLOR_MAP[cfg.color];
-              const active = localSettings.mode === mode;
+        <Section title="Trading mode" description="Controls how Oracle executes trades.">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {MODES.map((mode) => {
+              const active = localSettings.mode === mode.key;
               return (
                 <button
-                  key={mode}
-                  onClick={() => update("mode", mode)}
-                  className={`flex-1 min-w-[140px] px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 text-left ${active ? colors.active : colors.idle}`}
+                  key={mode.key}
+                  onClick={() => update("mode", mode.key)}
+                  disabled={READONLY_MODE}
+                  className={cn(
+                    "relative px-4 py-3.5 rounded-xl text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md",
+                    active
+                      ? "bg-primary/25 border-2 border-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]"
+                      : "bg-foreground/[0.05] border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25"
+                  )}
                 >
-                  <div className="font-semibold text-xs mb-0.5">{cfg.label}</div>
-                  <div className={`text-[10px] leading-tight ${active ? "opacity-70" : "text-gray-600"}`}>{cfg.desc}</div>
+                  {active && (
+                    <span className="absolute top-2 right-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-foreground text-background">
+                      <Check className="h-3 w-3" strokeWidth={4} />
+                    </span>
+                  )}
+                  <div className={cn("font-bold text-xs mb-0.5 uppercase tracking-wider pr-6", active ? "text-foreground" : "text-foreground/80")}>
+                    {mode.label}
+                  </div>
+                  <div className={cn("text-[11px] leading-tight", active ? "text-foreground/80 font-medium" : "text-foreground/55")}>{mode.desc}</div>
                 </button>
               );
             })}
           </div>
-        </div>
+        </Section>
+
+        {/* ── Risk Tier ── */}
+        <Section
+          icon={<AlertTriangle className="h-4 w-4" />}
+          title="Risk tier"
+          description="Controls which tokens pass the discovery filter."
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+            {TIERS.map((tier) => {
+              const active = localSettings.risk_tier?.preset === tier.key;
+              return (
+                <button
+                  key={tier.key}
+                  onClick={() => {
+                    const preset = TIER_PRESETS[tier.key] || localSettings.risk_tier;
+                    update("risk_tier", { ...preset, preset: tier.key } as RiskTierSettings);
+                  }}
+                  disabled={READONLY_MODE}
+                  className={cn(
+                    "relative px-3 py-3 rounded-xl text-left transition-all disabled:opacity-50 backdrop-blur-md",
+                    active
+                      ? "bg-secondary/60 border-2 border-foreground ring-2 ring-secondary/40 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--secondary)/0.55)]"
+                      : "bg-foreground/[0.05] border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25"
+                  )}
+                >
+                  {active && (
+                    <span className="absolute top-1.5 right-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full bg-foreground text-background">
+                      <Check className="h-2.5 w-2.5" strokeWidth={4} />
+                    </span>
+                  )}
+                  <div className={cn("font-bold text-xs mb-0.5 uppercase tracking-wider pr-5", active ? "text-foreground" : "text-foreground/80")}>
+                    {tier.label}
+                  </div>
+                  <div className={cn("text-[10px] leading-tight", active ? "text-foreground/75 font-medium" : "text-foreground/55")}>{tier.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div
+            className={cn(
+              "rounded-xl border p-4 transition-colors backdrop-blur-md",
+              localSettings.risk_tier?.preset === "custom"
+                ? "border-primary/40 bg-primary/[0.08]"
+                : "border-foreground/15 bg-foreground/[0.04]"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-bold text-foreground/60 uppercase tracking-[0.08em]">
+                Filter parameters
+              </span>
+              {localSettings.risk_tier?.preset !== "custom" && (
+                <span className="text-[10px] text-foreground/45">
+                  switch to Custom to edit
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {[
+                { key: "min_mcap" as const, label: "Min market cap", prefix: "$", step: 10000, min: 0, max: 100_000_000 },
+                { key: "min_age_days" as const, label: "Min token age", suffix: "days", step: 1, min: 0, max: 90 },
+                { key: "min_sm_traders" as const, label: "Min SM traders", step: 1, min: 0, max: 20 },
+                { key: "min_accum_score" as const, label: "Min accum score", step: 5, min: 0, max: 100 },
+                { key: "min_sm_buyers" as const, label: "Min SM buyers", step: 1, min: 0, max: 10 },
+              ].map((param) => (
+                <div key={param.key}>
+                  <label className="text-[10px] text-foreground/60 font-semibold block mb-1.5">
+                    {param.label}
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {param.prefix && <span className="text-xs font-bold text-foreground/75">{param.prefix}</span>}
+                    <Input
+                      type="number"
+                      min={param.min}
+                      max={param.max}
+                      step={param.step}
+                      value={localSettings.risk_tier?.[param.key] ?? 0}
+                      disabled={localSettings.risk_tier?.preset !== "custom" || READONLY_MODE}
+                      onChange={(e) => {
+                        const rt = { ...(localSettings.risk_tier || DEFAULT_SETTINGS.risk_tier) };
+                        rt[param.key] = Number(e.target.value);
+                        rt.preset = "custom";
+                        update("risk_tier", rt);
+                      }}
+                      className="h-7 text-xs font-mono"
+                    />
+                    {param.suffix && <span className="text-xs text-foreground/60">{param.suffix}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Section>
 
         {/* ── Position Sizing ── */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-2.25m0 0l-.75 1.5h3.75a1.5 1.5 0 000-3h-3.75a1.5 1.5 0 00-1.5 1.5v3.75m0 0l1.5 1.5m-1.5-1.5l1.5-1.5" />
-            </svg>
-            <h2 className="text-sm font-semibold text-white">Position Sizing</h2>
-          </div>
-          <div className="space-y-5">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-xs text-gray-400 font-medium">Max position size</label>
-                <span className="text-sm font-bold text-emerald-400 font-mono">{localSettings.max_position_pct * 100}%</span>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={50}
-                value={localSettings.max_position_pct * 100}
-                onChange={(e) => update("max_position_pct", Number(e.target.value) / 100)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1.5">
-                <span>1%</span>
-                <span className="text-gray-500">{localSettings.max_position_pct * 100}% of portfolio</span>
-                <span>50%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Section icon={<Sliders className="h-4 w-4" />} title="Position sizing">
+          <SliderRow
+            label="Max position size"
+            value={localSettings.max_position_pct * 100}
+            min={1}
+            max={50}
+            unit="%"
+            footer="of portfolio"
+            onChange={(v) => update("max_position_pct", v / 100)}
+            disabled={READONLY_MODE}
+          />
+        </Section>
 
         {/* ── Exit Strategy ── */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 3m0 0l6 6m-6-6v12" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6v6" />
-            </svg>
-            <h2 className="text-sm font-semibold text-white">Exit Strategy</h2>
-          </div>
+        <Section icon={<Target className="h-4 w-4" />} title="Exit strategy">
           <div className="space-y-6">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-xs text-gray-400 font-medium">Trailing stop</label>
-                <span className="text-sm font-bold text-emerald-400 font-mono">{localSettings.trailing_stop_pct * 100}%</span>
-              </div>
-              <input
-                type="range"
-                min={5}
-                max={50}
-                value={localSettings.trailing_stop_pct * 100}
-                onChange={(e) => update("trailing_stop_pct", Number(e.target.value) / 100)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1.5">
-                <span>5%</span>
-                <span className="text-gray-500">exit from peak after entry</span>
-                <span>50%</span>
-              </div>
-            </div>
+            <SliderRow
+              label="Trailing stop"
+              value={localSettings.trailing_stop_pct * 100}
+              min={5}
+              max={50}
+              unit="%"
+              footer="exit from peak after entry"
+              onChange={(v) => update("trailing_stop_pct", v / 100)}
+              disabled={READONLY_MODE}
+            />
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <label className="text-xs text-gray-400 font-medium">Take-profit tiers</label>
-                <span className="text-[10px] text-gray-600">(exit 33% at each tier)</span>
+                <label className="text-xs text-foreground font-medium">Take-profit tiers</label>
+                <span className="text-[10px] text-muted-foreground">exit 33% at each tier</span>
               </div>
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {localSettings.take_profit_tiers.map((tier, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-gray-800/50 rounded-xl px-3 py-2 border border-white/5">
-                    <span className="text-[10px] text-gray-600 font-bold">T{i + 1}</span>
-                    <input
+                  <div key={i} className="flex items-center gap-1.5 rounded-xl border border-foreground/15 bg-foreground/[0.05] px-2.5 py-1.5 backdrop-blur-md">
+                    <span className="text-[10px] text-foreground/60 font-bold">T{i + 1}</span>
+                    <Input
                       type="number"
                       min={10}
                       max={500}
                       value={tier * 100}
+                      disabled={READONLY_MODE}
                       onChange={(e) => {
                         const newTiers = [...localSettings.take_profit_tiers];
                         newTiers[i] = Number(e.target.value) / 100;
                         update("take_profit_tiers", newTiers);
                       }}
-                      className="w-16 bg-transparent text-center text-sm font-mono text-white outline-none"
+                      className="h-6 w-14 text-xs font-mono text-center px-1"
                     />
-                    <span className="text-[10px] text-gray-600">%</span>
+                    <span className="text-[10px] text-foreground/60">%</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </Section>
 
         {/* ── Scanning ── */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
-            </svg>
-            <h2 className="text-sm font-semibold text-white">Scanning</h2>
-          </div>
+        <Section icon={<Search className="h-4 w-4" />} title="Scanning">
           <div className="space-y-6">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-xs text-gray-400 font-medium">Min convergence wallets</label>
-                <span className="text-sm font-bold text-emerald-400 font-mono">{localSettings.min_convergence_wallets}</span>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={10}
-                value={localSettings.min_convergence_wallets}
-                onChange={(e) => update("min_convergence_wallets", Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1.5">
-                <span>1 (sensitive)</span>
-                <span className="text-gray-500">wallets needed for signal</span>
-                <span>10 (strict)</span>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-xs text-gray-400 font-medium">Scan interval</label>
-                <span className="text-sm font-bold text-emerald-400 font-mono">{localSettings.scan_interval_minutes} min</span>
-              </div>
-              <input
-                type="range"
-                min={5}
-                max={60}
-                step={5}
-                value={localSettings.scan_interval_minutes}
-                onChange={(e) => update("scan_interval_minutes", Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1.5">
-                <span>5 min</span>
-                <span className="text-gray-500">time between scans</span>
-                <span>60 min</span>
-              </div>
-            </div>
+            <SliderRow
+              label="Min convergence wallets"
+              value={localSettings.min_convergence_wallets}
+              min={1}
+              max={10}
+              unit=""
+              footer="wallets needed for signal"
+              onChange={(v) => update("min_convergence_wallets", v)}
+              disabled={READONLY_MODE}
+            />
+            <SliderRow
+              label="Scan interval"
+              value={localSettings.scan_interval_minutes}
+              min={60}
+              max={720}
+              step={30}
+              unit=" min"
+              footer="time between scans (default 6h)"
+              onChange={(v) => update("scan_interval_minutes", v)}
+              disabled={READONLY_MODE}
+            />
           </div>
-        </div>
+        </Section>
 
-        {/* ── Save Button ── */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <button
-            onClick={saveSettings}
-            disabled={saving}
-            className="inline-flex items-center gap-2.5 px-7 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 hover:shadow-emerald-400/30 hover:scale-[1.01] active:scale-[0.99]"
-          >
-            {saving ? (
-              <>
-                <span className="h-4 w-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : saved ? (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Saved!
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
-                Save Settings
-              </>
-            )}
-          </button>
-          {saved && (
-            <span className="text-sm text-emerald-400/70">Settings updated — next scan cycle will use new values</span>
-          )}
-        </div>
+        {!READONLY_MODE && (
+          <div className="flex items-center gap-3 pt-2">
+            <Button onClick={saveSettings} disabled={saving} size="lg">
+              {saving ? (
+                <>
+                  <span className="h-3 w-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  Save settings
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Helpers ──
+
+function Section({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="glass-card p-6">
+      <div className="flex items-center gap-2 mb-1">
+        {icon && <span className="text-foreground/60">{icon}</span>}
+        <h2 className="text-sm font-bold text-foreground tracking-tight">{title}</h2>
+      </div>
+      {description && <p className="text-xs text-foreground/60 mb-5">{description}</p>}
+      {!description && <div className="mb-5" />}
+      {children}
+    </section>
+  );
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  unit,
+  footer,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit: string;
+  footer?: string;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-2.5">
+        <label className="text-xs text-foreground/80 font-semibold">{label}</label>
+        <span className="inline-flex items-center rounded-md bg-foreground/[0.06] border border-foreground/15 px-2 py-0.5 text-sm font-bold text-foreground font-mono tabular-nums">
+          {value}
+          {unit}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full disabled:opacity-50"
+      />
+      <div className="flex justify-between text-[10px] text-muted-foreground/70 mt-1.5">
+        <span>{min}{unit}</span>
+        {footer && <span>{footer}</span>}
+        <span>{max}{unit}</span>
       </div>
     </div>
   );

@@ -1,25 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { fmtUsd, truncAddr } from "@/lib/utils";
+import { apiFetch, apiPost, READONLY_MODE } from "@/lib/api";
+import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
+import GradeBadge from "@/components/GradeBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { toast } from "sonner";
+import {
+  Briefcase,
+  Wallet,
+  TrendingUp,
+  Lock,
+  ExternalLink,
+  Pencil,
+  X as XIcon,
+  AlertTriangle,
+} from "lucide-react";
 
 interface OpenPosition {
   id: string;
   token: string;
+  symbol?: string;
   chain: string;
   side: string;
   entry_price: number;
   size_usdc: number;
   current_price?: number;
-  pnl_usd?: number;
-  pnl_pct?: number;
+  pnl_usd?: number | null;
+  pnl_pct?: number | null;
+  change_24h?: number | null;
+  current_mcap?: number | null;
+  stop_loss_pct?: number | null;
+  take_profit_pct?: number | null;
   timestamp: string;
   trailing_stop_triggered?: boolean;
   stop_reason?: string;
   tx_hash?: string;
   status: string;
+  dry_run?: boolean;
+  grade?: string;
+  accum_score?: number;
+  recommended?: boolean;
 }
 
 interface PositionsResponse {
@@ -27,27 +51,20 @@ interface PositionsResponse {
   count: number;
 }
 
-function SolscanLink({ hash, label }: { hash: string; label: string }) {
-  if (!hash) return null;
-  return (
-    <a href={`https://solscan.io/tx/${hash}`} target="_blank" rel="noopener noreferrer" className="text-emerald-400/70 hover:text-emerald-400 text-xs transition-colors flex items-center gap-0.5">
-      {label}
-      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-      </svg>
-    </a>
-  );
-}
-
 export default function PositionsPage() {
   const [positions, setPositions] = useState<OpenPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [closing, setClosing] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [editingTargets, setEditingTargets] = useState<string | null>(null);
+  const [tempSL, setTempSL] = useState<string>("");
+  const [tempTP, setTempTP] = useState<string>("");
+  const [savingTargets, setSavingTargets] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadPositions();
-    const interval = setInterval(loadPositions, 15000);
+    const interval = setInterval(loadPositions, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -57,32 +74,78 @@ export default function PositionsPage() {
       setPositions(data.positions || []);
       setLastUpdate(new Date());
     } catch {
-      const res = await fetch("http://178.128.253.120:5001/api/positions");
-      const data = await res.json();
-      setPositions(data.positions || []);
-      setLastUpdate(new Date());
+      /* keep state */
     } finally {
       setLoading(false);
     }
   }
 
-  async function closePosition(token: string, reason: string) {
-    if (!confirm(`Close position for ${token.slice(0, 12)}...?\nReason: ${reason}`)) return;
-    setClosing(token);
+  async function saveTargets(token: string) {
+    setSavingTargets(true);
     try {
-      const res = await fetch("http://178.128.253.120:5001/api/positions/close", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: token, reason }),
+      const sl = tempSL === "" ? null : Number(tempSL);
+      const tp = tempTP === "" ? null : Number(tempTP);
+      const result = await apiPost<{ success: boolean; error?: string }>(`/api/positions/${token}/targets`, {
+        stop_loss_pct: sl,
+        take_profit_pct: tp,
       });
-      const result = await res.json();
       if (result.success) {
-        setPositions((prev) => prev.filter((p) => p.token !== token));
+        setPositions((prev) => prev.map((p) =>
+          p.token === token ? { ...p, stop_loss_pct: sl, take_profit_pct: tp } : p
+        ));
+        setEditingTargets(null);
+        toast.success("Targets updated", {
+          description: `Stop loss ${sl ?? "—"}% · Take profit +${tp ?? "—"}%`,
+        });
       } else {
-        alert(`Close failed: ${result.error}`);
+        toast.error("Save failed", { description: result.error });
       }
     } catch (e) {
-      alert(`Error: ${e}`);
+      toast.error("Save failed", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSavingTargets(false);
+    }
+  }
+
+  function startEditTargets(pos: OpenPosition) {
+    setEditingTargets(pos.token);
+    setTempSL(pos.stop_loss_pct != null ? String(pos.stop_loss_pct) : "");
+    setTempTP(pos.take_profit_pct != null ? String(pos.take_profit_pct) : "");
+  }
+
+  async function closePosition(pos: OpenPosition, reason: string) {
+    const ok = await confirm({
+      title: `Close ${pos.symbol || truncAddr(pos.token, 4)}?`,
+      description: (
+        <span>
+          This will exit your <span className="text-foreground font-semibold">{fmtUsd(pos.size_usdc)}</span> position
+          {pos.pnl_pct != null && (
+            <>
+              {" at "}
+              <span className={cn("font-semibold", pos.pnl_pct >= 0 ? "text-profit" : "text-loss")}>
+                {pos.pnl_pct >= 0 ? "+" : ""}{pos.pnl_pct.toFixed(2)}%
+              </span>
+            </>
+          )}
+          . Reason: <span className="text-foreground font-semibold">{reason}</span>
+        </span>
+      ),
+      confirmLabel: "Close position",
+      variant: "destructive",
+    });
+    if (!ok) return;
+
+    setClosing(pos.token);
+    try {
+      const result = await apiPost<{ success: boolean; error?: string }>(`/api/positions/${pos.token}/close`, { reason });
+      if (result.success) {
+        setPositions((prev) => prev.filter((p) => p.token !== pos.token));
+        toast.success("Position closed", { description: pos.symbol || truncAddr(pos.token) });
+      } else {
+        toast.error("Close failed", { description: result.error });
+      }
+    } catch (e) {
+      toast.error("Close failed", { description: e instanceof Error ? e.message : String(e) });
     } finally {
       setClosing(null);
     }
@@ -90,152 +153,343 @@ export default function PositionsPage() {
 
   const totalPnl = positions.reduce((s, p) => s + (p.pnl_usd || 0), 0);
   const totalValue = positions.reduce((s, p) => s + (p.size_usdc || 0), 0);
+  const totalPnlPct = totalValue > 0 ? (totalPnl / totalValue) * 100 : 0;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-gray-400">
-        <div className="h-10 w-10 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-4" />
-        <p className="text-sm text-gray-500">Loading positions...</p>
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
+        <div className="h-10 w-10 rounded-full border-2 border-foreground/20 border-t-primary animate-spin mb-4" />
+        <p className="text-sm text-foreground/60">Loading positions...</p>
       </div>
     );
   }
 
   return (
-    <div className="gradient-mesh min-h-screen">
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
-
+    <div className="glass-bg min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* ── Header ── */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-gray-900/80 to-gray-900/40 p-8 backdrop-blur-sm">
-          <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-          <div className="relative flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
-                <span className="text-xs font-medium text-emerald-400/70 uppercase tracking-wider">Live Tracking</span>
-              </div>
-              <h1 className="text-4xl font-black text-white tracking-tight">Positions</h1>
-              <p className="text-sm text-gray-500 mt-1">Auto-refreshes every 15s &bull; Updated {lastUpdate.toLocaleTimeString()}</p>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 backdrop-blur-sm">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
-              <span className="text-xs text-gray-400 font-medium">Live</span>
-            </div>
+        <div className="flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Positions</h1>
+            <p className="text-sm text-foreground/60 mt-1">
+              Auto-refresh 10s · Updated {lastUpdate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {READONLY_MODE && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/40 border border-accent/60 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                <Lock className="h-3 w-3" />
+                View only
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 border border-primary/40 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-dot" />
+              Live
+            </span>
           </div>
         </div>
 
         {/* ── Summary Cards ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <StatCard label="Open Positions" value={String(positions.length)} icon={
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
-          } />
-          <StatCard label="Total Invested" value={fmtUsd(totalValue)} icon={
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-            </svg>
-          } />
-          <StatCard label="Unrealized P&L" value={totalPnl >= 0 ? `+${fmtUsd(totalPnl)}` : fmtUsd(totalPnl)} accent={totalPnl >= 0} icon={
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-            </svg>
-          } />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+label="Open positions"
+            value={String(positions.length)}
+            icon={<Briefcase className="h-4 w-4" />}
+            tone="white"
+          />
+          <StatCard
+label="Total invested"
+            value={fmtUsd(totalValue)}
+            icon={<Wallet className="h-4 w-4" />}
+            tone="pink"
+          />
+          <StatCard
+label="Unrealized P&L"
+            value={totalPnl >= 0 ? `+${fmtUsd(totalPnl)}` : fmtUsd(totalPnl)}
+            change={Number(totalPnlPct.toFixed(2))}
+            accent={totalPnl >= 0}
+            icon={<TrendingUp className="h-4 w-4" />}
+            tone={totalPnl >= 0 ? "lime" : "red"}
+          />
         </div>
 
         {/* ── Empty State ── */}
         {positions.length === 0 ? (
-          <div className="glass-card p-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800/50 border border-white/5">
-              <svg className="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-              </svg>
+          <div className="glass-card p-16 text-center">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/40 border border-accent/60">
+              <Briefcase className="h-6 w-6 text-foreground/70" />
             </div>
-            <h3 className="text-base font-semibold text-gray-300 mb-1">No open positions</h3>
-            <p className="text-sm text-gray-600 mb-2">Discovery signals will appear here when Oracle finds convergence.</p>
-            <p className="text-xs text-gray-600">Run <span className="text-emerald-400/60">/discover</span> on Telegram to start.</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No open positions</h3>
+            <p className="text-sm text-foreground/60 mb-1">Discovery signals will appear here when Oracle finds convergence.</p>
+            <p className="text-xs text-foreground/50">
+              Run <span className="inline-block bg-primary/20 border border-primary/40 rounded px-1.5 py-0.5 font-mono text-foreground">/discover</span> on Telegram to start.
+            </p>
           </div>
         ) : (
-          /* ── Positions List ── */
           <div className="space-y-4">
-            {positions.map((pos) => {
-              const pnlPct = pos.pnl_pct ?? null;
-              const pnlUsd = pos.pnl_usd ?? null;
-              const hasPnl = pnlPct !== null && !isNaN(pnlPct);
-              const isProfit = hasPnl && pnlPct >= 0;
-              return (
-                <div
-                  key={pos.id}
-                  className={`glass-card p-6 transition-all duration-200 ${
-                    pos.trailing_stop_triggered
-                      ? "border-red-500/25 bg-red-500/3 shadow-[0_0_20px_rgba(239,68,68,0.06)]"
-                      : ""
-                  }`}
-                >
-                  {pos.trailing_stop_triggered && (
-                    <div className="flex items-center gap-2 mb-5 text-red-400 text-xs font-semibold rounded-lg bg-red-500/10 border border-red-500/15 px-3 py-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse flex-shrink-0" />
-                      Trailing stop triggered &mdash; {pos.stop_reason}
-                    </div>
-                  )}
-
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    {/* Token Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="font-bold text-white text-lg">{pos.token.slice(0, 14)}...</span>
-                        <span className="font-mono text-[10px] text-gray-600 bg-gray-800/60 rounded-lg px-2 py-0.5">{truncAddr(pos.token)}</span>
-                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold border ${
-                          pos.side === "buy"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-red-500/10 text-red-400 border-red-500/20"
-                        }`}>
-                          {pos.side.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-                        <span>Entry: <span className="text-white font-mono">${pos.entry_price?.toFixed(6) || "—"}</span></span>
-                        <span>Size: <span className="text-white font-mono">{fmtUsd(pos.size_usdc)}</span></span>
-                        {pos.tx_hash && <SolscanLink hash={pos.tx_hash} label="Entry Tx" />}
-                        <span className="text-gray-700">·</span>
-                        <span>{new Date(pos.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                      </div>
-                    </div>
-
-                    {/* P&L */}
-                    <div className="text-right flex-shrink-0">
-                      <div className={`text-2xl font-black font-mono tracking-tight ${hasPnl ? (isProfit ? "text-emerald-400" : "text-red-400") : "text-gray-500"}`}>
-                        {hasPnl ? `${isProfit ? "+" : ""}${pnlPct.toFixed(2)}%` : "—"}
-                      </div>
-                      <div className={`text-sm font-mono mt-0.5 ${hasPnl ? (isProfit ? "text-emerald-400/60" : "text-red-400/60") : "text-gray-600"}`}>
-                        {hasPnl ? `${isProfit ? "+" : ""}${fmtUsd(pnlUsd)}` : "—"}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => closePosition(pos.token, "manual")}
-                        disabled={closing === pos.token}
-                        className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-gray-300 hover:text-white transition-all disabled:opacity-30 text-center"
-                      >
-                        {closing === pos.token ? "Closing..." : "Close Position"}
-                      </button>
-                      {pos.trailing_stop_triggered && (
-                        <button
-                          onClick={() => closePosition(pos.token, pos.stop_reason || "trailing_stop")}
-                          className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-sm transition-all text-center font-semibold"
-                        >
-                          Exit Now (Stop Hit)
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {positions.map((pos) => (
+              <PositionCard
+                key={pos.id}
+                pos={pos}
+                isEditing={editingTargets === pos.token}
+                tempSL={tempSL}
+                tempTP={tempTP}
+                onTempSL={setTempSL}
+                onTempTP={setTempTP}
+                onStartEdit={() => startEditTargets(pos)}
+                onSave={() => saveTargets(pos.token)}
+                onCancel={() => setEditingTargets(null)}
+                onClose={(reason) => closePosition(pos, reason)}
+                saving={savingTargets}
+                closing={closing === pos.token}
+              />
+            ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+// Position Card
+// ════════════════════════════════════════════════════════════════
+
+interface CardProps {
+  pos: OpenPosition;
+  isEditing: boolean;
+  tempSL: string;
+  tempTP: string;
+  onTempSL: (v: string) => void;
+  onTempTP: (v: string) => void;
+  onStartEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onClose: (reason: string) => void;
+  saving: boolean;
+  closing: boolean;
+}
+
+function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onStartEdit, onSave, onCancel, onClose, saving, closing }: CardProps) {
+  const pnlPct = pos.pnl_pct ?? null;
+  const pnlUsd = pos.pnl_usd ?? null;
+  const hasPnl = pnlPct !== null && !isNaN(pnlPct);
+  const isProfit = hasPnl && pnlPct! >= 0;
+  const sl = pos.stop_loss_pct ?? -25;
+  const tp = pos.take_profit_pct ?? 50;
+  const range = tp - sl;
+  const pct = hasPnl ? pnlPct! : 0;
+  const barPos = range > 0 ? Math.max(0, Math.min(100, ((pct - sl) / range) * 100)) : 50;
+  const zeroPos = range > 0 ? Math.max(0, Math.min(100, ((0 - sl) / range) * 100)) : 50;
+
+  return (
+    <div className="glass-card p-6">
+      {pos.trailing_stop_triggered && (
+        <div className="flex items-center gap-2 mb-5 text-xs font-semibold rounded-xl bg-destructive/15 border border-destructive/40 text-foreground px-3 py-2">
+          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+          {pos.stop_reason || "Target triggered"}
+        </div>
+      )}
+
+      {/* ── Top Row: Token + P/L ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://dd.dexscreener.com/ds-data/tokens/solana/${pos.token}.png`}
+              alt=""
+              className="h-10 w-10 rounded-xl bg-foreground/5 flex-shrink-0 border border-foreground/10"
+              onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+            />
+            <span className="font-bold text-foreground text-xl tracking-tight">
+              {pos.symbol || truncAddr(pos.token, 6)}
+            </span>
+            {pos.grade && <GradeBadge grade={pos.grade} size="md" />}
+            {pos.accum_score != null && (
+              <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/15 px-2 py-0.5 text-[10px] font-semibold font-mono text-foreground/70">
+                score {pos.accum_score}
+              </span>
+            )}
+            {pos.dry_run && (
+              <span className="inline-flex items-center rounded-full bg-accent/40 border border-accent/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground">
+                DRY RUN
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-x-4 gap-y-1 text-xs text-foreground/60 flex-wrap">
+            <PriceField label="Entry" value={pos.entry_price} />
+            <PriceField label="Now" value={pos.current_price} />
+            <span>
+              Size <span className="text-foreground font-mono font-semibold">{fmtUsd(pos.size_usdc)}</span>
+            </span>
+            {pos.change_24h != null && (
+              <span>
+                24h{" "}
+                <span className={cn("font-mono font-semibold", pos.change_24h >= 0 ? "text-profit" : "text-loss")}>
+                  {pos.change_24h >= 0 ? "+" : ""}{pos.change_24h.toFixed(2)}%
+                </span>
+              </span>
+            )}
+            <a
+              href={`https://dexscreener.com/solana/${pos.token}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full bg-foreground/5 border border-foreground/15 px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-foreground/10 transition-colors"
+            >
+              Chart
+              <ExternalLink className="h-2.5 w-2.5" />
+            </a>
+          </div>
+        </div>
+
+        {/* Big P&L */}
+        <div
+          className={cn(
+            "flex-shrink-0 rounded-2xl px-5 py-3 text-right border backdrop-blur-md",
+            hasPnl
+              ? isProfit
+                ? "bg-primary/20 border-primary/40 shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.35)]"
+                : "bg-destructive/20 border-destructive/40 shadow-[0_4px_16px_-4px_hsl(var(--destructive)/0.35)]"
+              : "bg-foreground/5 border-foreground/15"
+          )}
+        >
+          <div
+            className={cn(
+              "text-3xl font-bold font-mono tracking-tight tabular-nums leading-none",
+              hasPnl ? (isProfit ? "text-profit" : "text-loss") : "text-foreground/50"
+            )}
+          >
+            {hasPnl ? `${isProfit ? "+" : ""}${pnlPct!.toFixed(2)}%` : "—"}
+          </div>
+          <div
+            className={cn(
+              "text-sm font-mono font-semibold mt-1 tabular-nums",
+              hasPnl ? (isProfit ? "text-profit/80" : "text-loss/80") : "text-foreground/40"
+            )}
+          >
+            {hasPnl ? `${isProfit ? "+" : ""}${fmtUsd(pnlUsd!)}` : "—"}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Progress Bar ── */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between text-[10px] font-semibold mb-2">
+          <span className="text-loss">SL {sl}%</span>
+          <span className="text-foreground/50">Entry 0%</span>
+          <span className="text-profit">TP +{tp}%</span>
+        </div>
+        <div className="relative h-2 rounded-full bg-foreground/8 overflow-hidden border border-foreground/15">
+          <div
+            className="absolute top-0 bottom-0 bg-loss/30"
+            style={{ left: 0, width: `${zeroPos}%` }}
+          />
+          <div
+            className="absolute top-0 bottom-0 bg-profit/30"
+            style={{ left: `${zeroPos}%`, width: `${100 - zeroPos}%` }}
+          />
+          <div
+            className="absolute top-0 bottom-0 w-px bg-foreground/40"
+            style={{ left: `${zeroPos}%` }}
+          />
+          <div
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full border-2 border-foreground/30 shadow-md",
+              isProfit ? "bg-profit" : hasPnl ? "bg-loss" : "bg-foreground/40"
+            )}
+            style={{ left: `calc(${barPos}% - 7px)` }}
+          />
+        </div>
+      </div>
+
+      {/* ── Controls ── */}
+      <div className="flex items-center justify-between gap-3 pt-4 border-t border-foreground/10 flex-wrap">
+        {isEditing && !READONLY_MODE ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-foreground font-semibold uppercase tracking-wider rounded-md bg-loss/15 border border-loss/40 px-1.5 py-0.5">SL</span>
+              <Input
+                type="number"
+                value={tempSL}
+                onChange={(e) => onTempSL(e.target.value)}
+                className="h-8 w-20 text-xs font-mono text-right rounded-lg border-foreground/15"
+                placeholder="-25"
+              />
+              <span className="text-[10px] text-foreground/60">%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-foreground font-semibold uppercase tracking-wider rounded-md bg-profit/15 border border-profit/40 px-1.5 py-0.5">TP</span>
+              <Input
+                type="number"
+                value={tempTP}
+                onChange={(e) => onTempTP(e.target.value)}
+                className="h-8 w-20 text-xs font-mono text-right rounded-lg border-foreground/15"
+                placeholder="50"
+              />
+              <span className="text-[10px] text-foreground/60">%</span>
+            </div>
+            <Button size="sm" onClick={onSave} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-loss/15 border border-loss/40 px-2.5 py-1">
+              <span className="text-[10px] text-foreground/70 font-semibold uppercase tracking-wider">SL</span>
+              <span className="text-xs font-mono font-semibold text-foreground tabular-nums">{sl}%</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-profit/15 border border-profit/40 px-2.5 py-1">
+              <span className="text-[10px] text-foreground/70 font-semibold uppercase tracking-wider">TP</span>
+              <span className="text-xs font-mono font-semibold text-foreground tabular-nums">+{tp}%</span>
+            </div>
+            {!READONLY_MODE && (
+              <Button size="xs" variant="ghost" onClick={onStartEdit} className="gap-1">
+                <Pencil className="h-3 w-3" />
+                Edit
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!READONLY_MODE && (
+          <div className="flex items-center gap-2 ml-auto">
+            <Button size="sm" variant="outline" onClick={() => onClose("manual")} disabled={closing}>
+              {closing ? "Closing..." : (
+                <>
+                  <XIcon className="h-3 w-3" />
+                  Close
+                </>
+              )}
+            </Button>
+            {pos.trailing_stop_triggered && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => onClose(pos.stop_reason || "target_hit")}
+              >
+                Exit Now
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Helpers ──
+
+function PriceField({ label, value }: { label: string; value: number | undefined }) {
+  return (
+    <span>
+      {label}{" "}
+      <span className="text-foreground font-mono font-semibold tabular-nums">
+        {value && value > 0 ? `$${value.toFixed(value > 1 ? 4 : 8)}` : "—"}
+      </span>
+    </span>
   );
 }

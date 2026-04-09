@@ -1,3 +1,11 @@
+import { cn } from "@/lib/utils";
+
+// ════════════════════════════════════════════════════════════════
+// GradeBadge — visual hierarchy S > A > B > C > D
+// Colored tiers (S/A/B) always use DARK ink for reliable contrast
+// in both light and dark modes. C/D use token colors so they flip.
+// ════════════════════════════════════════════════════════════════
+
 type Grade = "S" | "A" | "B" | "C" | "D";
 type Size = "sm" | "md" | "lg";
 
@@ -6,67 +14,83 @@ interface GradeBadgeProps {
   size?: Size;
 }
 
-const GRADE_STYLES: Record<Grade, { bg: string; text: string; border: string; glow: string; extra: string }> = {
-  S: {
-    bg: "bg-amber-500/15",
-    text: "text-amber-400",
-    border: "border-amber-400/30",
-    glow: "shadow-[0_0_16px_rgba(245,158,11,0.35),0_0_32px_rgba(245,158,11,0.15)]",
-    extra: "grade-s-glow",
-  },
-  A: {
-    bg: "bg-emerald-500/15",
-    text: "text-emerald-400",
-    border: "border-emerald-400/25",
-    glow: "shadow-[0_0_12px_rgba(16,185,129,0.25)]",
-    extra: "",
-  },
-  B: {
-    bg: "bg-yellow-500/15",
-    text: "text-yellow-400",
-    border: "border-yellow-400/25",
-    glow: "shadow-[0_0_8px_rgba(234,179,8,0.15)]",
-    extra: "",
-  },
-  C: {
-    bg: "bg-orange-500/15",
-    text: "text-orange-400",
-    border: "border-orange-400/25",
-    glow: "shadow-[0_0_8px_rgba(249,115,22,0.15)]",
-    extra: "",
-  },
-  D: {
-    bg: "bg-red-500/15",
-    text: "text-red-400",
-    border: "border-red-400/25",
-    glow: "shadow-[0_0_8px_rgba(239,68,68,0.15)]",
-    extra: "",
-  },
+const SIZE: Record<Size, { box: string; text: string }> = {
+  sm: { box: "h-5 min-w-[22px] px-1", text: "text-[10px]" },
+  md: { box: "h-6 min-w-[28px] px-1.5", text: "text-xs" },
+  lg: { box: "h-10 min-w-[44px] px-2", text: "text-lg" },
 };
 
-const FALLBACK_STYLE = {
-  bg: "bg-gray-500/15",
-  text: "text-gray-400",
-  border: "border-gray-500/25",
-  glow: "",
-  extra: "",
+// Dark ink color used on colored backgrounds so text stays readable
+// regardless of theme. Explicit near-black (not `text-foreground`).
+const INK = "text-[hsl(0_0%_8%)]";
+
+const TIER_CLASSES: Record<Grade, string> = {
+  // ── S: trophy. Yellow fill + dark ink + heavy shadow.
+  S: [
+    "relative bg-gradient-to-b from-accent to-[hsl(44_97%_68%)]",
+    INK,
+    "font-black",
+    "border-[2px] border-[hsl(0_0%_12%)]",
+    "rounded-md",
+    "shadow-[0_0_0_2px_hsl(var(--accent)/0.35),_0_6px_18px_-4px_hsl(var(--accent)/0.55),_0_2px_0_0_hsl(0_0%_12%)]",
+    "ring-1 ring-white/60 ring-inset",
+  ].join(" "),
+
+  // ── A: strong lime, dark ink.
+  A: [
+    "bg-primary",
+    INK,
+    "font-extrabold",
+    "border-[1.5px] border-[hsl(0_0%_12%)]",
+    "rounded-md",
+    "shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.55),_0_1px_0_0_hsl(0_0%_12%)]",
+  ].join(" "),
+
+  // ── B: pink fill, dark ink.
+  B: [
+    "bg-secondary",
+    INK,
+    "font-bold",
+    "border border-[hsl(0_0%_20%)]",
+    "rounded-md",
+  ].join(" "),
+
+  // ── C: neutral — flips via tokens.
+  C: [
+    "bg-foreground/10",
+    "text-foreground/80",
+    "font-semibold",
+    "border border-foreground/25",
+    "rounded-md",
+    "backdrop-blur-sm",
+  ].join(" "),
+
+  // ── D: muted, buried.
+  D: [
+    "bg-foreground/[0.06]",
+    "text-foreground/45",
+    "font-medium",
+    "border border-foreground/15",
+    "rounded-md",
+  ].join(" "),
 };
 
-const SIZE_CLASSES: Record<Size, string> = {
-  sm: "px-2 py-0.5 text-xs min-w-[28px] text-center",
-  md: "px-3 py-1 text-sm min-w-[36px] text-center",
-  lg: "px-4 py-1.5 text-lg min-w-[48px] text-center font-black",
-};
+const FALLBACK =
+  "bg-foreground/10 text-foreground/50 font-semibold border border-foreground/20 rounded-md";
 
 export default function GradeBadge({ grade, size = "md" }: GradeBadgeProps) {
   const g = (grade || "?").toUpperCase().charAt(0) as Grade;
-  const style = GRADE_STYLES[g] || FALLBACK_STYLE;
-  const sizeClass = SIZE_CLASSES[size];
+  const tier = TIER_CLASSES[g] || FALLBACK;
+  const s = SIZE[size];
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full font-bold tracking-wide border ${style.bg} ${style.text} ${style.border} ${style.glow} ${style.extra} ${sizeClass}`}
-      style={size === "lg" ? { fontSize: "1.1rem", letterSpacing: "0.05em" } : {}}
+      className={cn(
+        "inline-flex items-center justify-center uppercase tracking-wider",
+        s.box,
+        s.text,
+        tier
+      )}
     >
       {grade || "?"}
     </span>

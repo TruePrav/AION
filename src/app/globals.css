@@ -2,52 +2,529 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #050810;
-  color: #e2e8f0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+/* ════════════════════════════════════════════════════════════════
+   Oracle Design System — BRUTALIST
+   - Cream background · pure black borders/text · flat color blocks
+   - Thick (3px) borders · hard offset shadows · sharp corners
+   - All colors behind tokens — swap palette by editing :root only
+   ════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    --background: #050810;
-    --foreground: #e2e8f0;
+    /* ── Surfaces ── */
+    --background: 45 38% 93%;         /* #f5f0e8 cream paper */
+    --foreground: 0 0% 0%;            /* pure black text */
+
+    --card: 0 0% 100%;                /* white */
+    --card-foreground: 0 0% 0%;
+    --card-muted: 45 30% 96%;         /* faintly tinted off-white */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --muted: 45 30% 88%;              /* subtle gray-cream for table row hover */
+    --muted-foreground: 0 0% 32%;     /* dark gray — secondary text */
+
+    --border: 0 0% 0%;                /* pure black borders always */
+    --input: 0 0% 0%;
+    --ring: 83 81% 58%;               /* lime focus */
+
+    /* Profit / loss override — must stay dark enough on cream to be legible */
+    --profit-text: 120 70% 28%;
+    --loss-text: 0 75% 42%;
+
+    /* ── Brand palette (easy to swap) ── */
+    --primary: 83 81% 58%;            /* #a3e635 lime-400 — main action */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 330 81% 86%;         /* #fbcfe8 pink-200 */
+    --secondary-foreground: 0 0% 0%;
+
+    --accent: 54 97% 77%;             /* #fef08a yellow-200 */
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 93% 73%;         /* #fca5a5 red-300 */
+    --destructive-foreground: 0 0% 0%;
+
+    /* ── Semantic P/L (brutalist fills, not tints) ── */
+    --profit: 83 81% 58%;             /* lime-400 for wins */
+    --loss:   0 93% 65%;              /* red-400 for losses */
+
+    /* ── Structural tokens ── */
+    --radius: 0;                      /* sharp corners everywhere */
+    --brutal-border: 3px;
+    --brutal-border-sm: 2px;
+    --brutal-shadow: 6px 6px 0 0 hsl(var(--border));
+    --brutal-shadow-sm: 4px 4px 0 0 hsl(var(--border));
+    --brutal-shadow-xs: 2px 2px 0 0 hsl(var(--border));
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     Dark mode — override the CSS vars via a .dark class on <html>.
+     All downstream components that use text-foreground / bg-card /
+     border / etc. flip automatically.
+     ════════════════════════════════════════════════════════════════ */
+  .dark {
+    --background: 28 14% 8%;          /* deep warm near-black */
+    --foreground: 40 20% 96%;         /* warm white */
+
+    --card: 30 10% 14%;
+    --card-foreground: 40 20% 96%;
+    --card-muted: 30 8% 18%;
+
+    --popover: 30 10% 14%;
+    --popover-foreground: 40 20% 96%;
+
+    --muted: 30 8% 16%;
+    --muted-foreground: 40 10% 68%;
+
+    --border: 0 0% 100%;              /* white borders in dark */
+    --input: 0 0% 100%;
+
+    /* Profit / loss tuned for dark bg — brighter */
+    --profit-text: 83 81% 58%;
+    --loss-text: 0 93% 68%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  .tabular-nums, .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Brutalist scrollbar — chunky and black */
+  ::-webkit-scrollbar { width: 14px; height: 14px; }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border-left: 3px solid hsl(var(--border));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border: 3px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)); }
+
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--foreground));
   }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #080d18; }
-::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #334155; }
+/* ════════════════════════════════════════════════════════════════
+   Brutalist building blocks — reusable utility classes
+   ════════════════════════════════════════════════════════════════ */
 
-/* Gradient text — subtle, not overpowering */
-.gradient-text {
-  background: linear-gradient(90deg, #10b981, #34d399);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.brutal-box {
+  background: hsl(var(--card));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow);
 }
 
-/* Dark terminal-style background with subtle grid */
-.gradient-mesh {
-  background:
-    linear-gradient(to bottom, #050810 0%, #060b14 100%),
-    repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(16,185,129,0.015) 50px, rgba(16,185,129,0.015) 51px),
-    repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(16,185,129,0.015) 50px, rgba(16,185,129,0.015) 51px);
+.brutal-box-sm {
+  background: hsl(var(--card));
+  border: var(--brutal-border-sm) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow-sm);
 }
 
-/* Glass card — darker, more subtle */
-.glass-card {
-  background: rgba(8, 13, 24, 0.8);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+.brutal-box-flat {
+  background: hsl(var(--card));
+  border: var(--brutal-border) solid hsl(var(--border));
 }
 
-/* Subtle glow on focus/active states */
-.focus-glow:focus-visible {
+.brutal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow-sm);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 0.625rem 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+.brutal-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--brutal-shadow-xs);
+}
+.brutal-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 hsl(var(--border));
+}
+
+.brutal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: var(--brutal-border-sm) solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--foreground));
+}
+
+.brutal-input {
+  background: hsl(var(--card));
+  border: var(--brutal-border-sm) solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0.5rem 0.75rem;
+}
+.brutal-input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+  box-shadow: var(--brutal-shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Glass building blocks — soft modern surface used on all pages.
+   Each class has a .dark override so the same markup flips to
+   dark mode automatically when .dark is set on <html>.
+   ════════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: hsl(0 0% 100% / 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid hsl(0 0% 0% / 0.08);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.6) inset,
+    0 12px 32px -16px hsl(0 0% 0% / 0.18),
+    0 2px 6px -2px hsl(0 0% 0% / 0.06);
+}
+.dark .glass-card {
+  background: hsl(0 0% 100% / 0.05);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border-color: hsl(0 0% 100% / 0.12);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.08) inset,
+    0 0 0 1px hsl(0 0% 100% / 0.03),
+    0 24px 60px -24px hsl(0 0% 0% / 0.7),
+    0 8px 24px -12px hsl(0 0% 0% / 0.4);
+}
+
+.glass-card-sm {
+  background: hsl(0 0% 100% / 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid hsl(0 0% 0% / 0.08);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.6) inset,
+    0 4px 16px -8px hsl(0 0% 0% / 0.1);
+}
+.dark .glass-card-sm {
+  background: hsl(0 0% 100% / 0.04);
+  backdrop-filter: blur(20px) saturate(150%);
+  border-color: hsl(0 0% 100% / 0.1);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.06) inset,
+    0 8px 24px -12px hsl(0 0% 0% / 0.5);
+}
+
+.glass-panel {
+  background: hsl(0 0% 100% / 0.55);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid hsl(0 0% 0% / 0.06);
+  border-radius: 0.875rem;
+}
+.dark .glass-panel {
+  background: hsl(0 0% 100% / 0.035);
+  border-color: hsl(0 0% 100% / 0.08);
+}
+
+.glass-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: hsl(0 0% 100% / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(0 0% 0% / 0.1);
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: hsl(var(--foreground));
+}
+.dark .glass-chip {
+  background: hsl(0 0% 100% / 0.08);
+  border-color: hsl(0 0% 100% / 0.14);
+}
+
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: hsl(0 0% 100% / 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(0 0% 0% / 0.12);
+  border-radius: 0.625rem;
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.8) inset,
+    0 2px 8px -2px hsl(0 0% 0% / 0.08);
+  font-weight: 600;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+.glass-btn:hover {
+  background: hsl(0 0% 100% / 0.9);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.8) inset,
+    0 6px 16px -4px hsl(0 0% 0% / 0.12);
+}
+.glass-btn:active {
+  transform: translateY(0);
+}
+.dark .glass-btn {
+  background: hsl(0 0% 100% / 0.06);
+  border-color: hsl(0 0% 100% / 0.14);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.08) inset,
+    0 4px 14px -4px hsl(0 0% 0% / 0.5);
+}
+.dark .glass-btn:hover {
+  background: hsl(0 0% 100% / 0.1);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.1) inset,
+    0 8px 20px -4px hsl(0 0% 0% / 0.6);
+}
+
+.glass-btn-primary {
+  background: hsl(var(--primary) / 0.92);
+  border-color: hsl(0 0% 0% / 0.2);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.5) inset,
+    0 4px 16px -4px hsl(var(--primary) / 0.4),
+    0 2px 6px -2px hsl(0 0% 0% / 0.08);
+}
+.glass-btn-primary:hover {
+  background: hsl(var(--primary));
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.6) inset,
+    0 8px 20px -4px hsl(var(--primary) / 0.5);
+}
+
+.glass-input {
+  background: hsl(0 0% 100% / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(0 0% 0% / 0.12);
+  border-radius: 0.5rem;
+  color: hsl(var(--foreground));
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.glass-input:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+}
+.dark .glass-input {
+  background: hsl(0 0% 100% / 0.05);
+  border-color: hsl(0 0% 100% / 0.14);
+}
+
+/* Ambient page background for glass pages — softer radial blooms */
+.glass-bg {
+  position: relative;
+  background: hsl(var(--background));
+  min-height: 100vh;
+}
+.glass-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 15% 10%, hsl(var(--primary) / 0.28), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, hsl(var(--secondary) / 0.32), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 100%, hsl(var(--accent) / 0.28), transparent 60%);
+}
+.glass-bg > * { position: relative; z-index: 1; }
+
+.dark .glass-bg::before {
+  background-image:
+    radial-gradient(ellipse 55% 45% at 12% 8%, hsl(var(--primary) / 0.22), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 88% 18%, hsl(var(--secondary) / 0.18), transparent 65%),
+    radial-gradient(ellipse 65% 50% at 50% 100%, hsl(var(--accent) / 0.15), transparent 65%);
+}
+
+/* Semantic text tokens that flip per theme for max legibility */
+.text-profit { color: hsl(var(--profit-text)); }
+.text-loss { color: hsl(var(--loss-text)); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   Legacy utility class mappings — kept so older pages don't break
+   ════════════════════════════════════════════════════════════════ */
+
+.page-bg {
+  background: hsl(var(--background));
+  background-image:
+    radial-gradient(circle at 10% 10%, hsl(var(--primary) / 0.35), transparent 40%),
+    radial-gradient(circle at 90% 90%, hsl(var(--accent) / 0.35), transparent 40%);
+}
+
+.card {
+  background: hsl(var(--card));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow);
+}
+.card:hover {
+  border-color: hsl(var(--border));
+}
+
+.emerald-card {
+  background: hsl(var(--primary));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow);
+}
+
+.accent-text {
+  color: hsl(var(--foreground));
+  background: hsl(var(--primary));
+  padding: 0 0.25rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--border));
+}
+
+.navbar-border {
+  border-bottom: var(--brutal-border) solid hsl(var(--border));
+}
+
+.table-row-stripe:hover {
+  background: hsl(var(--primary) / 0.25);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Form controls
+   ════════════════════════════════════════════════════════════════ */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--border));
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--border));
+  cursor: pointer;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Animations — still restrained
+   ════════════════════════════════════════════════════════════════ */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, hsl(var(--muted) / 0.5) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* Legacy glow utilities — repurposed as flat accent fills */
+.card-glow-emerald {
+  background: hsl(var(--primary));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow);
+}
+.card-glow-cyan {
+  background: hsl(var(--secondary));
+  border: var(--brutal-border) solid hsl(var(--border));
+  box-shadow: var(--brutal-shadow);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Typography utilities
+   ════════════════════════════════════════════════════════════════ */
+
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+
+:focus-visible {
+  outline: 3px solid hsl(var(--border));
+  outline-offset: 2px;
 }

@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch, type Status, type DiscoveryToken, type ScoutResult, type Trade } from "@/lib/api";
-import { fmtUsd, fmtPct, truncAddr } from "@/lib/utils";
+import { fmtUsd, fmtPct, truncAddr, cn } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
 import GradeBadge from "@/components/GradeBadge";
-import Spinner from "@/components/Spinner";
+import { ArrowRight, Activity, Wallet, TrendingUp, Trophy, BarChart3, Send, Zap, AlertTriangle } from "lucide-react";
 
 export default function HomePage() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -14,6 +14,7 @@ export default function HomePage() {
   const [scout, setScout] = useState<ScoutResult | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -28,187 +29,235 @@ export default function HomePage() {
         setTokens(t);
         setScout(sc);
         setTrades(tr);
-      } catch { /* show empty state */ }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to connect to Oracle API");
+      }
       setLoading(false);
     };
     load();
   }, []);
 
-  if (loading) return <Spinner />;
+  if (loading) {
+    return (
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
+        <div className="h-10 w-10 rounded-full border-2 border-foreground/20 border-t-primary animate-spin mb-4" />
+        <p className="text-sm text-foreground/60">Loading Oracle…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center px-6">
+        <div className="glass-card p-6 max-w-md">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <p className="text-sm font-semibold text-foreground">Oracle API unreachable</p>
+          </div>
+          <p className="text-xs text-foreground/70 leading-relaxed">{error}</p>
+          <p className="text-[11px] text-foreground/50 mt-3">
+            Check that <code className="inline-block rounded bg-foreground/5 border border-foreground/10 px-1.5 py-0.5 font-mono">NEXT_PUBLIC_API_URL</code> is set correctly.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const topTokens = [...tokens].sort((a, b) => b.net_flow_7d - a.net_flow_7d).slice(0, 6);
   const closedTrades = trades.filter((t) => t.status === "closed").slice(0, 5);
 
   return (
-    <div className="gradient-mesh min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
-
-        {/* Hero */}
-        <div className="relative text-center py-6 space-y-5 overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-96 h-40 bg-gradient-to-b from-emerald-500/10 to-transparent blur-3xl rounded-full" />
+    <div className="glass-bg min-h-screen">
+      <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
+        {/* ══ HERO ══ */}
+        <section className="py-6 space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 border border-primary/40 px-3 py-1 backdrop-blur-md">
+            <Zap className="h-3.5 w-3.5 text-foreground" fill="currentColor" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">
+              Live Tracking
+            </span>
           </div>
-          <div className="relative space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-medium text-emerald-400">Live &middot; Nansen Smart Money Tracking</span>
-            </div>
-            <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-tight">
-              <span className="text-white">Smart Money</span>
-              <br />
-              <span className="gradient-text">Intelligence</span>
-            </h1>
-            <p className="text-base text-gray-400 max-w-xl mx-auto leading-relaxed">
-              Oracle tracks Nansen&rsquo;s labeled wallets, grades their performance, and surfaces real alpha &mdash; before the crowd catches on.
-            </p>
-            <div className="flex justify-center gap-3 pt-1 flex-wrap">
-              <Link
-                href="/discovery"
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-7 py-3 text-sm font-bold text-black transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-400/30 hover:scale-[1.02]"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
-                </svg>
-                View Discovery
-              </Link>
-              <a
-                href="https://t.me/OracleAITradingBot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-7 py-3 text-sm font-semibold text-gray-200 transition-all duration-200 hover:border-white/20"
-              >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                </svg>
-                Get Telegram Bot
-              </a>
-            </div>
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] max-w-4xl text-foreground">
+            Smart Money.
+            <br />
+            <span className="text-foreground/50">Decoded.</span>
+          </h1>
+          <p className="text-base text-foreground/70 max-w-xl leading-relaxed">
+            Oracle hunts the wallets that move markets. We grade them. We track them. You eat.
+          </p>
+          <div className="flex gap-3 pt-2 flex-wrap">
+            <Link
+              href="/discovery"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary/90 border border-foreground/15 px-5 py-2.5 text-sm font-bold text-[hsl(0_0%_8%)] hover:bg-primary transition-colors shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.45)]"
+            >
+              View Discovery <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            </Link>
+            <a
+              href="https://t.me/OracleAITradingBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl glass-btn px-5 py-2.5 text-sm font-bold"
+            >
+              <Send className="h-4 w-4" strokeWidth={2.5} /> Telegram Bot
+            </a>
           </div>
-        </div>
+        </section>
 
-        {/* Stats Bar */}
+        {/* ══ STATS BAR ══ */}
         {status && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <StatCard label="Tokens Tracked" value={String(status.tokens_in_run)} accent={false} />
-            <StatCard label="Wallets Monitored" value={String(status.wallets_graded)} accent={false} />
-            <StatCard label="Total Trades" value={String(status.total_trades)} accent={false} />
-            <StatCard label="Win Rate" value={status.win_rate > 0 ? fmtPct(status.win_rate) : "\u2014"} accent={false} />
-            <StatCard label="Total PnL" value={status.total_pnl !== 0 ? fmtUsd(status.total_pnl) : "\u2014"} accent={false} />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <StatCard
+              label="Tokens"
+              value={String(status.tokens_in_run)}
+              icon={<Activity className="h-4 w-4" />}
+              tone="white"
+            />
+            <StatCard
+              label="Wallets"
+              value={String(status.wallets_graded)}
+              icon={<Wallet className="h-4 w-4" />}
+              tone="pink"
+            />
+            <StatCard
+              label="Trades"
+              value={String(status.total_trades)}
+              icon={<BarChart3 className="h-4 w-4" />}
+              tone="white"
+            />
+            <StatCard
+              label="Win Rate"
+              value={status.win_rate > 0 ? fmtPct(status.win_rate) : "—"}
+              icon={<Trophy className="h-4 w-4" />}
+              tone="yellow"
+            />
+            <StatCard
+              label="Total PnL"
+              value={status.total_pnl !== 0 ? fmtUsd(status.total_pnl) : "—"}
+              icon={<TrendingUp className="h-4 w-4" />}
+              tone={status.total_pnl >= 0 ? "lime" : "red"}
+            />
           </div>
         )}
 
-        {/* Hot Tokens + Top Wallets */}
+        {/* ══ HOT TOKENS + TOP WALLETS ══ */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Hot Tokens */}
-          <div className="glass-card p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <h2 className="text-base font-bold text-white">Tokens Smart Money Is Buying</h2>
-              </div>
-              <Link href="/discovery" className="text-xs text-emerald-400/70 hover:text-emerald-400 font-medium transition-colors flex items-center gap-1">
-                View All
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-            {topTokens.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-2 text-center">
-                <div className="text-3xl opacity-30">&#128202;</div>
-                <p className="text-sm text-gray-500">No discovery data yet.</p>
-                <p className="text-xs text-gray-600">Run <span className="text-emerald-400/70">/discover</span> on Telegram to start.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {topTokens.map((t) => (
-                  <div key={t.address} className="flex items-center justify-between rounded-xl bg-gray-800/40 p-4 hover:bg-gray-800/70 transition-all duration-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <GradeBadge grade={t.accumulation.grade as "S"|"A"|"B"|"C"|"D"} size="sm" />
-                      <div className="min-w-0">
-                        <a
-                          href={`https://app.nansen.ai/token/${t.address}?chain=${t.chain}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-white/90 hover:text-emerald-400 transition-colors text-sm truncate block"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {t.symbol}
-                        </a>
-                        <div className="text-xs text-gray-500">MCap {fmtUsd(t.market_cap)}</div>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0 ml-3">
-                      <div className={`font-mono font-bold text-sm ${t.net_flow_7d >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {t.net_flow_7d >= 0 ? "+" : ""}{fmtUsd(t.net_flow_7d)}
-                      </div>
-                      <div className="text-[10px] text-gray-600">7d SM flow</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Top Wallets */}
-          <div className="glass-card p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <h2 className="text-base font-bold text-white">Highest Scoring Wallets</h2>
-              </div>
-              <Link href="/wallets" className="text-xs text-emerald-400/70 hover:text-emerald-400 font-medium transition-colors flex items-center gap-1">
-                View All
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-            {!scout ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-2 text-center">
-                <div className="text-3xl opacity-30">&#128269;</div>
-                <p className="text-sm text-gray-500">No scout data yet.</p>
-                <p className="text-xs text-gray-600">Run <span className="text-emerald-400/70">/scout</span> on Telegram to find top wallets.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Link
-                  href={`/wallet/${scout.wallet.address}`}
-                  className="flex items-center justify-between rounded-xl bg-gray-800/40 p-4 hover:bg-emerald-500/5 hover:border hover:border-emerald-500/20 transition-all duration-200 group"
+          <Panel
+            title="Smart Money Is Buying"
+            href="/discovery"
+            empty={topTokens.length === 0}
+            emptyText="No discovery data yet."
+            emptyHint="Run /discover on Telegram to start."
+          >
+            <div className="space-y-2">
+              {topTokens.map((t) => (
+                <a
+                  key={t.address}
+                  href={`https://dexscreener.com/solana/${t.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] border border-foreground/10 p-3 hover:bg-foreground/[0.08] transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <GradeBadge grade={scout.wallet.grade as "S"|"A"|"B"|"C"|"D"} size="lg" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.address}.png`}
+                      alt=""
+                      className="h-8 w-8 rounded-lg bg-foreground/5 border border-foreground/10 flex-shrink-0"
+                      onError={(e) => {
+                        const el = e.target as HTMLImageElement;
+                        el.src = "";
+                      }}
+                    />
+                    <GradeBadge grade={t.accumulation.grade as "S" | "A" | "B" | "C" | "D"} size="sm" />
                     <div className="min-w-0">
-                      <div className="font-semibold text-white/90 group-hover:text-emerald-400 transition-colors text-sm truncate">
-                        {scout.wallet.label || truncAddr(scout.wallet.address)}
+                      <div className="font-bold text-foreground text-sm truncate">
+                        {t.symbol}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        Score <span className="text-white font-mono">{scout.wallet.score}</span> &middot; {scout.wallet.win_rate > 0 ? fmtPct(scout.wallet.win_rate) : "\u2014"} win rate
+                      <div className="text-[11px] font-mono text-foreground/55 tabular-nums">
+                        MCAP {fmtUsd(t.market_cap)}
                       </div>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 ml-3">
-                    <div className={`font-mono font-bold text-sm ${scout.wallet.total_pnl_realized >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {scout.wallet.total_pnl_realized >= 0 ? "+" : ""}{fmtUsd(scout.wallet.total_pnl_realized)}
+                    <div
+                      className={cn(
+                        "inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums",
+                        t.net_flow_7d >= 0
+                          ? "text-profit bg-profit/15"
+                          : "text-loss bg-loss/15"
+                      )}
+                    >
+                      {t.net_flow_7d >= 0 ? "+" : ""}
+                      {fmtUsd(t.net_flow_7d)}
                     </div>
-                    <div className="text-[10px] text-gray-600">Realized PnL</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-foreground/45 mt-0.5">
+                      7D SM Flow
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel
+            title="Highest Scoring Wallets"
+            href="/wallets"
+            empty={!scout}
+            emptyText="No scout data yet."
+            emptyHint="Run /scout on Telegram to find top wallets."
+          >
+            {scout && (
+              <div className="space-y-4">
+                <Link
+                  href={`/wallet/${scout.wallet.address}`}
+                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] border border-foreground/10 p-4 hover:bg-foreground/[0.08] transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <GradeBadge grade={scout.wallet.grade as "S" | "A" | "B" | "C" | "D"} size="lg" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-foreground text-sm truncate">
+                        {scout.wallet.label || truncAddr(scout.wallet.address)}
+                      </div>
+                      <div className="text-[11px] text-foreground/55 tabular-nums font-mono">
+                        SCORE <span className="font-bold text-foreground/80">{scout.wallet.score}</span> ·{" "}
+                        {scout.wallet.win_rate > 0 ? fmtPct(scout.wallet.win_rate) : "—"} WIN
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-3">
+                    <div
+                      className={cn(
+                        "inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums",
+                        scout.wallet.total_pnl_realized >= 0
+                          ? "text-profit bg-profit/15"
+                          : "text-loss bg-loss/15"
+                      )}
+                    >
+                      {scout.wallet.total_pnl_realized >= 0 ? "+" : ""}
+                      {fmtUsd(scout.wallet.total_pnl_realized)}
+                    </div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-foreground/45 mt-0.5">
+                      Realized
+                    </div>
                   </div>
                 </Link>
                 {scout.recent_buys && scout.recent_buys.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-semibold text-gray-600 mb-2 uppercase tracking-widest flex items-center gap-1.5">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                    <p className="text-[10px] font-bold text-foreground/50 mb-2 uppercase tracking-wider">
                       Latest Buys
                     </p>
                     <div className="space-y-1.5">
                       {scout.recent_buys.slice(0, 3).map((b, i) => (
-                        <div key={i} className="flex items-center justify-between rounded-lg bg-gray-800/20 px-3 py-2 text-sm">
-                          <span className="text-gray-300 font-medium text-xs">{b.token || truncAddr(b.token_address || "")}</span>
-                          <div className="text-right flex items-center gap-2">
-                            <span className="font-mono text-gray-400 text-xs">{fmtUsd(b.value)}</span>
-                          </div>
+                        <div
+                          key={i}
+                          className="flex items-center justify-between rounded-lg bg-foreground/[0.035] border border-foreground/10 px-3 py-2 text-xs"
+                        >
+                          <span className="font-semibold text-foreground">
+                            {b.token || truncAddr(b.token_address || "")}
+                          </span>
+                          <span className="font-mono font-bold text-foreground/80 tabular-nums">
+                            {fmtUsd(b.value)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -216,91 +265,130 @@ export default function HomePage() {
                 )}
               </div>
             )}
-          </div>
+          </Panel>
         </div>
 
-        {/* Recent Trades */}
-        <div className="glass-card p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-              <h2 className="text-base font-bold text-white">Recent Trade Results</h2>
-            </div>
-            <Link href="/trades" className="text-xs text-emerald-400/70 hover:text-emerald-400 font-medium transition-colors flex items-center gap-1">
-              View All
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-          {closedTrades.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="text-3xl opacity-30 mb-2">&#128203;</div>
-              <p className="text-sm text-gray-500">No closed trades yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/5 text-gray-500 text-[11px] uppercase tracking-wider">
-                    <th className="text-left py-2 pr-4 font-medium">Token</th>
-                    <th className="text-right py-2 px-3 font-medium">Amount</th>
-                    <th className="text-right py-2 px-3 font-medium">Entry</th>
-                    <th className="text-right py-2 px-3 font-medium">PnL %</th>
-                    <th className="text-right py-2 pl-4 font-medium">Result</th>
+        {/* ══ RECENT TRADES ══ */}
+        <Panel
+          title="Recent Trade Results"
+          href="/trades"
+          empty={closedTrades.length === 0}
+          emptyText="No closed trades yet."
+        >
+          <div className="overflow-x-auto rounded-xl border border-foreground/10">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-foreground/10 bg-foreground/[0.04] text-foreground/50 text-[10px] uppercase tracking-wider">
+                  <th className="text-left py-2.5 px-4 font-semibold">Token</th>
+                  <th className="text-right py-2.5 px-3 font-semibold">Amount</th>
+                  <th className="text-right py-2.5 px-3 font-semibold">Entry</th>
+                  <th className="text-right py-2.5 px-3 font-semibold">PnL %</th>
+                  <th className="text-right py-2.5 px-4 font-semibold">Result</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-foreground/[0.07]">
+                {closedTrades.map((t) => (
+                  <tr key={t.id} className="hover:bg-foreground/[0.04] transition-colors">
+                    <td className="py-3 px-4">
+                      <span className="font-semibold text-foreground text-xs">{truncAddr(t.token)}</span>
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono font-semibold text-foreground/80 text-xs tabular-nums">
+                      {fmtUsd(t.size_usdc)}
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono text-foreground/60 text-xs tabular-nums">
+                      {t.entry_price > 0 ? `$${t.entry_price.toFixed(4)}` : "—"}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums",
+                          (t.pnl_pct || 0) >= 0
+                            ? "text-profit bg-profit/15"
+                            : "text-loss bg-loss/15"
+                        )}
+                      >
+                        {t.pnl_pct !== null ? `${(t.pnl_pct || 0) >= 0 ? "+" : ""}${t.pnl_pct.toFixed(2)}%` : "—"}
+                      </span>
+                    </td>
+                    <td
+                      className={cn(
+                        "py-3 px-4 text-right font-mono text-xs font-bold tabular-nums",
+                        (t.pnl_usd || 0) >= 0 ? "text-profit" : "text-loss"
+                      )}
+                    >
+                      {(t.pnl_usd || 0) >= 0 ? "+" : ""}
+                      {fmtUsd(t.pnl_usd || 0)}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {closedTrades.map((t) => (
-                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-3.5 pr-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-gray-300">{truncAddr(t.token)}</span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-3 text-right font-mono text-gray-400 text-xs">{fmtUsd(t.size_usdc)}</td>
-                      <td className="py-3.5 px-3 text-right font-mono text-gray-500 text-xs">
-                        {t.entry_price > 0 ? `$${t.entry_price.toFixed(4)}` : "\u2014"}
-                      </td>
-                      <td className={`py-3.5 px-3 text-right font-mono font-semibold text-sm ${(t.pnl_pct || 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {t.pnl_pct !== null ? `${(t.pnl_pct || 0) >= 0 ? "+" : ""}${t.pnl_pct.toFixed(2)}%` : "\u2014"}
-                      </td>
-                      <td className="py-3.5 pl-4 text-right">
-                        <span className={`font-bold text-sm ${(t.pnl_usd || 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {(t.pnl_usd || 0) >= 0 ? "+" : ""}{fmtUsd(t.pnl_usd || 0)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* CTA Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-emerald-500/8 to-transparent p-8 text-center">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent pointer-events-none" />
-          <div className="relative">
-            <h3 className="text-xl font-black text-white mb-2 tracking-tight">Ready to find alpha?</h3>
-            <p className="text-gray-400 text-sm mb-5 max-w-md mx-auto">
-              Add the Oracle bot to your Telegram group and get real-time alerts when top wallets trade.
-            </p>
-            <a
-              href="https://t.me/OracleAITradingBot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-7 py-3 text-sm font-bold text-black transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:scale-[1.02]"
-            >
-              Try the Bot Free
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </a>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </Panel>
 
+        {/* ══ CTA ══ */}
+        <section className="glass-card p-10 text-center">
+          <h3 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
+            Ready to find alpha?
+          </h3>
+          <p className="text-sm text-foreground/70 mb-6 max-w-md mx-auto">
+            Add the Oracle bot to your Telegram and get real-time alerts when top wallets trade.
+          </p>
+          <a
+            href="https://t.me/OracleAITradingBot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary/90 border border-foreground/15 px-5 py-2.5 text-sm font-bold text-[hsl(0_0%_8%)] hover:bg-primary transition-colors shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.45)]"
+          >
+            <Send className="h-4 w-4" strokeWidth={2.5} />
+            Try the bot free
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </a>
+        </section>
       </div>
     </div>
+  );
+}
+
+// ── Helpers ──
+
+function Panel({
+  title,
+  href,
+  empty,
+  emptyText,
+  emptyHint,
+  children,
+}: {
+  title: string;
+  href?: string;
+  empty?: boolean;
+  emptyText?: string;
+  emptyHint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="glass-card p-6">
+      <div className="mb-5 flex items-center justify-between border-b border-foreground/10 pb-3">
+        <h2 className="text-sm font-bold text-foreground tracking-tight">{title}</h2>
+        {href && (
+          <Link
+            href={href}
+            className="inline-flex items-center gap-1 rounded-full bg-foreground/5 border border-foreground/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/70 hover:bg-foreground/10 hover:text-foreground transition-colors"
+          >
+            View all
+            <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+          </Link>
+        )}
+      </div>
+      {empty ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm font-semibold text-foreground/70">{emptyText}</p>
+          {emptyHint && <p className="text-xs text-foreground/50 mt-1">{emptyHint}</p>}
+        </div>
+      ) : (
+        children
+      )}
+    </section>
   );
 }

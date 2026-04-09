@@ -1,8 +1,37 @@
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+
+/**
+ * True on public/read-only deployments — hides admin controls (edit SL/TP,
+ * close position, copy trade, settings writes). Set NEXT_PUBLIC_READONLY_MODE=1
+ * in Vercel env to enable. Unset locally so you keep full admin access.
+ */
+export const READONLY_MODE = process.env.NEXT_PUBLIC_READONLY_MODE === "1";
 
 export async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Authenticated POST — routes through the server-side proxy at /api/admin/*
+ * so the Oracle API key stays on the server and never reaches the browser.
+ *
+ * - Local dev with ORACLE_API_KEY + ADMIN_ALLOW_MUTATIONS=1 in .env.local → works
+ * - Public Vercel deploy without those envs → returns 503 (read-only mode)
+ */
+export async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  // path like "/api/positions/XYZ/targets" → proxy "/api/admin/positions/XYZ/targets"
+  const proxyPath = path.replace(/^\/api\//, "/api/admin/");
+  const res = await fetch(proxyPath, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API ${path}: ${res.status} ${text}`);
+  }
   return res.json();
 }
 
@@ -23,19 +52,14 @@ export async function copyTrade(token: {
   market_cap?: number;
   token_age_days?: number;
 }, amountUsd: number): Promise<CopyTradeResult> {
-  const res = await fetch(`${API}/api/trade/copy`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      token_address: token.address,
-      chain: token.chain,
-      amount_usd: amountUsd,
-      symbol: token.symbol,
-      market_cap: token.market_cap,
-      token_age_days: token.token_age_days,
-    }),
+  return apiPost<CopyTradeResult>("/api/trade/copy", {
+    token_address: token.address,
+    chain: token.chain,
+    amount_usd: amountUsd,
+    symbol: token.symbol,
+    market_cap: token.market_cap,
+    token_age_days: token.token_age_days,
   });
-  return res.json();
 }
 
 export interface OpenPosition {

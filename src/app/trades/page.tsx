@@ -1,51 +1,54 @@
-import fs from "fs";
-import path from "path";
+"use client";
+
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
+import { AlertTriangle, TrendingUp, BarChart3, Trophy, Activity } from "lucide-react";
 
 interface Trade {
   id: string;
   token: string;
+  symbol?: string;
   chain: string;
   side: "buy" | "sell";
-  amount_usd: number;
+  size_usdc: number;
   entry_price: number;
   exit_price: number | null;
   status: "open" | "closed" | "stopped";
-  pnl: number | null;
-  pnl_percent: number | null;
-  tx_hash: string;
+  pnl_usd: number | null;
+  pnl_pct: number | null;
+  tx_hash?: string;
   timestamp: string;
-  trigger: "discovery" | "manual" | "scout";
+  dry_run?: boolean;
+  recommended?: boolean;
+  grade?: string;
+  exit_reason?: string | null;
 }
 
-interface TradesData {
-  stats: {
-    total_trades: number;
-    win_rate: number;
-    total_pnl: number;
-    total_pnl_formatted: string;
-    best_trade_pnl: number;
-    worst_trade_pnl: number;
-  };
-  trades: Trade[];
+interface TradeStats {
+  total: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  total_pnl: number;
+  avg_profit: number;
+  avg_loss: number;
 }
 
-function readJson<T>(filename: string): T {
-  const filePath = path.join(process.cwd(), "public", "data", filename);
-  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
-}
+const CHAIN_STYLES: Record<string, string> = {
+  solana: "bg-[hsl(270_50%_50%/0.15)] border-[hsl(270_60%_55%/0.4)] text-[hsl(270_60%_40%)] dark:text-[hsl(270_80%_80%)]",
+  ethereum: "bg-[hsl(210_50%_50%/0.15)] border-[hsl(210_60%_55%/0.4)] text-[hsl(210_70%_38%)] dark:text-[hsl(210_85%_80%)]",
+  base: "bg-[hsl(220_60%_50%/0.15)] border-[hsl(220_70%_55%/0.4)] text-[hsl(220_75%_38%)] dark:text-[hsl(220_85%_80%)]",
+};
 
 function chainBadge(chain: string) {
-  const styles: Record<string, string> = {
-    solana: "bg-purple-500/10 text-purple-300 border-purple-500/20",
-    ethereum: "bg-blue-500/10 text-blue-300 border-blue-500/20",
-    base: "bg-sky-500/10 text-sky-300 border-sky-500/20",
-  };
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${
-        styles[chain] ?? "bg-gray-500/10 text-gray-400 border-gray-500/20"
-      }`}
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border",
+        CHAIN_STYLES[chain] ?? "bg-foreground/5 border-foreground/15 text-foreground/70"
+      )}
     >
       {chain}
     </span>
@@ -53,48 +56,46 @@ function chainBadge(chain: string) {
 }
 
 function sideBadge(side: "buy" | "sell") {
-  return side === "buy" ? (
-    <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-bold uppercase">
-      Buy
-    </span>
-  ) : (
-    <span className="inline-flex items-center rounded-full bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-0.5 text-xs font-bold uppercase">
-      Sell
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border",
+        side === "buy"
+          ? "bg-profit/15 text-profit border-profit/40"
+          : "bg-loss/15 text-loss border-loss/40"
+      )}
+    >
+      {side}
     </span>
   );
 }
 
 function statusBadge(status: "open" | "closed" | "stopped") {
-  const styles: Record<string, { bg: string; text: string; border: string }> = {
-    open: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20" },
-    closed: { bg: "bg-gray-500/10", text: "text-gray-400", border: "border-gray-500/20" },
-    stopped: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
+  const styles: Record<string, string> = {
+    open: "bg-primary/20 text-foreground border-primary/50",
+    closed: "bg-foreground/10 text-foreground/80 border-foreground/25",
+    stopped: "bg-loss/15 text-loss border-loss/40",
   };
-  const s = styles[status];
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase border ${s.bg} ${s.text} ${s.border}`}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border",
+        styles[status]
+      )}
+    >
       {status}
-    </span>
-  );
-}
-
-function triggerBadge(trigger: "discovery" | "manual" | "scout") {
-  const styles: Record<string, { bg: string; text: string; border: string }> = {
-    discovery: { bg: "bg-purple-500/10", text: "text-purple-300", border: "border-purple-500/20" },
-    manual: { bg: "bg-gray-500/10", text: "text-gray-400", border: "border-gray-500/20" },
-    scout: { bg: "bg-blue-500/10", text: "text-blue-300", border: "border-blue-500/20" },
-  };
-  const s = styles[trigger];
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold capitalize border ${s.bg} ${s.text} ${s.border}`}>
-      {trigger}
     </span>
   );
 }
 
 function formatUsd(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function formatPrice(price: number): string {
@@ -122,152 +123,319 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+type StatusFilter = "all" | "open" | "closed" | "stopped";
+type SideFilter = "all" | "buy" | "sell";
+type TypeFilter = "all" | "live" | "dry_run";
+type SortKey = "newest" | "oldest" | "pnl_desc" | "pnl_asc" | "size_desc";
+
 export default function TradesPage() {
-  const data = readJson<TradesData>("trades.json");
-  const { stats, trades } = data;
-  const sortedTrades = [...trades].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [stats, setStats] = useState<TradeStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sideFilter, setSideFilter] = useState<SideFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [sortBy, setSortBy] = useState<SortKey>("newest");
+
+  useEffect(() => {
+    Promise.all([
+      apiFetch<Trade[]>("/api/trades").catch(() => []),
+      apiFetch<TradeStats>("/api/trades/stats").catch(() => null),
+    ])
+      .then(([t, s]) => {
+        setTrades(Array.isArray(t) ? t : []);
+        setStats(s);
+      })
+      .catch((e) => setError(e.message || "Failed to load trades"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
+        <div className="h-10 w-10 border-2 border-foreground/20 border-t-primary rounded-full animate-spin mb-4" />
+        <p className="text-sm text-foreground/60">Loading trades...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
+        <AlertTriangle className="h-8 w-8 mb-3 text-accent" />
+        <p className="text-base font-semibold text-foreground mb-1">Could not load trades</p>
+        <p className="text-sm text-foreground/60">{error}</p>
+      </div>
+    );
+  }
+
+  const filteredTrades = trades.filter((t) => {
+    if (statusFilter !== "all" && t.status !== statusFilter) return false;
+    if (sideFilter !== "all" && t.side !== sideFilter) return false;
+    if (typeFilter === "live" && t.dry_run) return false;
+    if (typeFilter === "dry_run" && !t.dry_run) return false;
+    return true;
+  });
+
+  const sortedTrades = [...filteredTrades].sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      case "pnl_desc":
+        return (b.pnl_usd ?? -Infinity) - (a.pnl_usd ?? -Infinity);
+      case "pnl_asc":
+        return (a.pnl_usd ?? Infinity) - (b.pnl_usd ?? Infinity);
+      case "size_desc":
+        return (b.size_usdc || 0) - (a.size_usdc || 0);
+      case "newest":
+      default:
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    }
+  });
 
   return (
-    <div className="gradient-mesh min-h-screen">
+    <div className="glass-bg min-h-screen">
       <div className="mx-auto max-w-7xl px-6 py-10 space-y-8">
-
         {/* ── Page Header ── */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-gray-900/80 to-gray-900/40 p-8 backdrop-blur-sm">
-          <div className="absolute right-0 top-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400 pulse-dot" style={{animationDelay: "0.5s"}} />
-              <span className="text-xs font-medium text-blue-400/70 uppercase tracking-wider">Execution History</span>
-            </div>
-            <h1 className="text-4xl font-black text-white tracking-tight">Trades</h1>
-            <p className="text-sm text-gray-500 mt-1">Performance metrics and trade history</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Trades</h1>
+          <p className="text-sm text-foreground/60 mt-1">Performance metrics and trade history</p>
         </div>
 
         {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            label="Total Trades"
-            value={stats.total_trades}
-            icon={
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-              </svg>
-            }
+        {stats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Total trades"
+              value={String(stats.total || sortedTrades.length)}
+              icon={<BarChart3 className="h-3.5 w-3.5" />}
+              tone="white"
+            />
+            <StatCard
+              label="Win rate"
+              value={stats.win_rate > 0 ? `${(stats.win_rate * 100).toFixed(0)}%` : "—"}
+              icon={<Trophy className="h-3.5 w-3.5" />}
+              tone="pink"
+            />
+            <StatCard
+              label="Total PnL"
+              value={stats.total_pnl !== 0 ? formatUsd(stats.total_pnl) : "—"}
+              icon={<TrendingUp className="h-3.5 w-3.5" />}
+              accent={stats.total_pnl >= 0}
+              tone={stats.total_pnl >= 0 ? "lime" : "red"}
+            />
+            <StatCard
+              label="W / L"
+              value={`${stats.wins}W / ${stats.losses}L`}
+              icon={<Activity className="h-3.5 w-3.5" />}
+              tone="white"
+            />
+          </div>
+        )}
+
+        {/* ── Filters ── */}
+        <div className="glass-card p-4 flex flex-wrap items-center gap-4">
+          <FilterGroup
+            label="Status"
+            options={[
+              { key: "all", label: "All" },
+              { key: "open", label: "Open" },
+              { key: "closed", label: "Closed" },
+              { key: "stopped", label: "Stopped" },
+            ]}
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as StatusFilter)}
           />
-          <StatCard
-            label="Win Rate"
-            value={`${(stats.win_rate * 100).toFixed(0)}%`}
-            icon={
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
+          <FilterGroup
+            label="Side"
+            options={[
+              { key: "all", label: "All" },
+              { key: "buy", label: "Buy" },
+              { key: "sell", label: "Sell" },
+            ]}
+            value={sideFilter}
+            onChange={(v) => setSideFilter(v as SideFilter)}
           />
-          <StatCard
-            label="Total PnL"
-            value={stats.total_pnl_formatted}
-            accent={stats.total_pnl >= 0}
-            icon={
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-              </svg>
-            }
+          <FilterGroup
+            label="Type"
+            options={[
+              { key: "all", label: "All" },
+              { key: "live", label: "Live" },
+              { key: "dry_run", label: "Dry" },
+            ]}
+            value={typeFilter}
+            onChange={(v) => setTypeFilter(v as TypeFilter)}
           />
-          <StatCard
-            label="Best Trade"
-            value={stats.best_trade_pnl != null && !isNaN(stats.best_trade_pnl) ? `+${formatUsd(stats.best_trade_pnl)}` : "—"}
-            icon={
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-              </svg>
-            }
-          />
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-[11px] text-foreground/50 font-semibold uppercase tracking-wider">
+              Sort
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+              className="glass-input text-xs font-semibold cursor-pointer"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="pnl_desc">PnL · high → low</option>
+              <option value="pnl_asc">PnL · low → high</option>
+              <option value="size_desc">Largest size</option>
+            </select>
+          </div>
         </div>
 
         {/* ── Trades Table ── */}
         <div className="glass-card overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-gray-500 pulse-dot" style={{animationDelay: "0.7s"}} />
-            <h2 className="text-base font-bold text-white">Trade History</h2>
-            <span className="text-xs font-mono text-gray-500 bg-gray-800 px-2.5 py-1 rounded-full border border-white/5 ml-auto">{sortedTrades.length} trades</span>
+          <div className="px-6 py-4 border-b border-foreground/10 flex items-center gap-2">
+            <h2 className="text-sm font-bold text-foreground tracking-tight">Trade history</h2>
+            <span className="ml-auto inline-flex items-center rounded-full bg-foreground/5 border border-foreground/15 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-foreground/70">
+              {sortedTrades.length} {sortedTrades.length === 1 ? "trade" : "trades"}
+            </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/5 text-gray-500 text-[11px] uppercase tracking-wider">
-                  <th className="text-left px-4 py-3.5 font-medium">Token</th>
-                  <th className="text-center px-3 py-3.5 font-medium">Side</th>
-                  <th className="text-right px-3 py-3.5 font-medium">Amount</th>
-                  <th className="text-right px-3 py-3.5 font-medium">Entry</th>
-                  <th className="text-right px-3 py-3.5 font-medium">Exit</th>
-                  <th className="text-center px-3 py-3.5 font-medium">Status</th>
-                  <th className="text-right px-3 py-3.5 font-medium">PnL</th>
-                  <th className="text-right px-3 py-3.5 font-medium">PnL %</th>
-                  <th className="text-center px-3 py-3.5 font-medium">Trigger</th>
-                  <th className="text-right px-4 py-3.5 font-medium">Tx Hash</th>
-                  <th className="text-right px-4 py-3.5 font-medium">Time</th>
+                <tr className="border-b border-foreground/10 text-foreground/45 text-[10px] uppercase tracking-wider">
+                  <th className="text-left px-4 py-3 font-bold">Token</th>
+                  <th className="text-center px-3 py-3 font-bold">Side</th>
+                  <th className="text-right px-3 py-3 font-bold">Size</th>
+                  <th className="text-right px-3 py-3 font-bold">Entry</th>
+                  <th className="text-right px-3 py-3 font-bold">Exit</th>
+                  <th className="text-center px-3 py-3 font-bold">Status</th>
+                  <th className="text-right px-3 py-3 font-bold">PnL</th>
+                  <th className="text-right px-3 py-3 font-bold">PnL %</th>
+                  <th className="text-center px-3 py-3 font-bold">Type</th>
+                  <th className="text-right px-4 py-3 font-bold">Time</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
-                {sortedTrades.map((trade, i) => (
-                  <tr key={trade.id} className="table-row-stripe transition-colors">
-                    {/* Token */}
-                    <td className="px-4 py-3.5 whitespace-nowrap">
+              <tbody className="divide-y divide-foreground/5">
+                {sortedTrades.map((trade) => (
+                  <tr key={trade.id} className="hover:bg-foreground/[0.04] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{trade.token}</span>
+                        <span className="font-bold text-foreground text-sm">
+                          {trade.symbol || truncateHash(trade.token)}
+                        </span>
                         {chainBadge(trade.chain)}
+                        {trade.grade && (
+                          <span className="text-[10px] font-mono font-bold text-foreground/70 bg-foreground/8 border border-foreground/15 px-1.5 py-0.5 rounded">
+                            {trade.grade}
+                          </span>
+                        )}
                       </div>
                     </td>
-                    {/* Side */}
-                    <td className="px-3 py-3.5 text-center whitespace-nowrap">{sideBadge(trade.side)}</td>
-                    {/* Amount */}
-                    <td className="px-3 py-3.5 text-right whitespace-nowrap font-mono text-gray-300 text-xs">{formatUsd(trade.amount_usd)}</td>
-                    {/* Entry */}
-                    <td className="px-3 py-3.5 text-right whitespace-nowrap font-mono text-gray-400 text-xs">{formatPrice(trade.entry_price)}</td>
-                    {/* Exit */}
-                    <td className="px-3 py-3.5 text-right whitespace-nowrap font-mono text-gray-400 text-xs">
-                      {trade.exit_price !== null ? formatPrice(trade.exit_price) : <span className="text-gray-700">—</span>}
+                    <td className="px-3 py-3 text-center whitespace-nowrap">{sideBadge(trade.side)}</td>
+                    <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-foreground/85 text-xs font-semibold tabular-nums">
+                      {formatUsd(trade.size_usdc)}
                     </td>
-                    {/* Status */}
-                    <td className="px-3 py-3.5 text-center whitespace-nowrap">{statusBadge(trade.status)}</td>
-                    {/* PnL */}
-                    <td className="px-3 py-3.5 text-right whitespace-nowrap font-mono text-sm">
-                      {trade.pnl !== null ? (
-                        <span className={trade.pnl >= 0 ? "text-emerald-400 font-semibold" : "text-red-400 font-semibold"}>
-                          {trade.pnl >= 0 ? "+" : ""}{formatUsd(trade.pnl)}
+                    <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-foreground/60 text-xs tabular-nums">
+                      {trade.entry_price > 0 ? (
+                        formatPrice(trade.entry_price)
+                      ) : (
+                        <span className="text-foreground/30">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-foreground/60 text-xs tabular-nums">
+                      {trade.exit_price !== null && trade.exit_price !== undefined ? (
+                        formatPrice(trade.exit_price)
+                      ) : (
+                        <span className="text-foreground/30">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                      {statusBadge(trade.status as "open" | "closed" | "stopped")}
+                    </td>
+                    <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-sm tabular-nums">
+                      {trade.pnl_usd !== null && trade.pnl_usd !== undefined ? (
+                        <span
+                          className={cn(
+                            "font-bold",
+                            trade.pnl_usd >= 0 ? "text-profit" : "text-loss"
+                          )}
+                        >
+                          {trade.pnl_usd >= 0 ? "+" : ""}
+                          {formatUsd(trade.pnl_usd)}
                         </span>
-                      ) : <span className="text-gray-700">—</span>}
+                      ) : (
+                        <span className="text-foreground/30">—</span>
+                      )}
                     </td>
-                    {/* PnL % */}
-                    <td className="px-3 py-3.5 text-right whitespace-nowrap font-mono text-sm">
-                      {trade.pnl_percent !== null ? (
-                        <span className={trade.pnl_percent >= 0 ? "text-emerald-400 font-semibold" : "text-red-400 font-semibold"}>
-                          {trade.pnl_percent >= 0 ? "+" : ""}{trade.pnl_percent.toFixed(1)}%
+                    <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-sm tabular-nums">
+                      {trade.pnl_pct !== null && trade.pnl_pct !== undefined ? (
+                        <span
+                          className={cn(
+                            "font-bold",
+                            trade.pnl_pct >= 0 ? "text-profit" : "text-loss"
+                          )}
+                        >
+                          {trade.pnl_pct >= 0 ? "+" : ""}
+                          {trade.pnl_pct.toFixed(1)}%
                         </span>
-                      ) : <span className="text-gray-700">—</span>}
+                      ) : (
+                        <span className="text-foreground/30">—</span>
+                      )}
                     </td>
-                    {/* Trigger */}
-                    <td className="px-3 py-3.5 text-center whitespace-nowrap">{triggerBadge(trade.trigger)}</td>
-                    {/* Tx */}
-                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                      <a
-                        href={`https://solscan.io/tx/${trade.tx_hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-xs text-amber-400/60 hover:text-amber-400 transition-colors"
-                      >
-                        {truncateHash(trade.tx_hash)}
-                      </a>
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                      {trade.dry_run ? (
+                        <span className="inline-flex items-center rounded-full bg-accent/25 text-foreground border border-accent/60 px-2 py-0.5 text-[9px] font-bold uppercase">
+                          Dry run
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-primary/25 text-foreground border border-primary/60 px-2 py-0.5 text-[9px] font-bold uppercase">
+                          Live
+                        </span>
+                      )}
                     </td>
-                    {/* Time */}
-                    <td className="px-4 py-3.5 text-right whitespace-nowrap text-gray-500 text-xs">{relativeTime(trade.timestamp)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-foreground/55 text-xs tabular-nums">
+                      {relativeTime(trade.timestamp)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-foreground/50 font-semibold uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="flex gap-1">
+        {options.map((opt) => {
+          const active = value === opt.key;
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => onChange(opt.key)}
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider border transition-all",
+                active
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-foreground/5 text-foreground/70 border-foreground/15 hover:bg-foreground/10 hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
