@@ -218,7 +218,7 @@ export default function WalletPage() {
               <div>
                 <h2 className="text-base font-semibold text-foreground">Copy trade terminal</h2>
                 <p className="text-[11px] text-foreground/60">
-                  Executes from Oracle VPS wallet via Nansen API
+                  Executes from AION VPS wallet via Nansen API
                 </p>
               </div>
               {tradeLoading && (

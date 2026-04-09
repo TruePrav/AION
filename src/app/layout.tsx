@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AIChatLoader from "@/components/AIChatLoader";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -43,6 +44,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
+            <AIChatLoader />
           </ConfirmProvider>
           <Toaster
             position="bottom-right"

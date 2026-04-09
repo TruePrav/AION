@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
       <div className="mx-auto max-w-5xl px-6 py-16 space-y-16">
         {/* Hero */}
         <section className="text-center py-6 space-y-4">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">How Oracle works</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">How AION works</h1>
           <p className="text-base text-foreground/70 max-w-2xl mx-auto leading-relaxed font-medium">
             From discovery to execution — a fully automated smart money intelligence pipeline that runs 24/7.
           </p>
@@ -222,7 +222,7 @@ export default function HowItWorksPage() {
         <section className="glass-card p-10 text-center">
           <h3 className="text-2xl font-bold text-foreground mb-2 tracking-tight">Ready to get started?</h3>
           <p className="text-foreground/70 text-sm font-medium mb-6 max-w-md mx-auto">
-            Add the Oracle bot to Telegram and start tracking smart money in minutes.
+            Add the AION bot to Telegram and start tracking smart money in minutes.
           </p>
           <a
             href="https://t.me/OracleAITradingBot"

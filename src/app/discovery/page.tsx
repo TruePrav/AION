@@ -316,7 +316,7 @@ export default function DiscoveryPage() {
                             }}
                           />
                           <a
-                            href={`https://dexscreener.com/solana/${t.address}`}
+                            href={`https://dexscreener.com/${t.chain || "solana"}/${t.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-foreground font-semibold text-sm hover:underline underline-offset-2"
@@ -324,6 +324,14 @@ export default function DiscoveryPage() {
                           >
                             {t.symbol}
                           </a>
+                          <span className={cn(
+                            "text-[9px] font-bold uppercase tracking-wider rounded-full px-1.5 py-0 border",
+                            t.chain === "base" ? "bg-[hsl(220_70%_50%)]/15 text-[hsl(220_70%_50%)] border-[hsl(220_70%_50%)]/30"
+                              : t.chain === "ethereum" ? "bg-[hsl(240_10%_50%)]/15 text-[hsl(240_10%_60%)] border-[hsl(240_10%_50%)]/30"
+                              : "bg-primary/15 text-primary border-primary/30"
+                          )}>
+                            {t.chain === "ethereum" ? "ETH" : (t.chain || "SOL").toUpperCase()}
+                          </span>
                           {t.sectors && t.sectors.length > 0 && (
                             <span className="text-[10px] text-foreground/60 bg-foreground/5 border border-foreground/15 rounded-full px-1.5 py-0">
                               {t.sectors[0]}

@@ -18,7 +18,7 @@ export default function StylesPreviewPage() {
       {/* Page header */}
       <div className="border-b border-zinc-800 bg-zinc-950 px-8 py-8">
         <div className="max-w-[1280px] mx-auto">
-          <h1 className="text-3xl font-semibold tracking-tight mb-2">Oracle — Style Variants</h1>
+          <h1 className="text-3xl font-semibold tracking-tight mb-2">AION — Style Variants</h1>
           <p className="text-sm text-zinc-400">
             5 style directions × 4 key surfaces. Pick your favorite per surface (or mix & match).
           </p>

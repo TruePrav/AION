@@ -140,7 +140,7 @@ export default function SettingsPage() {
         )}
 
         {/* ── Trading Mode ── */}
-        <Section title="Trading mode" description="Controls how Oracle executes trades.">
+        <Section title="Trading mode" description="Controls how AION executes trades.">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {MODES.map((mode) => {
               const active = localSettings.mode === mode.key;

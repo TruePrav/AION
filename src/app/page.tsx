@@ -30,7 +30,7 @@ export default function HomePage() {
         setScout(sc);
         setTrades(tr);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to connect to Oracle API");
+        setError(e instanceof Error ? e.message : "Failed to connect to AION API");
       }
       setLoading(false);
     };
@@ -41,7 +41,7 @@ export default function HomePage() {
     return (
       <div className="glass-bg min-h-screen flex flex-col items-center justify-center">
         <div className="h-10 w-10 rounded-full border-2 border-foreground/20 border-t-primary animate-spin mb-4" />
-        <p className="text-sm text-foreground/60">Loading Oracle…</p>
+        <p className="text-sm text-foreground/60">Loading AION…</p>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default function HomePage() {
         <div className="glass-card p-6 max-w-md">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="h-4 w-4 text-destructive" />
-            <p className="text-sm font-semibold text-foreground">Oracle API unreachable</p>
+            <p className="text-sm font-semibold text-foreground">AION API unreachable</p>
           </div>
           <p className="text-xs text-foreground/70 leading-relaxed">{error}</p>
           <p className="text-[11px] text-foreground/50 mt-3">
@@ -83,7 +83,7 @@ export default function HomePage() {
             <span className="text-foreground/50">Decoded.</span>
           </h1>
           <p className="text-base text-foreground/70 max-w-xl leading-relaxed">
-            Oracle hunts the wallets that move markets. We grade them. We track them. You eat.
+            AION hunts the wallets that move markets. We grade them. We track them. You eat.
           </p>
           <div className="flex gap-3 pt-2 flex-wrap">
             <Link
@@ -332,7 +332,7 @@ export default function HomePage() {
             Ready to find alpha?
           </h3>
           <p className="text-sm text-foreground/70 mb-6 max-w-md mx-auto">
-            Add the Oracle bot to your Telegram and get real-time alerts when top wallets trade.
+            Add the AION bot to your Telegram and get real-time alerts when top wallets trade.
           </p>
           <a
             href="https://t.me/OracleAITradingBot"

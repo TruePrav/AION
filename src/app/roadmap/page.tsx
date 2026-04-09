@@ -73,14 +73,14 @@ const FEATURES: Feature[] = [
     phase: "2",
     status: "in_progress",
     title: "Non-Custodial Copy Trade",
-    description: "One-click wallet-to-wallet copy trading. Oracle finds the signal, you sign the swap with your own wallet. Zero custody, zero trust required.",
+    description: "One-click wallet-to-wallet copy trading. AION finds the signal, you sign the swap with your own wallet. Zero custody, zero trust required.",
     eta: "~1-2 days after competition",
     tag: "killer feature",
     highlights: [
       "Phantom / Solflare / Backpack via @solana/wallet-adapter",
       "Jupiter v6 swap API for routing + price discovery",
       "Browser builds the tx, user signs, user broadcasts",
-      "Oracle never touches private keys",
+      "AION never touches private keys",
       "Per-token size slider + slippage control",
     ],
   },
@@ -117,7 +117,7 @@ const FEATURES: Feature[] = [
     phase: "2",
     status: "planned",
     title: "Public Telegram Signal Channel",
-    description: "@OracleAlphaSignals — free public broadcast of every high-conviction discovery with rich embeds (graph, reasoning, CLI commands).",
+    description: "@AIONSignals — free public broadcast of every high-conviction discovery with rich embeds (graph, reasoning, CLI commands).",
     eta: "1 day",
   },
   {
@@ -140,7 +140,7 @@ const FEATURES: Feature[] = [
     phase: "3",
     status: "planned",
     title: "Multi-User Watchlists",
-    description: "Personal Oracle per user. Save favorite tokens, set custom alerts, track your own Nansen CLI usage.",
+    description: "Personal AION per user. Save favorite tokens, set custom alerts, track your own Nansen CLI usage.",
     eta: "2+ weeks",
     highlights: [
       "Supabase auth + per-user state",
@@ -163,8 +163,8 @@ const FEATURES: Feature[] = [
   {
     phase: "3",
     status: "planned",
-    title: "Oracle MCP Server",
-    description: "Expose the full discovery + reasoning pipeline as an MCP tool so any LLM (Claude, GPT) can query Oracle conversationally.",
+    title: "AION MCP Server",
+    description: "Expose the full discovery + reasoning pipeline as an MCP tool so any LLM (Claude, GPT) can query AION conversationally.",
     tag: "AI-native",
   },
 ];
@@ -299,7 +299,7 @@ export default function RoadmapPage() {
               </span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-3">
-              Where Oracle is going next
+              Where AION is going next
             </h1>
             <p className="text-foreground/70 max-w-2xl leading-relaxed text-sm font-medium">
               The product is live for Week 4 of the Nansen CLI competition. Here&apos;s what&apos;s shipped,
@@ -351,8 +351,8 @@ export default function RoadmapPage() {
         {/* ── Footer CTA ── */}
         <div className="glass-card p-6 text-center">
           <p className="text-sm text-foreground/75 font-medium">
-            Want to follow Oracle&apos;s development? Signals drop soon on{" "}
-            <span className="text-primary font-bold">@OracleAlphaSignals</span> — stay tuned.
+            Want to follow AION&apos;s development? Signals drop soon on{" "}
+            <span className="text-primary font-bold">@AIONSignals</span> — stay tuned.
           </p>
         </div>
       </div>

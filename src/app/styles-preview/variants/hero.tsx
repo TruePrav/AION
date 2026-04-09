@@ -82,7 +82,7 @@ export function HeroV2() {
           <span className="bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-400 bg-clip-text text-transparent">intelligence</span>
         </h1>
         <p className="text-sm text-white/50 max-w-md mx-auto leading-relaxed mb-7">
-          Oracle tracks labeled wallets, grades performance, surfaces real alpha before the crowd catches on.
+          AION tracks labeled wallets, grades performance, surfaces real alpha before the crowd catches on.
         </p>
         <div className="flex justify-center gap-3 mb-8">
           <button className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-2.5 text-sm font-medium text-cyan-300 backdrop-blur-md hover:bg-cyan-400/20 transition">
@@ -128,7 +128,7 @@ export function HeroV3() {
           <span className="text-neutral-500">decoded.</span>
         </h1>
         <p className="text-lg text-neutral-400 max-w-xl leading-relaxed mb-10">
-          Oracle tracks the wallets that move markets, grades their performance, and surfaces real alpha — so you stop guessing and start following.
+          AION tracks the wallets that move markets, grades their performance, and surfaces real alpha — so you stop guessing and start following.
         </p>
         <div className="flex items-center gap-4 mb-16">
           <button className="group inline-flex items-center gap-2 rounded-lg bg-neutral-100 px-5 py-2.5 text-sm font-medium text-neutral-900 hover:bg-white transition">
@@ -177,7 +177,7 @@ export function HeroV4() {
         <span className="inline-block bg-black text-lime-400 px-2">Money.</span>
       </h1>
       <p className="text-base text-black font-medium max-w-lg leading-snug mb-8">
-        Oracle hunts the wallets the market follows. We grade them. We track them. You eat.
+        AION hunts the wallets the market follows. We grade them. We track them. You eat.
       </p>
       <div className="flex gap-3 mb-8">
         <button className="inline-flex items-center gap-2 border-[3px] border-black bg-lime-400 px-5 py-3 text-sm font-black text-black uppercase shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#000] transition">

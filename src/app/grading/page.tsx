@@ -85,7 +85,7 @@ const accumulationSignals = [
   },
   {
     name: "Smart money consensus",
-    description: "3+ S/A-grade wallets aligned on the same token — the strongest confluence signal in Oracle.",
+    description: "3+ S/A-grade wallets aligned on the same token — the strongest confluence signal in AION.",
   },
 ];
 
@@ -123,7 +123,7 @@ export default function GradingPage() {
             Wallet grading system
           </h1>
           <p className="text-base text-foreground/70 max-w-xl mx-auto">
-            How Oracle scores and ranks smart money wallets.
+            How AION scores and ranks smart money wallets.
           </p>
         </section>
 
@@ -190,7 +190,7 @@ export default function GradingPage() {
         <section className="space-y-5">
           <h2 className="text-lg font-bold text-foreground tracking-tight">Accumulation scoring</h2>
           <p className="text-sm text-foreground/70 leading-relaxed">
-            Oracle detects accumulation patterns by monitoring five key signals. When multiple signals fire
+            AION detects accumulation patterns by monitoring five key signals. When multiple signals fire
             simultaneously, the conviction score increases.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">

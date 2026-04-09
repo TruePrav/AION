@@ -1,226 +1,164 @@
-# Oracle v3
+# AION — Smart Money Intelligence
 
-Oracle v3 is a self-hosted smart money intelligence dashboard for discovering wallets, grading trader quality, validating tokens, and reviewing trade activity through a clean web interface.
+Multi-chain smart money tracking, wallet grading, and automated token discovery. Built for the Nansen CLI competition.
 
-This repository contains the **dashboard frontend** for Oracle v3. It is designed to connect to an Oracle API running separately on your own infrastructure.
+**Live site:** [aionchain.app](https://aionchain.app)
 
-## What this repo is
+## What it does
 
-This repo contains:
-- Next.js dashboard frontend
-- Discovery, wallets, grading, trades, and settings pages
-- Shared UI components for Oracle v3
-- Static sample data used for local/demo rendering
+AION monitors smart money wallets across Solana, Base, and Ethereum. It grades wallets by performance, scores token accumulation patterns, and surfaces actionable signals — all powered by the Nansen CLI.
 
-This repo does **not** contain:
-- Private keys
-- Wallet secrets
-- Production API keys
-- Telegram bot credentials
-- Live trading credentials
+### Key features
 
-## Core features
+- **Multi-chain discovery** — scans Solana, Base, and Ethereum for tokens with strong smart money inflows, with automatic fallback across chains
+- **Wallet grading** — S/A/B/C/D grade system based on win rate, PnL, ROI, consistency, and convergence
+- **Accumulation scoring** — per-token buy/sell ratio, buyer concentration, and SM buyer percentage analysis
+- **Risk tier filtering** — degen / balanced / conservative presets filter tokens by mcap, age, SM trader count
+- **Ask AION** — AI-powered chat (Claude) that can answer questions about the latest discovery data
+- **Telegram alerts** — real-time notifications with AI-generated reasoning for each signal
+- **Copy trading** — one-click trade execution via Nansen wallet (approval mode or autonomous)
+- **Wallet graph mapping** — related-wallet discovery to detect clusters and syndicates
 
-### 1. Discovery dashboard
-Review tokens and wallet activity surfaced by the Oracle pipeline.
+## Quick start
 
-Includes:
-- token discovery tables
-- smart money inflow and accumulation context
-- graded wallet summaries
-- blocklist/community moderation UI
+### Prerequisites
 
-### 2. Wallet grading views
-Inspect wallet quality using Oracle’s scoring system.
-
-Typical grading signals include:
-- win rate
-- realized PnL / ROI
-- activity consistency
-- diversification
-- convergence strength
-
-### 3. Trade visibility
-Track historical and open trade information through dashboard pages.
-
-Includes:
-- recent trade history
-- open positions views
-- live PnL style display
-- execution mode visibility
-
-### 4. Settings UI
-The dashboard exposes controls for configurable Oracle parameters such as:
-- trailing stop percentage
-- take-profit tiers
-- position sizing
-- convergence thresholds
-- scan interval
-- run mode
-
-### 5. Professional terminal-style interface
-The UI is designed to feel like a serious trading/intelligence terminal rather than a generic AI landing page.
-
-## Product architecture
-
-Oracle v3 is split into two layers:
-
-1. **Backend / Oracle API**
-   - runs on your VPS or server
-   - gathers smart money intelligence
-   - exposes API endpoints
-   - handles execution logic separately
-
-2. **Dashboard frontend**
-   - this repository
-   - renders the Oracle data visually
-   - talks to the Oracle API via HTTP
-
-## Tech stack
-
-- Next.js
-- TypeScript
-- Tailwind CSS
-- React
-
-## Repository structure
-
-```text
-src/
-  app/
-    page.tsx                Dashboard home
-    discovery/              Discovery view
-    grading/                Methodology / grading page
-    how-it-works/           Product explanation page
-    trades/                 Trade history view
-    wallets/                Wallet listing page
-    wallet/[address]/       Individual wallet page
-  components/               Reusable UI components
-  lib/                      Utilities and API helpers
-
-public/
-  data/                     Demo/sample JSON data
-```
-
-## Local development
-
-### Requirements
 - Node.js 18+
 - npm
+- An AION backend running (see [Architecture](#architecture))
 
-### Install
+### Clone and run
 
 ```bash
+git clone https://github.com/TruePrav/oracle-v3.git
+cd oracle-v3
+cp .env.example .env.local
+# Edit .env.local with your values
 npm install
-```
-
-### Run dev server
-
-```bash
 npm run dev
 ```
 
-### Build production bundle
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Environment variables
+
+Create a `.env.local` file from the example:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | Your AION backend URL (e.g. `http://localhost:5001`) |
+| `NEXT_PUBLIC_ORACLE_API_KEY` | No | API key for write operations (trade execution, settings). Without this, the dashboard is read-only. |
+| `ANTHROPIC_API_KEY` | No | Enables the "Ask AION" AI chat feature. Server-side only — never exposed to the browser. |
+
+### Build for production
 
 ```bash
 npm run build
-```
-
-### Start production server
-
-```bash
 npm start
 ```
 
-## Connecting to your Oracle API
+## Architecture
 
-The dashboard expects an Oracle API to be available separately.
+AION is split into two layers:
 
-Review and update the API helper in:
-
-```text
-src/lib/api.ts
+```
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│   Dashboard (this repo)     │     │     Backend (separate)       │
+│                             │     │                              │
+│  Next.js 14 + TypeScript    │────▶│  Python API on your VPS      │
+│  Tailwind CSS + shadcn/ui   │     │  Nansen CLI integration      │
+│  Deployed on Vercel / VPS   │     │  Trade execution engine      │
+│                             │     │  Telegram bot                │
+└─────────────────────────────┘     └──────────────────────────────┘
 ```
 
-If you deploy frontend and backend separately, configure the correct base URL for your environment.
+**Frontend (this repo):**
+- Next.js 14 App Router
+- TypeScript
+- Tailwind CSS with glass morphism design system
+- Dark/light mode with system preference detection
+- shadcn/ui components
 
-## Deployment notes
+**Backend (separate private repo):**
+- Python API with Nansen CLI
+- Discovery pipeline (multi-chain)
+- Wallet grading and accumulation scoring
+- Trade execution via Nansen wallet
+- Telegram bot for alerts
 
-Recommended minimum for smooth builds:
-- 4 GB RAM
-- 2 vCPU
+## Project structure
 
-Why:
-- Next.js production builds can be memory-hungry
-- lower-memory VPS instances may fail during `npm run build`
-- 4 GB makes deploys and rebuilds much more stable
+```
+src/
+  app/
+    page.tsx                 Dashboard home
+    discovery/               Token discovery with sortable columns
+    wallets/                 Graded wallet directory
+    wallet/[address]/        Individual wallet detail + copy trade
+    positions/               Open positions tracker
+    trades/                  Trade history with filters
+    grading/                 Methodology explainer
+    settings/                Pipeline configuration
+    how-it-works/            Product walkthrough
+    roadmap/                 Feature roadmap
+    api/
+      admin/[...path]/       Server-side proxy (keeps API key off client)
+      ai/chat/               Claude AI chat endpoint
+  components/
+    AIChatPanel.tsx          "Ask AION" floating chat
+    AIReasoning.tsx          Per-token AI analysis cards
+    GradeBadge.tsx           S/A/B/C/D grade badges
+    Navbar.tsx               Navigation with AION logo
+    WalletGraph.tsx          Wallet relationship graph
+    ...
+  lib/
+    api.ts                   API client + TypeScript interfaces
+    utils.ts                 Formatting helpers
+```
 
-## Security and privacy
+## Pages
 
-Before making this repo public or pushing updates:
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard with stats, recent trades, and CTA |
+| `/discovery` | Token table with SM inflow, accumulation grades, sortable columns |
+| `/wallets` | Graded wallet directory with win rates and PnL |
+| `/wallet/[address]` | Wallet detail view with top tokens and copy trade |
+| `/positions` | Open positions with live PnL |
+| `/trades` | Trade history with status/side/type filters and sort |
+| `/grading` | Scoring methodology, accumulation signals, risk tiers |
+| `/settings` | Pipeline config (stop loss, take profit, scan interval) |
+| `/how-it-works` | Step-by-step pipeline explanation |
+| `/roadmap` | Feature roadmap with phase tracking |
 
-### Safe to include
-- frontend source code
-- static demo/sample JSON
-- generic setup docs
-- UI components
-- public architecture notes
+## Security
 
-### Do not include
-- `.env` files
-- API keys
-- wallet passwords
-- session tokens
-- private RPC endpoints if sensitive
-- internal-only ops docs
-- personal notes or contracts
+- API keys are **server-side only** — the admin proxy at `/api/admin/[...path]` keeps `ORACLE_API_KEY` off the client
+- `ANTHROPIC_API_KEY` is server-side only (no `NEXT_PUBLIC_` prefix)
+- `.env.local` files are gitignored
+- Public deployments can set `NEXT_PUBLIC_READONLY_MODE=1` for a read-only showcase
+- No private keys, wallet secrets, or credentials in this repo
 
-### Current hygiene choices in this repo
-- local env files are gitignored
-- build output is gitignored
-- personal/internal workflow files are excluded from public source control
+## Deployment
 
-## Suggested production setup
+### Vercel (recommended for frontend)
 
-A clean production setup is:
+1. Push to GitHub
+2. Import in Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy
 
-- **frontend repo**: public or private UI repo
-- **backend repo**: separate private repo for Oracle API, execution, bots, and automation
-- **server secrets**: stored only in environment variables on the VPS
+### Self-hosted
 
-That split keeps the public-facing dashboard safe while protecting trading logic and credentials.
+```bash
+npm run build
+npm start
+# or with PM2:
+pm2 start npm --name "aion" -- start
+```
 
-## Recommended README policy
+Minimum: 4 GB RAM, 2 vCPU (Next.js builds are memory-hungry).
 
-For public repositories:
-- document architecture clearly
-- explain setup in detail
-- avoid publishing live server IPs unless intentional
-- avoid personal/private operational details
-- avoid linking to internal-only tools unless they are meant to be public
+## License
 
-## GitHub repo
-
-Target repo:
-- https://github.com/TruePrav/oracle-v3
-
-## Push checklist
-
-Before push:
-
-1. verify `.gitignore`
-2. verify no `.env` files are tracked
-3. verify no secrets appear in tracked files
-4. remove internal-only files
-5. confirm README is public-safe
-6. push to the correct repo
-
-## Next recommended step
-
-If you want, I can do this next:
-1. run a tighter final secret audit on tracked files
-2. inspect git status
-3. set the remote to `https://github.com/TruePrav/oracle-v3`
-4. prepare the exact push command sequence
-
-Then you can approve the final push if everything looks clean.
+Private. All rights reserved.

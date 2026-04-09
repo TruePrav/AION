@@ -111,7 +111,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-foreground tracking-tight">
-              Oracle AI Analysis
+              AION AI Analysis
             </h2>
             {reasoning && (
               <span className="inline-flex items-center rounded-full bg-white/60 border border-foreground/10 px-2 py-0 text-[10px] font-semibold font-mono text-foreground/70">

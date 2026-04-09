@@ -220,7 +220,7 @@ label="Unrealized P&L"
               <Briefcase className="h-6 w-6 text-foreground/70" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">No open positions</h3>
-            <p className="text-sm text-foreground/60 mb-1">Discovery signals will appear here when Oracle finds convergence.</p>
+            <p className="text-sm text-foreground/60 mb-1">Discovery signals will appear here when AION finds convergence.</p>
             <p className="text-xs text-foreground/50">
               Run <span className="inline-block bg-primary/20 border border-primary/40 rounded px-1.5 py-0.5 font-mono text-foreground">/discover</span> on Telegram to start.
             </p>
