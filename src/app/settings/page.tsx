@@ -79,6 +79,7 @@ const TIERS = [
 ];
 
 // Coming soon: save multiple named custom tiers
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CUSTOM_TIERS_COMING_SOON = true;
 
 const DEFAULT_SETTINGS: Settings = {

@@ -175,7 +175,7 @@ function renderMarkdown(src: string, onWikiLink: (p: string) => void): React.Rea
   let i = 0;
   let k = 0;
 
-  const flush = (node: React.ReactNode) => out.push(<div key={`n-${k++}`}>{node}</div>);
+  const _flush = (node: React.ReactNode) => out.push(<div key={`n-${k++}`}>{node}</div>);
 
   while (i < lines.length) {
     const line = lines[i];

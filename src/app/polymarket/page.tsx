@@ -5,7 +5,7 @@ import { API } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye, ArrowLeftRight } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // Category normalization
@@ -663,7 +663,6 @@ export default function PolymarketPage() {
 
           // Sort
           const sortedWhales = [...filteredWhales].sort((a, b) => {
-            const ap = a.profile, bp = b.profile;
             const getValue = (w: typeof a): { v: number; has: boolean } => {
               const p = w.profile;
               switch (whaleSort) {
@@ -1359,7 +1358,7 @@ function WhaleExpanded({
 
   // Split profiler markets into resolved (past trades) and active
   const pastTrades = profile?.top_markets?.filter(m => m.resolved) || [];
-  const activeProfMkts = profile?.top_markets?.filter(m => !m.resolved) || [];
+  const _activeProfMkts = profile?.top_markets?.filter(m => !m.resolved) || [];
 
   return (
     <div className="mt-3 pt-3 border-t border-foreground/10 space-y-4">
