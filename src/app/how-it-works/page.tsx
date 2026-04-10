@@ -198,15 +198,12 @@ interface DiffRow {
 
 const DIFF_ROWS: DiffRow[] = [
   { feature: "Raw wallet + token data", nansen: true, aion: true, note: "AION uses Nansen as the intel source" },
-  { feature: "One-page-at-a-time browsing", nansen: true, aion: false, note: "Nansen's UI is siloed" },
   { feature: "Deterministic wallet grading (S/A/B/C/D)", nansen: false, aion: true, note: "Reproducible score, tunable weights" },
   { feature: "Accumulation composite score", nansen: false, aion: true, note: "Buy/sell × HHI × SM-% × consistency" },
   { feature: "Cross-token convergence join", nansen: false, aion: true, note: "Wallets buying multiple hot tokens at once" },
   { feature: "Risk filter (honeypot / rug check)", nansen: false, aion: true, note: "GoPlus integration + blocklist" },
   { feature: "AI verdict + reasoning", nansen: false, aion: true, note: "LLM summary of raw signals" },
-  { feature: "Prediction market whale tracking", nansen: "raw", aion: true, note: "Same pipeline applied to Polymarket" },
   { feature: "Self-evolving scoring", nansen: false, aion: "partial", note: "Records snapshots, evaluates forward returns" },
-  { feature: "Transparent CLI command log", nansen: false, aion: true, note: "Every Nansen call exposed with credit cost" },
 ];
 
 // ─────────────────────────────────────────────
