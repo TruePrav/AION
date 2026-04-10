@@ -15,9 +15,9 @@ type SortKey = "score" | "pnl" | "winrate" | "trades" | "unrealized";
 export default function WalletsPage() {
   const [wallets, setWallets] = useState<DiscoveryWallet[]>([]);
   const [filter, setFilter] = useState<Grade | "ALL">("ALL");
-  const [sort, setSort] = useState<SortKey>("score");
+  const [sort, setSort] = useState<SortKey>("pnl");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
