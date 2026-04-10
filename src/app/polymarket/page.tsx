@@ -1382,7 +1382,12 @@ function WhaleExpanded({
       {list.map((wm, i) => (
         <div key={`${walletAddress}-${i}`} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex-1 min-w-0">
-            <span className="font-semibold text-foreground">{wm.question || "(unknown market)"}</span>
+            <a
+              href={`https://polymarket.com/search?query=${encodeURIComponent(wm.question || "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+            >{wm.question || "(unknown market)"}</a>
             {wm.side && (
               <span
                 className={cn(
@@ -1429,7 +1434,12 @@ function WhaleExpanded({
           {pastTrades.slice(0, 20).map((tm, i) => (
             <div key={`past-${walletAddress}-${i}`} className="text-xs text-foreground/65 flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0 truncate">
-                <span className="font-medium text-foreground/75">{tm.question || "(unknown)"}</span>
+                <a
+                  href={`https://polymarket.com/search?query=${encodeURIComponent(tm.question || "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground/75 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                >{tm.question || "(unknown)"}</a>
               </div>
               <span className={cn(
                 "w-14 text-right text-[10px] font-bold",
