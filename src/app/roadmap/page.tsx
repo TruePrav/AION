@@ -7,7 +7,6 @@ interface Feature {
   description: string;
   status: "shipped" | "in_progress" | "planned";
   phase: "1" | "2" | "3";
-  eta?: string;
   highlights?: string[];
   tag?: string;
 }
@@ -58,8 +57,14 @@ const FEATURES: Feature[] = [
   {
     phase: "1",
     status: "shipped",
-    title: "Live Paper Portfolio",
-    description: "10 simulated positions with real DexScreener prices, live P/L, editable SL/TP targets, and progress bars.",
+    title: "Live Portfolio + Copy Trading",
+    description: "Real positions with DexScreener prices, live P/L, editable SL/TP targets, progress bars, and one-click copy trading via Nansen API.",
+    highlights: [
+      "Quick buy from discovery page or wallet detail",
+      "Custom trade amounts + preset buttons",
+      "Auto SL/TP monitoring with 5-minute cron",
+      "Dry run / live toggle from dashboard settings",
+    ],
   },
   {
     phase: "1",
@@ -67,14 +72,45 @@ const FEATURES: Feature[] = [
     title: "Explicit Nansen CLI Command Log",
     description: "Every backend call shown as a monospace command block with credit cost, duration, and copy-to-clipboard — full transparency.",
   },
+  {
+    phase: "1",
+    status: "shipped",
+    title: "Polymarket Whale Intelligence",
+    description: "Same discovery playbook on prediction markets. Scans hot markets, extracts top holders, grades them, and surfaces wallets betting across multiple events.",
+    tag: "cross-market",
+    highlights: [
+      "Nansen prediction-market: market-screener + top-holders + trades-by-market",
+      "Grades whales S/A/B/C/D by position size + unrealized PnL + breadth",
+      "Convergence detection: wallets appearing in ≥2 hot markets",
+      "Deep-dive view with top holders and recent trade flow per market",
+      "~31 credits per run, 4h default cadence",
+    ],
+  },
+  {
+    phase: "1",
+    status: "shipped",
+    title: "Telegram Discovery Bot",
+    description: "Push notifications after every 4h discovery run (EVM + Polymarket) with top tokens/markets, chart links, and credit usage.",
+    highlights: [
+      "Fires from cron — no polling daemon needed",
+      "HTML formatting with inline DexScreener links",
+      "Separate messages for EVM + Polymarket runs",
+      "Smart alerts for whale moves and convergence events",
+    ],
+  },
+  {
+    phase: "1",
+    status: "shipped",
+    title: "Manual Scan Trigger + Live Status",
+    description: "On-demand discovery scans from the dashboard with real-time progress tracking, step indicators, and completion summaries.",
+  },
 
   // ── Phase 2 (Coming Next) ──
   {
     phase: "2",
     status: "in_progress",
-    title: "Non-Custodial Copy Trade",
-    description: "One-click wallet-to-wallet copy trading. AION finds the signal, you sign the swap with your own wallet. Zero custody, zero trust required.",
-    eta: "~1-2 days after competition",
+    title: "Non-Custodial Wallet Connect",
+    description: "Connect your own wallet to execute trades directly. AION finds the signal, you sign the swap. Zero custody, zero trust required.",
     tag: "killer feature",
     highlights: [
       "Phantom / Solflare / Backpack via @solana/wallet-adapter",
@@ -87,90 +123,42 @@ const FEATURES: Feature[] = [
   {
     phase: "2",
     status: "in_progress",
-    title: "Auto SL/TP via Nansen Wallet",
-    description: "Background monitor loop that watches open positions and auto-executes exits via `nansen trade` when stop-loss or take-profit levels are hit.",
-    eta: "2-3 days post-comp",
+    title: "Multi-Chain Expansion",
+    description: "Full scanning across all Nansen-supported chains. Cross-chain convergence signals when the same smart-money cluster accumulates on multiple chains.",
     highlights: [
-      "Per-position SL/TP (already wired in UI)",
-      "30s tick against Jupiter prices",
-      "Slippage guard — reject fills >10% off market",
-      "Liquidity gate — refuse exit if pool < $10k",
-      "Kill-switch endpoint + UI badge for safety",
-      "Live mode behind LIVE_TRADING=1 env flag",
-    ],
-  },
-  {
-    phase: "2",
-    status: "in_progress",
-    title: "Admin Control Panel (secure)",
-    description: "A password-gated admin view at /admin that enables the hidden mutation controls (edit SL/TP, close positions, trigger copy trades, update settings) — keeping the public site locked down as view-only.",
-    eta: "1 day",
-    highlights: [
-      "HttpOnly session cookie auth (no key in browser)",
-      "Rate-limited via Flask-Limiter",
-      "IP allowlist option for extra lockdown",
-      "All admin actions audit-logged to /data/audit.jsonl",
-      "Public site stays pure read-only, no attack surface",
-    ],
-  },
-  {
-    phase: "2",
-    status: "shipped",
-    title: "Telegram Discovery Summaries",
-    description: "Push-only notifications. After every 4h discovery run (EVM + Polymarket), the bot sends a summary to the user/group with the top 5 tokens/markets and live DexScreener chart links.",
-    tag: "phase 1",
-    highlights: [
-      "Fires from run_discovery_cron.py — no polling daemon needed",
-      "HTML formatting with inline chart links",
-      "Separate messages for EVM + Polymarket runs",
-      "Auto-retries swallowed so telegram downtime never breaks cron",
+      "Currently live: Solana, Base",
+      "Adding: Ethereum, BNB, Arbitrum, Optimism, Polygon, Avalanche",
+      "Also supported: Scroll, Linea, Mantle, Sei, Sonic, Ronin, Monad, HyperEVM, Plasma, IOTA EVM",
+      "Cross-chain wallet matching + unified leaderboard",
     ],
   },
   {
     phase: "2",
     status: "planned",
     title: "Telegram Trading Controls",
-    description: "Phase 2 of the bot — interactive controls beyond notifications. Inline Buy/Skip buttons on each summary, /buy /close slash commands, and opt-in auto-buy for high-conviction signals.",
-    eta: "3-4 days",
+    description: "Interactive controls beyond notifications. Inline Buy/Skip buttons on each summary, /buy /close slash commands, and opt-in auto-buy for high-conviction signals.",
     tag: "phase 2",
     highlights: [
       "Inline Buy $10 / $25 / $100 buttons per token",
       "/positions, /close, /status slash commands",
       "/autobuy on|off toggle with per-user budget",
-      "Long-polling webhook daemon (systemd unit)",
     ],
-  },
-  {
-    phase: "2",
-    status: "planned",
-    title: "Public Telegram Signal Channel",
-    description: "@AIONSignals — free public broadcast of every high-conviction discovery with rich embeds (graph, reasoning, CLI commands).",
-    eta: "1 day",
-  },
-  {
-    phase: "2",
-    status: "planned",
-    title: "Multi-Chain Expansion",
-    description: "ETH + Base + BNB scanning alongside Solana. Cross-chain convergence signals when the same smart-money cluster accumulates on multiple chains.",
-    eta: "1 week",
   },
   {
     phase: "2",
     status: "planned",
     title: "Multi-Timeframe Convergence",
     description: "Scan 1h / 4h / 24h / 7d windows simultaneously. Highest conviction signals are the ones that align across all four.",
-    eta: "3-4 days",
   },
 
   // ── Phase 3 (Long-term) ──
   {
     phase: "3",
     status: "planned",
-    title: "Multi-User Watchlists",
-    description: "Personal AION per user. Save favorite tokens, set custom alerts, track your own Nansen CLI usage.",
-    eta: "2+ weeks",
+    title: "Multi-User Platform",
+    description: "Personal AION per user. Save favorite tokens, set custom alerts, track your own portfolio with on-chain history.",
     highlights: [
-      "Supabase auth + per-user state",
+      "Auth + per-user state",
       "Encrypted wallet connection storage",
       "Personal P/L tracking from on-chain history",
     ],
@@ -188,21 +176,6 @@ const FEATURES: Feature[] = [
     description: "Combine on-chain smart-money signals with Polymarket, Farcaster sentiment, and governance vote data for a holistic alpha score.",
   },
   {
-    phase: "1",
-    status: "shipped",
-    title: "Polymarket Whale Intelligence",
-    description: "Same discovery playbook on prediction markets. Uses Nansen's new prediction-market endpoints to scan hot markets, extract top holders, grade them, and surface wallets betting across multiple events.",
-    tag: "cross-market",
-    highlights: [
-      "Nansen research prediction-market: market-screener + top-holders + trades-by-market",
-      "Grades whales S/A/B/C/D by position size + unrealized PnL + breadth",
-      "Convergence detection: wallets appearing in ≥2 hot markets",
-      "Deep-dive view with top holders and recent trade flow per market",
-      "~31 credits per run, 6h default cadence, on-demand triggers",
-      "Full tab at /polymarket",
-    ],
-  },
-  {
     phase: "3",
     status: "planned",
     title: "AION MCP Server",
@@ -212,10 +185,6 @@ const FEATURES: Feature[] = [
 ];
 
 function StatusBadge({ status }: { status: Feature["status"] }) {
-  // Each pill keeps a tinted background for the colour cue but the LABEL is
-  // always rendered against `text-foreground` so it stays legible in both
-  // light and dark themes. The previous `text-primary` / `text-accent`
-  // approach collapsed into the background in light mode.
   const cfg = {
     shipped: { label: "SHIPPED", color: "bg-primary/25 text-foreground border-primary/60" },
     in_progress: { label: "IN PROGRESS", color: "bg-accent/30 text-foreground border-accent/60" },
@@ -280,9 +249,6 @@ function FeatureCard({ feature }: { feature: Feature }) {
             </span>
           )}
         </div>
-        {feature.eta && (
-          <span className="text-[10px] text-foreground/55 font-mono font-semibold">ETA {feature.eta}</span>
-        )}
       </div>
       <h3 className="text-base font-bold text-foreground leading-tight mb-2 tracking-tight">{feature.title}</h3>
       <p className="text-[13px] text-foreground/70 leading-relaxed font-medium">{feature.description}</p>
@@ -352,12 +318,6 @@ export default function RoadmapPage() {
               what&apos;s coming next, and what we&apos;re dreaming about.
             </p>
 
-            {/*
-              Stat tiles: numbers and labels now use `text-foreground`
-              instead of `text-primary` / `text-accent` so they stay readable
-              in both themes. The tile background still carries the colour
-              cue (primary tint, accent tint, neutral).
-            */}
             <div className="grid grid-cols-3 gap-3 mt-6 max-w-md">
               <div className="rounded-xl border border-primary/40 bg-primary/15 p-3">
                 <div className="text-2xl font-bold text-foreground font-mono tabular-nums">{counts.shipped}</div>
@@ -376,10 +336,6 @@ export default function RoadmapPage() {
         </div>
 
         {/* ── Phase sections ── */}
-        {/*
-          Phase pill colours: tinted background carries the visual cue,
-          text uses `text-foreground` so it works in both themes.
-        */}
         <PhaseSection
           phase="1"
           title="Live today"
@@ -391,7 +347,7 @@ export default function RoadmapPage() {
         <PhaseSection
           phase="2"
           title="Coming next"
-          subtitle="post-competition, next 1–2 weeks"
+          subtitle="post-competition"
           features={p2}
           accent="bg-accent/25 text-foreground border border-accent/50"
         />
@@ -403,14 +359,6 @@ export default function RoadmapPage() {
           features={p3}
           accent="bg-foreground/10 text-foreground/80 border border-foreground/15"
         />
-
-        {/* ── Footer CTA ── */}
-        <div className="glass-card p-6 text-center">
-          <p className="text-sm text-foreground/75 font-medium">
-            Want to follow AION&apos;s development? Signals drop soon on{" "}
-            <span className="text-primary font-bold">@AIONSignals</span> — stay tuned.
-          </p>
-        </div>
       </div>
     </div>
   );
