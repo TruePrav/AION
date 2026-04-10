@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check, Bell, Eye, Plus, X, Waves, Power } from "lucide-react";
+import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check, Bell, Eye, Plus, X, Waves, Power, Zap, Loader2 } from "lucide-react";
 
 interface AlertSettings {
   alerts_enabled: boolean;
@@ -101,6 +101,7 @@ export default function SettingsPage() {
   const [alertSettings, setAlertSettings] = useState<AlertSettings>(DEFAULT_ALERT_SETTINGS);
   const [savingAlerts, setSavingAlerts] = useState(false);
   const [watchlistInput, setWatchlistInput] = useState("");
+  const [scanRunning, setScanRunning] = useState<string | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -182,6 +183,22 @@ export default function SettingsPage() {
       toast.error("Save failed", { description: e instanceof Error ? e.message : String(e) });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function triggerScan(mode: string) {
+    setScanRunning(mode);
+    try {
+      const result = await apiPost<{ success: boolean; message?: string }>("/api/discovery/trigger", { mode });
+      if (result.success) {
+        toast.success("Scan started", { description: result.message || `${mode} discovery running in background` });
+      } else {
+        toast.error("Trigger failed");
+      }
+    } catch (e) {
+      toast.error("Trigger failed", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setTimeout(() => setScanRunning(null), 3000);
     }
   }
 
@@ -664,6 +681,43 @@ export default function SettingsPage() {
             )}
           </div>
         </Section>
+
+        {!READONLY_MODE && (
+          <Section
+            icon={<Zap className="h-4 w-4" />}
+            title="Manual scan"
+            description="Trigger a discovery scan on demand. Runs in background on VPS (~20 credits for EVM, ~15 for Polymarket)."
+          >
+            <div className="flex items-center gap-3 flex-wrap">
+              {([
+                ["evm", "EVM (Solana + Base)", "~20 credits"],
+                ["polymarket", "Polymarket", "~15 credits"],
+                ["ceiling", "Full ceiling scan", "~60 credits"],
+              ] as const).map(([mode, label, cost]) => (
+                <button
+                  key={mode}
+                  onClick={() => triggerScan(mode)}
+                  disabled={scanRunning !== null}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all border",
+                    scanRunning === mode
+                      ? "bg-primary/25 border-primary/60 text-foreground"
+                      : "bg-foreground/5 border-foreground/15 text-foreground/80 hover:bg-foreground/10 hover:border-foreground/25",
+                    "disabled:opacity-40 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {scanRunning === mode ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Zap className="h-3.5 w-3.5" />
+                  )}
+                  <span>{label}</span>
+                  <span className="text-[10px] text-foreground/50 font-mono">{cost}</span>
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {!READONLY_MODE && (
           <div className="flex items-center gap-3 pt-2">
