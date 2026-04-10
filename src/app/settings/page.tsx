@@ -6,7 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check } from "lucide-react";
+import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check, Bell, Eye, Plus, X, Waves } from "lucide-react";
+
+interface AlertSettings {
+  alert_min_win_rate: number;
+  alert_min_grade: string;
+  alert_watchlist: string[];
+  alert_types_enabled: string[];
+  alert_max_per_hour: number;
+  telegram_enabled: boolean;
+  telegram_chat_id: string;
+  telegram_bot_token: string;
+}
+
+const ALERT_TYPES = [
+  { key: "SM_NEW_POSITION", label: "Crypto SM Alerts", desc: "When high-WR wallets buy tokens" },
+  { key: "PM_NEW_POSITION", label: "PM Whale Alerts", desc: "When proven whales enter markets" },
+  { key: "CONTRARIAN_EDGE", label: "Contrarian Edge", desc: "Whales disagree with market price" },
+  { key: "EARLY_MOVER", label: "Early Mover", desc: "Big positions in low-volume markets" },
+  { key: "CROSS_CORRELATION", label: "Cross-Chain", desc: "Same wallet on crypto + PM" },
+];
+
+const DEFAULT_ALERT_SETTINGS: AlertSettings = {
+  alert_min_win_rate: 0.60,
+  alert_min_grade: "B",
+  alert_watchlist: [],
+  alert_types_enabled: ALERT_TYPES.map(t => t.key),
+  alert_max_per_hour: 20,
+  telegram_enabled: true,
+  telegram_chat_id: "",
+  telegram_bot_token: "",
+};
 
 interface RiskTierSettings {
   preset: "degen" | "balanced" | "conservative" | "custom";
@@ -62,9 +92,13 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [alertSettings, setAlertSettings] = useState<AlertSettings>(DEFAULT_ALERT_SETTINGS);
+  const [savingAlerts, setSavingAlerts] = useState(false);
+  const [watchlistInput, setWatchlistInput] = useState("");
 
   useEffect(() => {
     loadSettings();
+    loadAlertSettings();
   }, []);
 
   async function loadSettings() {
@@ -78,6 +112,53 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadAlertSettings() {
+    try {
+      const data = await apiFetch<AlertSettings>("/api/alerts/settings");
+      setAlertSettings({ ...DEFAULT_ALERT_SETTINGS, ...data });
+    } catch {
+      // Silent — use defaults
+    }
+  }
+
+  async function saveAlertSettings() {
+    setSavingAlerts(true);
+    try {
+      await apiPost<{ success: boolean }>("/api/alerts/settings", alertSettings);
+      toast.success("Alert settings saved");
+    } catch (e) {
+      toast.error("Failed to save alert settings", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSavingAlerts(false);
+    }
+  }
+
+  function addToWatchlist() {
+    const addr = watchlistInput.trim().toLowerCase();
+    if (!addr || alertSettings.alert_watchlist.includes(addr)) return;
+    setAlertSettings(prev => ({
+      ...prev,
+      alert_watchlist: [...prev.alert_watchlist, addr],
+    }));
+    setWatchlistInput("");
+  }
+
+  function removeFromWatchlist(addr: string) {
+    setAlertSettings(prev => ({
+      ...prev,
+      alert_watchlist: prev.alert_watchlist.filter(a => a !== addr),
+    }));
+  }
+
+  function toggleAlertType(type: string) {
+    setAlertSettings(prev => ({
+      ...prev,
+      alert_types_enabled: prev.alert_types_enabled.includes(type)
+        ? prev.alert_types_enabled.filter(t => t !== type)
+        : [...prev.alert_types_enabled, type],
+    }));
   }
 
   async function saveSettings() {
@@ -372,6 +453,150 @@ export default function SettingsPage() {
               onChange={(v) => update("scan_interval_minutes", v)}
               disabled={READONLY_MODE}
             />
+          </div>
+        </Section>
+
+        {/* ── Smart Money Alerts ── */}
+        <Section icon={<Bell className="h-4 w-4" />} title="Smart money alerts" description="Get notified when proven wallets make moves. Works for both crypto and Polymarket.">
+          {/* Win rate threshold */}
+          <div className="space-y-6">
+            <SliderRow
+              label="Min win rate for alerts"
+              value={Math.round(alertSettings.alert_min_win_rate * 100)}
+              min={30}
+              max={95}
+              step={5}
+              unit="%"
+              footer="only alert on wallets with this win rate or higher"
+              onChange={(v) => setAlertSettings(prev => ({ ...prev, alert_min_win_rate: v / 100 }))}
+              disabled={READONLY_MODE}
+            />
+
+            {/* Min grade */}
+            <div>
+              <label className="text-xs text-foreground/80 font-semibold mb-2.5 block">Minimum wallet grade</label>
+              <div className="flex gap-2">
+                {["S", "A", "B", "C", "D"].map((g) => {
+                  const active = alertSettings.alert_min_grade === g;
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => setAlertSettings(prev => ({ ...prev, alert_min_grade: g }))}
+                      disabled={READONLY_MODE}
+                      className={cn(
+                        "h-9 w-9 rounded-lg text-sm font-bold transition-all disabled:opacity-50",
+                        active
+                          ? "bg-primary text-primary-foreground ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
+                          : "bg-foreground/[0.05] border border-foreground/15 text-foreground/70 hover:bg-foreground/[0.1]"
+                      )}
+                    >
+                      {g}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Alerts fire for this grade and above (e.g. B = B, A, S)</p>
+            </div>
+
+            {/* Alert types */}
+            <div>
+              <label className="text-xs text-foreground/80 font-semibold mb-2.5 block">Alert types</label>
+              <div className="space-y-1.5">
+                {ALERT_TYPES.map((type) => {
+                  const enabled = alertSettings.alert_types_enabled.includes(type.key);
+                  return (
+                    <button
+                      key={type.key}
+                      onClick={() => toggleAlertType(type.key)}
+                      disabled={READONLY_MODE}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all disabled:opacity-50",
+                        enabled
+                          ? "bg-primary/10 border border-primary/30"
+                          : "bg-foreground/[0.03] border border-foreground/10 opacity-60"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          "h-5 w-5 rounded-md flex items-center justify-center transition-all",
+                          enabled ? "bg-primary text-primary-foreground" : "bg-foreground/10 text-foreground/30"
+                        )}>
+                          {enabled && <Check className="h-3 w-3" strokeWidth={3} />}
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-foreground">{type.label}</div>
+                          <div className="text-[10px] text-muted-foreground">{type.desc}</div>
+                        </div>
+                      </div>
+                      {type.key === "CONTRARIAN_EDGE" && <Waves className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {type.key === "EARLY_MOVER" && <Eye className="h-3.5 w-3.5 text-muted-foreground" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Wallet watchlist */}
+            <div>
+              <label className="text-xs text-foreground/80 font-semibold mb-2.5 block">
+                Wallet watchlist
+                <span className="text-[10px] text-muted-foreground font-normal ml-2">
+                  Always alert on these wallets, regardless of grade/win rate
+                </span>
+              </label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  type="text"
+                  placeholder="0x... wallet address"
+                  value={watchlistInput}
+                  onChange={(e) => setWatchlistInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addToWatchlist()}
+                  disabled={READONLY_MODE}
+                  className="h-8 text-xs font-mono flex-1"
+                />
+                <Button
+                  onClick={addToWatchlist}
+                  disabled={READONLY_MODE || !watchlistInput.trim()}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {alertSettings.alert_watchlist.length > 0 && (
+                <div className="space-y-1">
+                  {alertSettings.alert_watchlist.map((addr) => (
+                    <div key={addr} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-foreground/[0.03] border border-foreground/10">
+                      <span className="text-[11px] font-mono text-foreground/80">{addr.slice(0, 14)}...{addr.slice(-6)}</span>
+                      <button
+                        onClick={() => removeFromWatchlist(addr)}
+                        disabled={READONLY_MODE}
+                        className="text-foreground/40 hover:text-destructive transition"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!READONLY_MODE && (
+              <Button onClick={saveAlertSettings} disabled={savingAlerts} size="sm" variant="outline">
+                {savingAlerts ? (
+                  <>
+                    <span className="h-3 w-3 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="h-3 w-3" />
+                    Save alert settings
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </Section>
 

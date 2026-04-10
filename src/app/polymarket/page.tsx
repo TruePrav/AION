@@ -5,7 +5,7 @@ import { API } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye, ArrowLeftRight, Trophy } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // Category normalization
@@ -171,6 +171,45 @@ interface PMBetsResponse {
   total_size_usd: number;
 }
 
+interface PMWhaleProfile {
+  address: string;
+  grade: string;
+  score: number;
+  win_rate: number;
+  wins: number;
+  losses: number;
+  total_pnl_realized: number;
+  total_trades: number;
+  profiled_at: string;
+}
+
+interface PMContrarianSignal {
+  market_id: string;
+  question: string;
+  implied_prob: number;
+  whale_yes_pct: number;
+  divergence: number;
+  whale_side: string;
+  graded_whale_count: number;
+  graded_whales: { address: string; grade: string; win_rate: number; side: string; position_usd: number }[];
+  volume_24hr: number;
+  slug: string;
+}
+
+interface PMEarlyMover {
+  market_id: string;
+  question: string;
+  address: string;
+  grade: string;
+  win_rate: number;
+  side: string;
+  position_usd: number;
+  volume_24h: number;
+  position_to_volume_ratio: number;
+  pnl_realized: number;
+  slug: string;
+}
+
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
@@ -236,7 +275,7 @@ export default function PolymarketPage() {
   const [data, setData] = useState<PMData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets">("markets");
+  const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets" | "contrarian" | "early-movers" | "whale-profiles">("markets");
   const [expandedMarket, setExpandedMarket] = useState<string | null>(null);
   const [expandedWhale, setExpandedWhale] = useState<string | null>(null);
   const [bets, setBets] = useState<PMBetsResponse | null>(null);
@@ -246,6 +285,9 @@ export default function PolymarketPage() {
   // Cache of fetched full-portfolio data per whale (only fetched on expand
   // so we don't hammer the polymarket API on page load).
   const [fullPositions, setFullPositions] = useState<Record<string, PMFullPositionsResponse | "loading" | "error">>({});
+  const [whaleProfiles, setWhaleProfiles] = useState<PMWhaleProfile[]>([]);
+  const [contrarianSignals, setContrarianSignals] = useState<PMContrarianSignal[]>([]);
+  const [earlyMovers, setEarlyMovers] = useState<PMEarlyMover[]>([]);
 
   async function loadFullPositions(addr: string) {
     if (fullPositions[addr]) return; // already cached or in-flight
@@ -277,9 +319,31 @@ export default function PolymarketPage() {
       .then((b: PMBetsResponse | null) => {
         if (b && b.bets) setBets(b);
       })
-      .catch(() => {
-        /* silent */
-      });
+      .catch(() => { /* silent */ });
+
+    // Load whale profiles with historical win rates
+    fetch(`${API}/api/polymarket/whale-profiles`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { profiles: PMWhaleProfile[] } | null) => {
+        if (d?.profiles) setWhaleProfiles(d.profiles);
+      })
+      .catch(() => { /* silent */ });
+
+    // Load contrarian edge signals
+    fetch(`${API}/api/polymarket/contrarian`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { signals: PMContrarianSignal[] } | null) => {
+        if (d?.signals) setContrarianSignals(d.signals);
+      })
+      .catch(() => { /* silent */ });
+
+    // Load early mover signals
+    fetch(`${API}/api/polymarket/early-movers`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { movers: PMEarlyMover[] } | null) => {
+        if (d?.movers) setEarlyMovers(d.movers);
+      })
+      .catch(() => { /* silent */ });
   }, []);
 
   if (loading) {
@@ -389,6 +453,29 @@ export default function PolymarketPage() {
               onClick={() => setTab("bets")}
               label={`AION Paper Bets (${bets.bets.length})`}
               highlight
+            />
+          )}
+          {contrarianSignals.length > 0 && (
+            <TabButton
+              active={tab === "contrarian"}
+              onClick={() => setTab("contrarian")}
+              label={`Contrarian Edge (${contrarianSignals.length})`}
+              highlight
+            />
+          )}
+          {earlyMovers.length > 0 && (
+            <TabButton
+              active={tab === "early-movers"}
+              onClick={() => setTab("early-movers")}
+              label={`Early Movers (${earlyMovers.length})`}
+              highlight
+            />
+          )}
+          {whaleProfiles.length > 0 && (
+            <TabButton
+              active={tab === "whale-profiles"}
+              onClick={() => setTab("whale-profiles")}
+              label={`Whale Profiles (${whaleProfiles.length})`}
             />
           )}
         </div>
@@ -814,6 +901,230 @@ export default function PolymarketPage() {
             {bets.updated_at && (
               <div className="text-[10px] text-foreground/40 font-mono text-right">
                 Bets opened {fmtRelTime(bets.updated_at)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Contrarian Edge tab ── */}
+        {tab === "contrarian" && (
+          <div className="space-y-4">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <AlertTriangle className="h-4 w-4 mt-0.5 text-accent flex-shrink-0" />
+              <div>
+                <span className="font-bold text-foreground">Contrarian Edge</span> — Markets where proven whale conviction
+                (weighted by historical win rate) diverges significantly from the current market price.
+                When the best traders disagree with the crowd, pay attention.
+              </div>
+            </div>
+            {contrarianSignals.length === 0 ? (
+              <div className="glass-card p-8 text-center text-sm text-foreground/50">
+                No contrarian signals detected in current markets.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {contrarianSignals.map((s) => {
+                  const bullish = s.whale_side === "YES";
+                  return (
+                    <div key={s.market_id} className="glass-card p-5 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <a
+                            href={polymarketUrl(s.slug)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold text-foreground hover:text-primary transition line-clamp-2"
+                          >
+                            {s.question}
+                          </a>
+                          <div className="flex items-center gap-3 mt-2 text-[11px] text-foreground/60">
+                            <span>Vol: {fmtCompact(s.volume_24hr)}/24h</span>
+                            <span>{s.graded_whale_count} graded whales</span>
+                          </div>
+                        </div>
+                        <div className={cn(
+                          "rounded-lg px-3 py-2 text-center border",
+                          bullish
+                            ? "bg-profit/10 border-profit/30 text-profit"
+                            : "bg-loss/10 border-loss/30 text-loss"
+                        )}>
+                          <div className="text-[10px] uppercase tracking-wider font-bold">Whales say</div>
+                          <div className="text-lg font-bold">{s.whale_side}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="rounded-lg bg-foreground/5 p-2.5">
+                          <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Market Price</div>
+                          <div className="text-base font-bold text-foreground tabular-nums">{(s.implied_prob * 100).toFixed(1)}% YES</div>
+                        </div>
+                        <div className="rounded-lg bg-foreground/5 p-2.5">
+                          <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Whale Conviction</div>
+                          <div className="text-base font-bold text-foreground tabular-nums">{(s.whale_yes_pct * 100).toFixed(1)}% YES</div>
+                        </div>
+                        <div className={cn("rounded-lg p-2.5", bullish ? "bg-profit/10" : "bg-loss/10")}>
+                          <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Divergence</div>
+                          <div className={cn("text-base font-bold tabular-nums", bullish ? "text-profit" : "text-loss")}>
+                            {s.divergence > 0 ? "+" : ""}{(s.divergence * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      {s.graded_whales.length > 0 && (
+                        <div className="border-t border-foreground/10 pt-3 space-y-1">
+                          <div className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider mb-1">Key whales in this market</div>
+                          {s.graded_whales.slice(0, 5).map((w, i) => (
+                            <div key={i} className="flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <GradeBadge grade={w.grade} />
+                                <span className="font-mono text-foreground/70">{truncAddr(w.address)}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-foreground/60">WR {(w.win_rate * 100).toFixed(0)}%</span>
+                                <span className={cn("font-semibold", w.side === "YES" ? "text-profit" : "text-loss")}>
+                                  {w.side} · {fmtCompact(w.position_usd)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Early Movers tab ── */}
+        {tab === "early-movers" && (
+          <div className="space-y-4">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Eye className="h-4 w-4 mt-0.5 text-accent flex-shrink-0" />
+              <div>
+                <span className="font-bold text-foreground">Early Movers</span> — A-tier or S-tier whales (60%+ win rate)
+                accumulating large positions relative to market volume. These positions often precede volume
+                spikes and major price moves.
+              </div>
+            </div>
+            {earlyMovers.length === 0 ? (
+              <div className="glass-card p-8 text-center text-sm text-foreground/50">
+                No early mover signals detected.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {earlyMovers.map((m, i) => (
+                  <div key={i} className="glass-card p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <a
+                          href={polymarketUrl(m.slug)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-semibold text-foreground hover:text-primary transition line-clamp-2"
+                        >
+                          {m.question}
+                        </a>
+                        <div className="flex items-center gap-2 mt-2">
+                          <GradeBadge grade={m.grade} />
+                          <span className="font-mono text-[11px] text-foreground/70">{truncAddr(m.address)}</span>
+                          <span className="text-[10px] text-foreground/50">WR {(m.win_rate * 100).toFixed(0)}%</span>
+                          <span className="text-[10px] text-foreground/50">PnL {fmtCompact(m.pnl_realized)}</span>
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "rounded-lg px-3 py-2 text-center border",
+                        m.side === "YES" ? "bg-profit/10 border-profit/30" : "bg-loss/10 border-loss/30"
+                      )}>
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-foreground/60">{m.side}</div>
+                        <div className="text-lg font-bold text-foreground tabular-nums">{fmtCompact(m.position_usd)}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mt-3 text-center">
+                      <div className="rounded-lg bg-foreground/5 p-2">
+                        <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Position</div>
+                        <div className="text-sm font-bold text-foreground tabular-nums">{fmtCompact(m.position_usd)}</div>
+                      </div>
+                      <div className="rounded-lg bg-foreground/5 p-2">
+                        <div className="text-[9px] text-foreground/50 uppercase tracking-wider">24h Volume</div>
+                        <div className="text-sm font-bold text-foreground tabular-nums">{fmtCompact(m.volume_24h)}</div>
+                      </div>
+                      <div className="rounded-lg bg-accent/10 p-2">
+                        <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Pos / Vol</div>
+                        <div className="text-sm font-bold text-accent tabular-nums">{(m.position_to_volume_ratio * 100).toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Whale Profiles tab ── */}
+        {tab === "whale-profiles" && (
+          <div className="space-y-4">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Trophy className="h-4 w-4 mt-0.5 text-accent flex-shrink-0" />
+              <div>
+                <span className="font-bold text-foreground">Whale Profiles</span> — Historical performance of Polymarket
+                whales graded by actual realized PnL and win rate on Polygon, not just current position size.
+                These are the wallets whose moves trigger smart money alerts.
+              </div>
+            </div>
+            {whaleProfiles.length === 0 ? (
+              <div className="glass-card p-8 text-center text-sm text-foreground/50">
+                No whale profiles yet. Run the PM whale profiler to grade whales by historical win rate.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {whaleProfiles.map((p, i) => {
+                  const profit = p.total_pnl_realized >= 0;
+                  return (
+                    <div key={p.address} className="glass-card-sm p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="text-[10px] text-foreground/40 tabular-nums w-5 text-right">{i + 1}</div>
+                          <GradeBadge grade={p.grade} />
+                          <div>
+                            <a
+                              href={polyscanAddr(p.address)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-foreground/80 hover:text-primary transition"
+                            >
+                              {truncAddr(p.address)}
+                            </a>
+                            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-foreground/50">
+                              <span>{p.total_trades} trades</span>
+                              <span>{p.wins}W / {p.losses}L</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Win Rate</div>
+                            <div className={cn(
+                              "text-base font-bold tabular-nums",
+                              p.win_rate >= 0.6 ? "text-profit" : p.win_rate >= 0.4 ? "text-foreground" : "text-loss"
+                            )}>
+                              {(p.win_rate * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Realized PnL</div>
+                            <div className={cn("text-base font-bold tabular-nums", profit ? "text-profit" : "text-loss")}>
+                              {profit ? "+" : ""}{fmtCompact(p.total_pnl_realized)}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Score</div>
+                            <div className="text-base font-bold text-foreground tabular-nums">{p.score}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

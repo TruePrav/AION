@@ -24,6 +24,7 @@ const NO_FLASH_SCRIPT = `
   if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
   var r=document.documentElement;
   if(t==='dark'){r.classList.add('dark');}else{r.classList.remove('dark');}
+  r.classList.add('ocean-theme');
   r.style.colorScheme=t;
 }catch(e){}})();
 `;
@@ -34,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(inter.variable, jetbrainsMono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(inter.variable, jetbrainsMono.variable, "ocean-theme")} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
