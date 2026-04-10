@@ -39,7 +39,7 @@ export default function Footer() {
               Smart money intelligence. Tracks the wallets that move markets, grades them, surfaces alpha before the crowd.
             </p>
             <a
-              href="https://t.me/OracleAITradingBot"
+              href="https://t.me/AIONSignalBot"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-btn text-xs"

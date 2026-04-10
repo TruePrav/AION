@@ -422,7 +422,7 @@ export default function HowItWorksPage() {
             Add the AION bot to Telegram and start tracking smart money in minutes.
           </p>
           <a
-            href="https://t.me/OracleAITradingBot"
+            href="https://t.me/AIONSignalBot"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl bg-primary/90 border border-foreground/15 px-5 py-2.5 text-sm font-bold text-[hsl(0_0%_8%)] hover:bg-primary transition-colors shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.35)]"

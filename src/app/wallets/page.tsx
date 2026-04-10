@@ -206,7 +206,7 @@ export default function WalletsPage() {
           <p>Data from latest discovery run.</p>
           <p>
             <a
-              href="https://t.me/OracleAITradingBot"
+              href="https://t.me/AIONSignalBot"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:text-primary/80 transition-colors"

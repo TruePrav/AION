@@ -112,7 +112,7 @@ export default function HomePage() {
               View Discovery <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
             </Link>
             <a
-              href="https://t.me/OracleAITradingBot"
+              href="https://t.me/AIONSignalBot"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl glass-btn px-6 py-4 text-sm font-bold"
@@ -349,7 +349,7 @@ export default function HomePage() {
             Add the AION bot to your Telegram and get real-time alerts when top wallets trade.
           </p>
           <a
-            href="https://t.me/OracleAITradingBot"
+            href="https://t.me/AIONSignalBot"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl bg-primary/90 border border-foreground/15 px-5 py-2.5 text-sm font-bold text-[hsl(0_0%_8%)] hover:bg-primary transition-colors shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.45)]"
