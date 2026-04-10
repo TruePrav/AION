@@ -21,14 +21,24 @@ const SUGGESTED = [
   "Which wallets are most active across multiple tokens?",
 ];
 
+const DEMO_LIMIT = 1; // messages per user in demo mode
+
 export default function AIChatPanel({ context }: AIChatPanelProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Check demo rate limit on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const used = parseInt(localStorage.getItem("aion_chat_used") || "0", 10);
+    if (used >= DEMO_LIMIT) setRateLimited(true);
+  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -47,7 +57,7 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
   const send = useCallback(
     async (text?: string) => {
       const msg = (text || input).trim();
-      if (!msg || loading) return;
+      if (!msg || loading || rateLimited) return;
 
       setInput("");
       setError(null);
@@ -69,6 +79,10 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
           setError(data.error || `Error ${res.status}`);
         } else {
           setMessages([...newMessages, { role: "assistant", content: data.message }]);
+          // Track usage for demo rate limit
+          const used = parseInt(localStorage.getItem("aion_chat_used") || "0", 10) + 1;
+          localStorage.setItem("aion_chat_used", String(used));
+          if (used >= DEMO_LIMIT) setRateLimited(true);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Network error");
@@ -76,7 +90,7 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
         setLoading(false);
       }
     },
-    [input, loading, messages, context]
+    [input, loading, messages, context, rateLimited]
   );
 
   return (
@@ -175,31 +189,58 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
 
           {/* Input */}
           <div className="border-t border-foreground/10 px-4 py-3 bg-foreground/[0.02]">
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send();
-                  }
-                }}
-                placeholder="Ask about tokens, wallets, signals..."
-                rows={1}
-                className="flex-1 resize-none rounded-xl border border-foreground/15 bg-foreground/[0.04] px-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => send()}
-                disabled={!input.trim() || loading}
-                className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary text-[hsl(0_0%_8%)] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-                aria-label="Send message"
-              >
-                <Send className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-            </div>
+            {rateLimited ? (
+              <div className="text-center space-y-2 py-1">
+                <p className="text-xs text-foreground/70">
+                  This is in demo mode right now. To continue asking questions, clone the repo and insert your own API key!
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <a
+                    href="https://github.com/TruePrav/AION"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 border border-primary/40 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:bg-primary/30 transition-colors"
+                  >
+                    GitHub repo
+                  </a>
+                  <a
+                    href="https://github.com/TruePrav/AION#readme"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 border border-foreground/15 px-3 py-1.5 text-[11px] font-semibold text-foreground/70 hover:bg-foreground/10 transition-colors"
+                  >
+                    Setup guide
+                  </a>
+                </div>
+                <p className="text-[10px] text-foreground/40">We hope to be live soon — thanks for trying out AION!</p>
+              </div>
+            ) : (
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder="Ask about tokens, wallets, signals..."
+                  rows={1}
+                  className="flex-1 resize-none rounded-xl border border-foreground/15 bg-foreground/[0.04] px-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => send()}
+                  disabled={!input.trim() || loading}
+                  className="h-10 w-10 flex-shrink-0 rounded-xl bg-primary text-[hsl(0_0%_8%)] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                  aria-label="Send message"
+                >
+                  <Send className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

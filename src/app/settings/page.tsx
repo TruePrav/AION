@@ -55,6 +55,8 @@ interface Settings {
   max_position_pct: number;
   min_convergence_wallets: number;
   scan_interval_minutes: number;
+  max_wallets: number;
+  pm_deep_dive: number;
   mode: string;
   risk_tier: RiskTierSettings;
 }
@@ -88,6 +90,8 @@ const DEFAULT_SETTINGS: Settings = {
   max_position_pct: 0.1,
   min_convergence_wallets: 3,
   scan_interval_minutes: 240, // 4 hours (matches cron)
+  max_wallets: 30,
+  pm_deep_dive: 5,
   mode: "dry_run",
   risk_tier: { preset: "balanced", ...TIER_PRESETS.balanced },
 };
@@ -466,6 +470,27 @@ export default function SettingsPage() {
         <Section icon={<Search className="h-4 w-4" />} title="Scanning">
           <div className="space-y-6">
             <SliderRow
+              label="EVM wallets to grade"
+              value={localSettings.max_wallets ?? 30}
+              min={5}
+              max={60}
+              step={5}
+              unit=""
+              footer={`~${localSettings.max_wallets ?? 30} credits (1 cr/wallet)`}
+              onChange={(v) => update("max_wallets" as keyof Settings, v as never)}
+              disabled={READONLY_MODE}
+            />
+            <SliderRow
+              label="Polymarket deep-dive markets"
+              value={localSettings.pm_deep_dive ?? 5}
+              min={1}
+              max={20}
+              unit=""
+              footer={`~${((localSettings.pm_deep_dive ?? 5) * 6) + 1} credits (6 cr/market + 1 screener)`}
+              onChange={(v) => update("pm_deep_dive" as keyof Settings, v as never)}
+              disabled={READONLY_MODE}
+            />
+            <SliderRow
               label="Min convergence wallets"
               value={localSettings.min_convergence_wallets}
               min={1}
@@ -482,7 +507,7 @@ export default function SettingsPage() {
               max={720}
               step={30}
               unit=" min"
-              footer="time between scans (default 6h)"
+              footer="time between scans (default 4h)"
               onChange={(v) => update("scan_interval_minutes", v)}
               disabled={READONLY_MODE}
             />
