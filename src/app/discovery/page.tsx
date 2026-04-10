@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
-import { apiFetch, API, Discovery } from "@/lib/api";
+import { apiFetch, apiUrl, Discovery } from "@/lib/api";
 import { fmtUsd, truncAddr, nansenToken, nansenWallet, fmtPct } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
@@ -88,7 +88,7 @@ export default function DiscoveryPage() {
       .then(setData)
       .catch((e) => setError(e.message || "Failed to load discovery"))
       .finally(() => setLoading(false));
-    fetch(`${API}/api/blocklist`)
+    fetch(apiUrl("/api/blocklist"))
       .then((r) => r.json())
       .then((d: BlocklistResponse) => {
         setBlocklist(d.blocklist || []);
@@ -97,20 +97,20 @@ export default function DiscoveryPage() {
         setBlockVotes(votes);
       })
       .catch(() => {});
-    fetch(`${API}/api/ratings?user_id=${userId}`)
+    fetch(apiUrl(`/api/ratings?user_id=${userId}`))
       .then((r) => r.json())
       .then((d: { ratings: Record<string, TokenRating> }) => setRatings(d.ratings || {}))
       .catch(() => {});
-    fetch(`${API}/api/discovery/reasoning`)
+    fetch(apiUrl("/api/discovery/reasoning"))
       .then((r) => r.json())
       .then((d: { reasoning: TokenReasoning[] }) => setReasoning(d.reasoning || null))
       .catch(() => {})
       .finally(() => setReasoningLoading(false));
-    fetch(`${API}/api/discovery/commands`)
+    fetch(apiUrl("/api/discovery/commands"))
       .then((r) => r.json())
       .then((d: { commands: PipelineCommand[] }) => setCommands(d.commands || null))
       .catch(() => {});
-    fetch(`${API}/api/evolution/status`)
+    fetch(apiUrl("/api/evolution/status"))
       .then((r) => r.json())
       .then((d: EvolutionStatus) => setEvolution(d))
       .catch(() => {})
@@ -120,7 +120,7 @@ export default function DiscoveryPage() {
   async function rateToken(address: string, direction: "up" | "down") {
     setVotingToken(address);
     try {
-      const res = await fetch(`${API}/api/ratings/vote`, {
+      const res = await fetch(apiUrl("/api/ratings/vote"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address, user_id: userId, direction }),
@@ -913,8 +913,8 @@ export default function DiscoveryPage() {
             onEvaluate={async () => {
               setEvolutionLoading(true);
               try {
-                await fetch(`${API}/api/evolution/evaluate`, { method: "POST" });
-                const res = await fetch(`${API}/api/evolution/status`);
+                await fetch(apiUrl("/api/evolution/evaluate"), { method: "POST" });
+                const res = await fetch(apiUrl("/api/evolution/status"));
                 const d: EvolutionStatus = await res.json();
                 setEvolution(d);
               } catch { /* ignore */ }

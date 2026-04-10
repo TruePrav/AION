@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { API, type DiscoveryToken } from "@/lib/api";
+import { apiUrl, type DiscoveryToken } from "@/lib/api";
 
 const AIChatPanel = dynamic(() => import("./AIChatPanel"), { ssr: false });
 
@@ -33,7 +33,7 @@ export default function AIChatLoader() {
   const [context, setContext] = useState<string>("");
 
   useEffect(() => {
-    fetch(`${API}/api/discovery/latest`, { cache: "no-store" })
+    fetch(apiUrl("/api/discovery/latest"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.tokens) setContext(buildContext(d.tokens));

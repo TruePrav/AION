@@ -11,7 +11,7 @@ import {
   type WalletTopToken,
   copyTrade,
   type CopyTradeResult,
-  API,
+  apiUrl,
   READONLY_MODE,
 } from "@/lib/api";
 import { fmtUsd, fmtPct, truncAddr, nansenWallet, nansenToken, cn } from "@/lib/utils";
@@ -67,7 +67,7 @@ export default function WalletPage() {
 
   useEffect(() => {
     if (!address) return;
-    fetch(`${API}/api/wallet/${address}`)
+    fetch(apiUrl(`/api/wallet/${address}`))
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);

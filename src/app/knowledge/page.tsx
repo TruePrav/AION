@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { API } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   BookOpen,
@@ -493,8 +493,8 @@ export default function KnowledgePage() {
     setError(null);
     try {
       const [treeRes, statsRes] = await Promise.all([
-        fetch(`${API}/api/knowledge/tree`, { cache: "no-store" }),
-        fetch(`${API}/api/knowledge/stats`, { cache: "no-store" }),
+        fetch(apiUrl("/api/knowledge/tree"), { cache: "no-store" }),
+        fetch(apiUrl("/api/knowledge/stats"), { cache: "no-store" }),
       ]);
       if (!treeRes.ok) throw new Error(`tree: ${treeRes.status}`);
       const treeData = (await treeRes.json()) as KnowledgeTree;
@@ -523,7 +523,7 @@ export default function KnowledgePage() {
     let cancelled = false;
     setLoading(true);
     setPage(null);
-    fetch(`${API}/api/knowledge/page?path=${encodeURIComponent(selected)}`, { cache: "no-store" })
+    fetch(apiUrl(`/api/knowledge/page?path=${encodeURIComponent(selected)}`), { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) setPage(data);
@@ -548,7 +548,7 @@ export default function KnowledgePage() {
     const handle = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`${API}/api/knowledge/search?q=${encodeURIComponent(query)}`, { cache: "no-store" });
+        const res = await fetch(apiUrl(`/api/knowledge/search?q=${encodeURIComponent(query)}`), { cache: "no-store" });
         if (res.ok) setSearchResults((await res.json()) as SearchResponse);
       } catch {
         /* swallow */

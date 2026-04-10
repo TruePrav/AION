@@ -17,6 +17,8 @@ const BACKEND =
 
 /** Paths the read proxy is allowed to forward. */
 const READ_ALLOWLIST: RegExp[] = [
+  /^status$/,
+  /^health$/,
   /^discovery\//,
   /^polymarket\//,
   /^wallet\//,
@@ -25,7 +27,10 @@ const READ_ALLOWLIST: RegExp[] = [
   /^settings$/,
   /^alerts\//,
   /^knowledge\//,
-  /^health$/,
+  /^scout\//,
+  /^blocklist$/,
+  /^ratings/,
+  /^evolution\//,
 ];
 
 function isAllowed(path: string): boolean {

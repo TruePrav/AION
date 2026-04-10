@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
@@ -313,7 +313,7 @@ export default function PolymarketPage() {
     if (fullPositions[addr]) return; // already cached or in-flight
     setFullPositions((prev) => ({ ...prev, [addr]: "loading" }));
     try {
-      const res = await fetch(`${API}/api/polymarket/positions/${addr}`);
+      const res = await fetch(apiUrl(`/api/polymarket/positions/${addr}`));
       if (!res.ok) throw new Error(`api ${res.status}`);
       const json = (await res.json()) as PMFullPositionsResponse;
       setFullPositions((prev) => ({ ...prev, [addr]: json }));
@@ -323,7 +323,7 @@ export default function PolymarketPage() {
   }
 
   useEffect(() => {
-    fetch(`${API}/api/polymarket/discovery/latest`, { cache: "no-store" })
+    fetch(apiUrl("/api/polymarket/discovery/latest"), { cache: "no-store" })
       .then(async (r) => {
         if (!r.ok) throw new Error(`API ${r.status}`);
         return r.json();
@@ -334,7 +334,7 @@ export default function PolymarketPage() {
 
     // Load AION paper bets (top 10 dry-run picks). Non-fatal — bets tab
     // just shows empty state if the endpoint is missing or returns nothing.
-    fetch(`${API}/api/polymarket/bets`, { cache: "no-store" })
+    fetch(apiUrl("/api/polymarket/bets"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((b: PMBetsResponse | null) => {
         if (b && b.bets) setBets(b);
@@ -342,7 +342,7 @@ export default function PolymarketPage() {
       .catch(() => { /* silent */ });
 
     // Load whale profiles with historical win rates
-    fetch(`${API}/api/polymarket/whale-profiles`, { cache: "no-store" })
+    fetch(apiUrl("/api/polymarket/whale-profiles"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { profiles: PMWhaleProfile[] } | null) => {
         if (d?.profiles) setWhaleProfiles(d.profiles);
@@ -350,7 +350,7 @@ export default function PolymarketPage() {
       .catch(() => { /* silent */ });
 
     // Load contrarian edge signals
-    fetch(`${API}/api/polymarket/contrarian`, { cache: "no-store" })
+    fetch(apiUrl("/api/polymarket/contrarian"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { signals: PMContrarianSignal[] } | null) => {
         if (d?.signals) setContrarianSignals(d.signals);
@@ -358,7 +358,7 @@ export default function PolymarketPage() {
       .catch(() => { /* silent */ });
 
     // Load early mover signals
-    fetch(`${API}/api/polymarket/early-movers`, { cache: "no-store" })
+    fetch(apiUrl("/api/polymarket/early-movers"), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { movers: PMEarlyMover[] } | null) => {
         if (d?.movers) setEarlyMovers(d.movers);

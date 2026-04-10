@@ -16,13 +16,19 @@ export const USE_PROXY = !process.env.NEXT_PUBLIC_API_URL;
  */
 export const READONLY_MODE = process.env.NEXT_PUBLIC_READONLY_MODE === "1";
 
-export async function apiFetch<T>(path: string): Promise<T> {
-  // In production, route through server-side proxy to hide VPS IP.
-  // path is like "/api/discovery/wallets" — rewrite to "/api/proxy/discovery/wallets"
-  const url = USE_PROXY
+/**
+ * Resolve an API path to a full URL. Handles proxy routing automatically.
+ * Input: "/api/discovery/wallets" or "/api/polymarket/positions/0x..."
+ * Output: proxy URL on production, direct VPS URL on local dev.
+ */
+export function apiUrl(path: string): string {
+  return USE_PROXY
     ? path.replace(/^\/api\//, "/api/proxy/")
     : `${API}${path}`;
-  const res = await fetch(url, { cache: "no-store" });
+}
+
+export async function apiFetch<T>(path: string): Promise<T> {
+  const res = await fetch(apiUrl(path), { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
   return res.json();
 }
