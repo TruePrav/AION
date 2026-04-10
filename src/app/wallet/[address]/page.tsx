@@ -286,8 +286,8 @@ export default function WalletPage() {
                   <label className="text-[10px] text-foreground/50 font-semibold uppercase tracking-wider block mb-2.5">
                     Amount (USDC)
                   </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {[5, 10, 25, 50].map((amt) => (
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {[5, 10, 25, 50, 100].map((amt) => (
                       <button
                         key={amt}
                         onClick={() => setTradeAmount(amt)}
@@ -301,6 +301,18 @@ export default function WalletPage() {
                         ${amt}
                       </button>
                     ))}
+                    <div className="flex items-center gap-1.5 rounded-full bg-foreground/5 border border-foreground/15 px-3 py-1">
+                      <span className="text-xs text-foreground/50 font-semibold">$</span>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-16 bg-transparent text-xs font-mono font-semibold text-foreground tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        placeholder="Custom"
+                      />
+                    </div>
                   </div>
                 </div>
 
