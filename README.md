@@ -72,7 +72,7 @@ Edit `.env.local`:
 NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:5001
 
 # Required for trade execution and settings changes
-NEXT_PUBLIC_ORACLE_API_KEY=your-api-key-here
+AION_API_KEY=your-api-key-here
 
 # Optional — enables "Ask AION" AI chat
 ANTHROPIC_API_KEY=sk-ant-...
@@ -100,7 +100,7 @@ pip3 install flask gunicorn requests python-dotenv
 cat > .env << 'EOF'
 NANSEN_API_KEY=your-nansen-key
 NANSEN_WALLET_PASSWORD=your-wallet-password
-ORACLE_API_KEY=your-api-key
+AION_API_KEY=your-api-key
 TELEGRAM_BOT_TOKEN=your-bot-token
 TELEGRAM_CHAT_ID=your-chat-id
 EXECUTION_MODE=dryrun          # change to 'live' for real trades
@@ -186,7 +186,7 @@ python3 pm_whale_profiler.py 350 5000
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | Backend API URL (`http://localhost:5001` for local, or `http://your-vps:5001`) |
-| `NEXT_PUBLIC_ORACLE_API_KEY` | Yes | API key for write operations (trading, settings). Without this, dashboard is read-only. |
+| `AION_API_KEY` | Yes | API key for write operations (trading, settings). Without this, dashboard is read-only. |
 | `ANTHROPIC_API_KEY` | No | Enables "Ask AION" AI chat. Server-side only. |
 | `NANSEN_API_KEY` | Yes (backend) | Your Nansen API key for CLI calls |
 | `NANSEN_WALLET_PASSWORD` | For trading | Nansen wallet password for trade execution |
@@ -278,8 +278,8 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
 1. Push to GitHub
 2. Import in Vercel
 3. Set environment variables in Vercel dashboard:
-   - `ORACLE_BACKEND_URL` = `http://your-vps-ip:5001` (server-side only, keeps VPS IP private)
-   - `ORACLE_API_KEY` = your API key (server-side only)
+   - `AION_BACKEND_URL` = `http://your-vps-ip:5001` (server-side only, keeps VPS IP private)
+   - `AION_API_KEY` = your API key (server-side only)
    - `ANTHROPIC_API_KEY` = your Anthropic key (server-side only)
    - `ADMIN_ALLOW_MUTATIONS` = `1` (if you want write access from the live site)
 4. Deploy — automatic on every push

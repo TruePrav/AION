@@ -12,7 +12,7 @@ export function HeroV1() {
     <div className="rounded-sm border border-emerald-500/30 bg-black font-mono">
       <div className="flex items-center justify-between border-b border-emerald-500/20 px-4 py-1.5 text-[10px] text-emerald-400/70">
         <div className="flex items-center gap-3">
-          <span>ORACLE v3.2.1</span>
+          <span>AION v3.2.1</span>
           <span>·</span>
           <span>MAINNET-BETA</span>
         </div>
@@ -214,7 +214,7 @@ export function HeroV5() {
       <div className="flex items-start justify-between mb-5 pb-5 border-b border-zinc-800/60">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded tracking-widest">ORACLE</span>
+            <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded tracking-widest">AION</span>
             <span className="text-[10px] font-mono text-zinc-500">{"// v3.2.1"}</span>
             <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400">
               <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />

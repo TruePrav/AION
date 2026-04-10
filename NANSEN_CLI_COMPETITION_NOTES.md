@@ -171,7 +171,7 @@
 ### Secure Admin Control Panel
 - Public `/` site stays pure read-only (no mutation surface exposed)
 - Admin features live at `/admin` behind a password-gated HttpOnly session cookie
-- No API keys in browser bundles — all mutations go through Next.js server-side proxy route (`/api/admin/[...path]`) which holds the key in `ORACLE_API_KEY` env
+- No API keys in browser bundles — all mutations go through Next.js server-side proxy route (`/api/admin/[...path]`) which holds the key in `AION_API_KEY` env
 - Flask-Limiter rate limiting on mutation endpoints
 - Optional IP allowlist for extra lockdown
 - Audit log at `/data/audit.jsonl` for every admin action

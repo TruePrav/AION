@@ -10,15 +10,15 @@ with open(SERVER_PATH) as f:
 auth = '''
 from functools import wraps
 
-ORACLE_API_KEY = os.getenv("ORACLE_API_KEY", "")
+AION_API_KEY = os.getenv("AION_API_KEY", "")
 
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not ORACLE_API_KEY:
+        if not AION_API_KEY:
             return jsonify({"success": False, "error": "Server API key not configured"}), 500
-        key = request.headers.get("X-Oracle-Key", "")
-        if key != ORACLE_API_KEY:
+        key = request.headers.get("X-Aion-Key", "")
+        if key != AION_API_KEY:
             return jsonify({"success": False, "error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return decorated

@@ -4,14 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
  * Server-side read proxy — forwards GET requests to the backend so the
  * VPS IP never appears in client-side code.
  *
- * Set ORACLE_BACKEND_URL (server-only, no NEXT_PUBLIC_ prefix) in Vercel
+ * Set AION_BACKEND_URL (server-only, no NEXT_PUBLIC_ prefix) in Vercel
  * env vars to keep the VPS address private.
  *
  * Requests to /api/proxy/discovery/wallets → BACKEND/api/discovery/wallets
  */
 
 const BACKEND =
-  process.env.ORACLE_BACKEND_URL ||
+  process.env.AION_BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:5001";
 

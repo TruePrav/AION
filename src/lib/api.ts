@@ -5,7 +5,7 @@ export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
  * NEXT_PUBLIC_API_URL directly. This keeps the VPS IP off the client.
  *
  * Enabled automatically when NEXT_PUBLIC_API_URL is NOT set (production
- * deploys that use ORACLE_BACKEND_URL server-side only).
+ * deploys that use AION_BACKEND_URL server-side only).
  */
 export const USE_PROXY = !process.env.NEXT_PUBLIC_API_URL;
 
@@ -31,7 +31,7 @@ export async function apiFetch<T>(path: string): Promise<T> {
  * Authenticated POST — routes through the server-side proxy at /api/admin/*
  * so the Oracle API key stays on the server and never reaches the browser.
  *
- * - Local dev with ORACLE_API_KEY + ADMIN_ALLOW_MUTATIONS=1 in .env.local → works
+ * - Local dev with AION_API_KEY + ADMIN_ALLOW_MUTATIONS=1 in .env.local → works
  * - Public Vercel deploy without those envs → returns 503 (read-only mode)
  */
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
