@@ -31,9 +31,9 @@ export default function Footer() {
             <Image
               src="/aion-logo-sm.png"
               alt="AION"
-              width={120}
-              height={36}
-              className="h-8 w-auto dark:[filter:invert(1)_hue-rotate(80deg)]"
+              width={929}
+              height={304}
+              className="h-9 w-auto dark:[filter:invert(1)_hue-rotate(80deg)] transition-[filter] duration-200"
             />
             <p className="text-xs text-foreground/70 leading-relaxed max-w-xs">
               Smart money intelligence. Tracks the wallets that move markets, grades them, surfaces alpha before the crowd.

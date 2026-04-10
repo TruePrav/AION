@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 // Runs before React hydrates — prevents a light/dark flash on first paint.
 const NO_FLASH_SCRIPT = `
 (function(){try{
-  var t=localStorage.getItem('oracle-theme');
+  var t=localStorage.getItem('aion-theme');
   if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
   var r=document.documentElement;
   if(t==='dark'){r.classList.add('dark');}else{r.classList.remove('dark');}

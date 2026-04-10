@@ -104,18 +104,18 @@ export default function HomePage() {
           <p className="text-base text-foreground/70 max-w-xl leading-relaxed">
             AION hunts the wallets that move markets. We grade them. We track them. You eat.
           </p>
-          <div className="flex gap-3 pt-2 flex-wrap">
+          <div className="flex gap-4 pt-4 flex-wrap">
             <Link
               href="/discovery"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary/90 border border-foreground/15 px-5 py-2.5 text-sm font-bold text-[hsl(0_0%_8%)] hover:bg-primary transition-colors shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.45)]"
+              className="inline-flex items-center gap-3 rounded-2xl bg-primary border border-foreground/15 px-8 py-4 text-base font-bold text-[hsl(0_0%_8%)] hover:bg-primary/85 transition-colors shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.55)]"
             >
-              View Discovery <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+              View Discovery <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
             </Link>
             <a
               href="https://t.me/OracleAITradingBot"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl glass-btn px-5 py-2.5 text-sm font-bold"
+              className="inline-flex items-center gap-2 rounded-2xl glass-btn px-6 py-4 text-sm font-bold"
             >
               <Send className="h-4 w-4" strokeWidth={2.5} /> Telegram Bot
             </a>
@@ -123,40 +123,25 @@ export default function HomePage() {
         </section>
 
         {/* ══ STATS BAR ══ */}
-        {status && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <StatCard
-              label="Tokens"
-              value={String(status.tokens_in_run)}
-              icon={<Activity className="h-4 w-4" />}
-              tone="white"
-            />
-            <StatCard
-              label="Wallets"
-              value={String(status.wallets_graded)}
-              icon={<Wallet className="h-4 w-4" />}
-              tone="pink"
-            />
-            <StatCard
-              label="Trades"
-              value={String(status.total_trades)}
-              icon={<BarChart3 className="h-4 w-4" />}
-              tone="white"
-            />
-            <StatCard
-              label="Win Rate"
-              value={status.win_rate > 0 ? fmtPct(status.win_rate) : "—"}
-              icon={<Trophy className="h-4 w-4" />}
-              tone="yellow"
-            />
-            <StatCard
-              label="Total PnL"
-              value={status.total_pnl !== 0 ? fmtUsd(status.total_pnl) : "—"}
-              icon={<TrendingUp className="h-4 w-4" />}
-              tone={status.total_pnl >= 0 ? "lime" : "red"}
-            />
-          </div>
-        )}
+        {status && (() => {
+          const cards = [
+            <StatCard key="tokens" label="Tokens" value={String(status.tokens_in_run)} icon={<Activity className="h-4 w-4" />} tone="white" />,
+            <StatCard key="wallets" label="Wallets" value={String(status.wallets_graded)} icon={<Wallet className="h-4 w-4" />} tone="pink" />,
+            <StatCard key="trades" label="Trades" value={String(status.total_trades)} icon={<BarChart3 className="h-4 w-4" />} tone="white" />,
+          ];
+          if (status.win_rate > 0) {
+            cards.push(<StatCard key="wr" label="Win Rate" value={fmtPct(status.win_rate)} icon={<Trophy className="h-4 w-4" />} tone="yellow" />);
+          }
+          if (status.total_pnl !== 0) {
+            cards.push(<StatCard key="pnl" label="Total PnL" value={fmtUsd(status.total_pnl)} icon={<TrendingUp className="h-4 w-4" />} tone={status.total_pnl >= 0 ? "lime" : "red"} />);
+          }
+          const cols = cards.length <= 3 ? "grid-cols-3" : cards.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
+          return (
+            <div className={`grid gap-4 ${cols}`}>
+              {cards}
+            </div>
+          );
+        })()}
 
         {/* ══ HOT TOKENS + TOP WALLETS ══ */}
         <div className="grid gap-6 lg:grid-cols-2">

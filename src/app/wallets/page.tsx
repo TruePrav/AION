@@ -6,7 +6,7 @@ import { apiFetch, type DiscoveryWallet } from "@/lib/api";
 import { fmtUsd, fmtPct, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { AlertTriangle, TrendingUp, Target, Activity, ArrowUpRight, Info } from "lucide-react";
+import { AlertTriangle, TrendingUp, Target, Activity, ArrowUpRight, Info, LayoutGrid, List } from "lucide-react";
 
 type Grade = "S" | "A" | "B" | "C" | "D";
 
@@ -17,6 +17,7 @@ export default function WalletsPage() {
   const [filter, setFilter] = useState<Grade | "ALL">("ALL");
   const [sort, setSort] = useState<SortKey>("score");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,6 +139,35 @@ export default function WalletsPage() {
             >
               {sortDir === "desc" ? "↓ High first" : "↑ Low first"}
             </button>
+            {/* View toggle */}
+            <div className="flex rounded-lg border border-foreground/15 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                title="Grid view"
+                className={cn(
+                  "px-2.5 py-1.5 transition-colors",
+                  viewMode === "grid"
+                    ? "bg-foreground text-background"
+                    : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10"
+                )}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                title="List view"
+                className={cn(
+                  "px-2.5 py-1.5 transition-colors",
+                  viewMode === "list"
+                    ? "bg-foreground text-background"
+                    : "bg-foreground/5 text-foreground/60 hover:bg-foreground/10"
+                )}
+              >
+                <List className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -156,17 +186,19 @@ export default function WalletsPage() {
           </p>
         </div>
 
-        {/* ── Wallet Grid ── */}
+        {/* ── Wallet Grid / List ── */}
         {filtered.length === 0 ? (
           <div className="glass-card p-16 text-center">
             <p className="text-sm text-foreground/60">No wallets match your filter</p>
           </div>
-        ) : (
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map((w) => (
               <WalletCard key={w.address} w={w} />
             ))}
           </div>
+        ) : (
+          <WalletListView wallets={filtered} />
         )}
 
         {/* ── Footer note ── */}
@@ -185,6 +217,91 @@ export default function WalletsPage() {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+// WalletListView — compact table layout
+// ════════════════════════════════════════════════════════════════
+
+function WalletListView({ wallets }: { wallets: DiscoveryWallet[] }) {
+  const colClass = "grid-cols-[36px_1fr_56px_64px_48px_80px_80px_56px] md:grid-cols-[40px_1fr_70px_70px_60px_90px_90px_60px]";
+  return (
+    <div className="glass-card overflow-x-auto">
+      {/* Header */}
+      <div className={cn("grid gap-2 px-4 py-2.5 border-b border-foreground/10 bg-foreground/[0.03] min-w-[600px]", colClass)}>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Grade</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Wallet</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Score</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Win Rate</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Trades</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Realized</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Unrealized</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40 text-right">Chain</span>
+      </div>
+      {/* Rows */}
+      {wallets.map((w) => {
+        const hasClosedTrades = w.total_trades > 0;
+        return (
+          <Link
+            key={w.address}
+            href={`/wallet/${w.address}`}
+            className={cn("grid gap-2 px-4 py-2.5 border-b border-foreground/[0.06] hover:bg-foreground/[0.05] transition-colors items-center min-w-[600px]", colClass)}
+          >
+            <GradeBadge grade={w.grade as Grade} size="sm" />
+            <div className="min-w-0 flex items-center gap-1.5">
+              <span className="font-bold text-foreground text-xs truncate">
+                {w.label || truncAddr(w.address, 6)}
+              </span>
+              <span className="font-mono text-[10px] text-foreground/35 hidden sm:inline">
+                {truncAddr(w.address, 4)}
+              </span>
+            </div>
+            <span className="font-mono text-xs font-bold text-foreground tabular-nums text-right">
+              {w.score}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-xs font-bold tabular-nums text-right",
+                !hasClosedTrades
+                  ? "text-foreground/40"
+                  : w.win_rate >= 0.7
+                    ? "text-profit"
+                    : w.win_rate >= 0.5
+                      ? "text-foreground"
+                      : "text-loss"
+              )}
+            >
+              {hasClosedTrades ? fmtPct(w.win_rate) : "—"}
+            </span>
+            <span className="font-mono text-xs text-foreground/80 tabular-nums text-right">
+              {w.total_trades}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-xs font-bold tabular-nums text-right",
+                w.total_pnl_realized >= 0 ? "text-profit" : "text-loss"
+              )}
+            >
+              {w.total_pnl_realized >= 0 ? "+" : ""}
+              {fmtUsdCompact(w.total_pnl_realized)}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-xs font-bold tabular-nums text-right",
+                w.total_pnl_unrealized >= 0 ? "text-profit" : "text-loss"
+              )}
+            >
+              {w.total_pnl_unrealized >= 0 ? "+" : ""}
+              {fmtUsdCompact(w.total_pnl_unrealized)}
+            </span>
+            <span className="text-[10px] text-foreground/50 font-semibold text-right capitalize">
+              {w.chain || "—"}
+            </span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

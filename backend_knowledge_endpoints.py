@@ -7,7 +7,7 @@
 import os as _os_kw
 from pathlib import Path as _Path_kw
 
-_KNOWLEDGE_DIR = _Path_kw(_os_kw.environ.get("AION_KNOWLEDGE_DIR", "/root/oracle/v3/knowledge"))
+_KNOWLEDGE_DIR = _Path_kw(_os_kw.environ.get("AION_KNOWLEDGE_DIR", "/root/aion/v3/knowledge"))
 
 
 def _kw_safe_path(relpath: str) -> _Path_kw | None:

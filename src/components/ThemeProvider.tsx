@@ -18,7 +18,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "oracle-theme";
+const STORAGE_KEY = "aion-theme";
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;

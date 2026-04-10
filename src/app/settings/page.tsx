@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check, Bell, Eye, Plus, X, Waves } from "lucide-react";
+import { Lock, Save, AlertTriangle, Sliders, Target, Search, Check, Bell, Eye, Plus, X, Waves, Power } from "lucide-react";
 
 interface AlertSettings {
+  alerts_enabled: boolean;
   alert_min_win_rate: number;
   alert_min_grade: string;
   alert_watchlist: string[];
@@ -28,6 +29,7 @@ const ALERT_TYPES = [
 ];
 
 const DEFAULT_ALERT_SETTINGS: AlertSettings = {
+  alerts_enabled: true,
   alert_min_win_rate: 0.60,
   alert_min_grade: "B",
   alert_watchlist: [],
@@ -75,6 +77,9 @@ const TIERS = [
   { key: "conservative" as const, label: "Conservative", desc: "Age 30d+, mcap $10M+, 5+ SM." },
   { key: "custom" as const, label: "Custom", desc: "Set your own thresholds below." },
 ];
+
+// Coming soon: save multiple named custom tiers
+const CUSTOM_TIERS_COMING_SOON = true;
 
 const DEFAULT_SETTINGS: Settings = {
   trailing_stop_pct: 0.15,
@@ -370,6 +375,16 @@ export default function SettingsPage() {
               })}
             </div>
           </div>
+
+          {/* Coming soon: multiple custom tiers */}
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-dashed border-foreground/15 bg-foreground/[0.02] px-4 py-3">
+            <span className="inline-flex items-center rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+              Coming Soon
+            </span>
+            <span className="text-[11px] text-foreground/60">
+              Save multiple named custom tiers — switch between your own presets instantly.
+            </span>
+          </div>
         </Section>
 
         {/* ── Position Sizing ── */}
@@ -458,8 +473,55 @@ export default function SettingsPage() {
 
         {/* ── Smart Money Alerts ── */}
         <Section icon={<Bell className="h-4 w-4" />} title="Smart money alerts" description="Get notified when proven wallets make moves. Works for both crypto and Polymarket.">
-          {/* Win rate threshold */}
+          {/* Master toggle */}
           <div className="space-y-6">
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-foreground/15 bg-foreground/[0.03]">
+              <div className="flex items-center gap-3">
+                <Power className="h-4 w-4 text-foreground/60" />
+                <div>
+                  <div className="text-xs font-semibold text-foreground">Enable alerts</div>
+                  <div className="text-[10px] text-muted-foreground">Master switch — disables all alerts when off</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setAlertSettings(prev => ({ ...prev, alerts_enabled: !prev.alerts_enabled }))}
+                disabled={READONLY_MODE}
+                className={cn(
+                  "relative h-6 w-11 rounded-full transition-all duration-200 disabled:opacity-50",
+                  alertSettings.alerts_enabled
+                    ? "bg-primary"
+                    : "bg-foreground/20"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200",
+                  alertSettings.alerts_enabled ? "left-[22px]" : "left-0.5"
+                )} />
+              </button>
+            </div>
+
+            {/* Quick actions: enable all / disable all types */}
+            <div className={cn("transition-opacity", !alertSettings.alerts_enabled && "opacity-40 pointer-events-none")}>
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setAlertSettings(prev => ({ ...prev, alert_types_enabled: ALERT_TYPES.map(t => t.key) }))}
+                  disabled={READONLY_MODE}
+                  className="text-[10px] font-semibold text-primary hover:text-primary/80 transition disabled:opacity-50"
+                >
+                  Enable all types
+                </button>
+                <span className="text-foreground/20">|</span>
+                <button
+                  onClick={() => setAlertSettings(prev => ({ ...prev, alert_types_enabled: [] }))}
+                  disabled={READONLY_MODE}
+                  className="text-[10px] font-semibold text-muted-foreground hover:text-foreground/60 transition disabled:opacity-50"
+                >
+                  Disable all types
+                </button>
+              </div>
+            </div>
+
+            <div className={cn("space-y-6 transition-opacity", !alertSettings.alerts_enabled && "opacity-40 pointer-events-none")}>
             <SliderRow
               label="Min win rate for alerts"
               value={Math.round(alertSettings.alert_min_win_rate * 100)}
@@ -581,6 +643,8 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+
+            </div>{/* end opacity wrapper */}
 
             {!READONLY_MODE && (
               <Button onClick={saveAlertSettings} disabled={savingAlerts} size="sm" variant="outline">

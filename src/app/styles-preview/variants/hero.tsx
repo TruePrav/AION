@@ -25,7 +25,7 @@ export function HeroV1() {
         </div>
       </div>
       <div className="p-8">
-        <pre className="text-[10px] leading-tight text-emerald-500/60 mb-4">{`> oracle --track smart-money --chain solana`}</pre>
+        <pre className="text-[10px] leading-tight text-emerald-500/60 mb-4">{`> aion --track smart-money --chain solana`}</pre>
         <h1 className="text-4xl font-bold text-emerald-400 tracking-tight mb-2">
           SMART_MONEY.INTELLIGENCE
         </h1>

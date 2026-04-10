@@ -32,6 +32,8 @@ const PATH_ALLOWLIST: RegExp[] = [
   /^settings$/,
   /^positions\/[^/]+\/targets$/,
   /^positions\/[^/]+\/close$/,
+  /^alerts\/settings$/,
+  /^alerts\/watchlist$/,
 ];
 
 function isAllowedPath(joined: string): boolean {

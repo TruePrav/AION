@@ -6,7 +6,7 @@ self-evolving scoring loop. The Karpathy-style markdown wiki in /knowledge
 is the *understanding* layer; this DB is the *telemetry* layer.
 
 Design rules:
-    - One file: /root/oracle/v3/data/aion.db
+    - One file: /root/aion/v3/data/aion.db
     - WAL mode so the curator and API can read/write concurrently
     - Full raw snapshots kept as JSON blobs alongside the indexed columns,
       so we can always rehydrate even if the schema evolves
@@ -26,7 +26,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator, Optional
 
-DB_PATH = os.environ.get("AION_DB_PATH", "/root/oracle/v3/data/aion.db")
+DB_PATH = os.environ.get("AION_DB_PATH", "/root/aion/v3/data/aion.db")
 
 SCHEMA = """
 PRAGMA journal_mode = WAL;
@@ -711,7 +711,7 @@ def get_evolution_status() -> dict:
 # Migration from legacy JSON files
 # ─────────────────────────────────────────────────────────────────────────────
 
-def migrate_from_json(data_dir: str = "/root/oracle/v3/data") -> dict:
+def migrate_from_json(data_dir: str = "/root/aion/v3/data") -> dict:
     """One-shot migration: pull any existing JSON data into SQLite."""
     init_db()
     result = {"snapshots": 0, "polymarket": 0, "weights": 0}

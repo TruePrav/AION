@@ -4,8 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Sun, Moon } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
 
 const NAV = [
   { href: "/", label: "Dashboard" },
@@ -17,13 +15,12 @@ const NAV = [
   { href: "/grading", label: "Grading" },
   { href: "/knowledge", label: "Wiki" },
   { href: "/settings", label: "Settings" },
-  { href: "/how-it-works", label: "How" },
+  { href: "/how-it-works", label: "How It Works" },
   { href: "/roadmap", label: "Roadmap" },
 ];
 
 export default function Navbar() {
   const path = usePathname() || "/";
-  const { theme, toggle } = useTheme();
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/90 border-foreground/10">
@@ -33,10 +30,10 @@ export default function Navbar() {
           <Image
             src="/aion-logo-sm.png"
             alt="AION"
-            width={120}
-            height={36}
+            width={929}
+            height={304}
             priority
-            className="h-8 w-auto dark:[filter:invert(1)_hue-rotate(80deg)] transition-[filter] duration-200"
+            className="h-9 w-auto dark:[filter:invert(1)_hue-rotate(80deg)] transition-[filter] duration-200"
           />
         </Link>
 
@@ -59,56 +56,27 @@ export default function Navbar() {
               </Link>
             );
           })}
-
-          {/* Theme toggle */}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            className="ml-2 h-8 w-8 inline-flex items-center justify-center rounded-full border border-foreground/15 bg-foreground/[0.06] text-foreground/80 hover:text-foreground hover:bg-foreground/10 transition-colors"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" strokeWidth={2.25} />
-            ) : (
-              <Moon className="h-4 w-4" strokeWidth={2.25} />
-            )}
-          </button>
         </div>
 
         {/* ── Mobile nav ── */}
-        <div className="flex items-center gap-1 md:hidden">
-          <div className="flex flex-wrap gap-1">
-            {NAV.map((n) => {
-              const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
-              return (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  className={cn(
-                    "px-2 py-0.5 text-[9px] font-semibold tracking-wide rounded-full",
-                    active
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70"
-                  )}
-                >
-                  {n.label}
-                </Link>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-foreground/15 bg-foreground/[0.06] text-foreground/80"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-3.5 w-3.5" strokeWidth={2.25} />
-            ) : (
-              <Moon className="h-3.5 w-3.5" strokeWidth={2.25} />
-            )}
-          </button>
+        <div className="flex flex-wrap gap-1 md:hidden">
+          {NAV.map((n) => {
+            const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={cn(
+                  "px-2 py-0.5 text-[9px] font-semibold tracking-wide rounded-full",
+                  active
+                    ? "bg-foreground text-background"
+                    : "text-foreground/70"
+                )}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

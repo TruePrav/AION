@@ -235,26 +235,6 @@ export default function HowItWorksPage() {
             </span>
           </div>
 
-          {/* How we count Nansen API calls — answers the competition question */}
-          <div className="glass-card p-4 flex items-start gap-3 bg-primary/[0.05] border-primary/25">
-            <Terminal className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-            <div className="text-[12px] leading-relaxed font-medium text-foreground/75">
-              <div className="font-bold text-foreground text-[13px] mb-1">
-                What counts as a Nansen API call?
-              </div>
-              Every CLI command is one call. A single discovery run fires{" "}
-              <span className="font-mono text-foreground font-bold">100+ calls</span> —
-              <span className="font-mono"> 3 </span>
-              smart-money inflows (one per chain), <span className="font-mono">~30</span>{" "}
-              top-traders (one per hot token), <span className="font-mono">~60</span>{" "}
-              profiler pnl lookups (one per SM wallet), plus the whole Polymarket branch
-              (<span className="font-mono">1 + 5 + 5 = 11</span>). Every call is logged to{" "}
-              <span className="font-mono text-foreground">data/credit_log.jsonl</span>{" "}
-              and visible on the <a href="/commands" className="underline underline-offset-2 hover:text-foreground">Command Log</a> tab.
-              Well past the 10-call minimum on every run.
-            </div>
-          </div>
-
           {/* Big circular diagram for desktop */}
           <PipelineLoop />
 
@@ -556,9 +536,9 @@ function PipelineLoop() {
             strokeDasharray="6 8"
             className="text-foreground/20 stroke-current"
           />
-          {/* Flow arc: covers ~340° then arrow back, implying a loop */}
+          {/* Flow arc: covers ~345° starting just after step 1, ending just past step 10, arrow points back to step 1 */}
           <path
-            d={arcPath(CENTER, CENTER, RADIUS - 6, -85, 265)}
+            d={arcPath(CENTER, CENTER, RADIUS - 6, -72, 320)}
             fill="none"
             strokeWidth={2}
             className="text-primary/45 stroke-current"

@@ -5,7 +5,7 @@ import { API } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye, ArrowLeftRight, Trophy } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye, ArrowLeftRight } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // Category normalization
@@ -173,14 +173,31 @@ interface PMBetsResponse {
 
 interface PMWhaleProfile {
   address: string;
+  owner_address: string;
   grade: string;
   score: number;
   win_rate: number;
-  wins: number;
-  losses: number;
+  resolved_wins: number;
+  resolved_losses: number;
+  resolved_total: number;
   total_pnl_realized: number;
-  total_trades: number;
+  total_pnl_unrealized: number;
+  total_buy_cost: number;
+  total_sell_proceeds: number;
+  total_redemption: number;
+  market_count: number;
   profiled_at: string;
+  top_markets: {
+    market_id: string;
+    question: string;
+    side: string;
+    pnl_usd: number;
+    buy_cost: number;
+    sell_proceeds: number;
+    redemption: number;
+    unrealized: number;
+    resolved: boolean;
+  }[];
 }
 
 interface PMContrarianSignal {
@@ -275,9 +292,12 @@ export default function PolymarketPage() {
   const [data, setData] = useState<PMData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets" | "contrarian" | "early-movers" | "whale-profiles">("markets");
+  const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets" | "contrarian" | "early-movers">("markets");
   const [expandedMarket, setExpandedMarket] = useState<string | null>(null);
   const [expandedWhale, setExpandedWhale] = useState<string | null>(null);
+  const [whaleSort, setWhaleSort] = useState<"score" | "win_rate" | "pnl" | "position" | "unrealized">("score");
+  const [whaleSortDir, setWhaleSortDir] = useState<"desc" | "asc">("desc");
+  const [whaleFilter, setWhaleFilter] = useState<"all" | "profiled" | "S" | "A" | "B" | "C" | "D">("all");
   const [bets, setBets] = useState<PMBetsResponse | null>(null);
   // Tag/category filter — null = "all categories". Selecting one or more
   // chips narrows the markets list to events tagged with any of those tags.
@@ -372,6 +392,24 @@ export default function PolymarketPage() {
   }
 
   const { funnel, markets, hot_markets, whales, convergence, credits, timestamp } = data;
+
+  // ── Enrich whales with profiler data (win rate, realized PnL, etc.) ──
+  // Build a lookup from proxy_address → profile so we can merge.
+  const profileByProxy = new Map<string, PMWhaleProfile>();
+  const profileByOwner = new Map<string, PMWhaleProfile>();
+  for (const p of whaleProfiles) {
+    profileByProxy.set(p.address.toLowerCase(), p);
+    if (p.owner_address) profileByOwner.set(p.owner_address.toLowerCase(), p);
+  }
+
+  // Attach profiler stats to each whale. Match on proxy first, owner second.
+  const enrichedWhales = whales.map((w) => {
+    const profile =
+      profileByProxy.get((w.proxy_wallet || "").toLowerCase()) ||
+      profileByOwner.get(w.owner_address.toLowerCase()) ||
+      null;
+    return { ...w, profile };
+  });
 
   // Build canonical-category counts across this run. Each market counts
   // once per unique canonical category its raw tags resolve to, so markets
@@ -469,13 +507,6 @@ export default function PolymarketPage() {
               onClick={() => setTab("early-movers")}
               label={`Early Movers (${earlyMovers.length})`}
               highlight
-            />
-          )}
-          {whaleProfiles.length > 0 && (
-            <TabButton
-              active={tab === "whale-profiles"}
-              onClick={() => setTab("whale-profiles")}
-              label={`Whale Profiles (${whaleProfiles.length})`}
             />
           )}
         </div>
@@ -618,35 +649,125 @@ export default function PolymarketPage() {
         )}
 
         {/* ── Whales tab ── */}
-        {tab === "whales" && (
+        {tab === "whales" && (() => {
+          const profiledCount = enrichedWhales.filter(w => w.profile).length;
+          const unprofiledCount = enrichedWhales.length - profiledCount;
+
+          // Filter
+          const filteredWhales = enrichedWhales.filter((w) => {
+            if (whaleFilter === "all") return true;
+            if (whaleFilter === "profiled") return !!w.profile;
+            const grade = w.profile ? w.profile.grade : w.grade;
+            return grade === whaleFilter;
+          });
+
+          // Sort
+          const sortedWhales = [...filteredWhales].sort((a, b) => {
+            const ap = a.profile, bp = b.profile;
+            const getValue = (w: typeof a): { v: number; has: boolean } => {
+              const p = w.profile;
+              switch (whaleSort) {
+                case "score":
+                  return { v: p ? p.score : 0, has: !!p };
+                case "win_rate":
+                  return { v: p ? p.win_rate : 0, has: !!p };
+                case "pnl":
+                  return { v: p ? p.total_pnl_realized : 0, has: !!p };
+                case "position":
+                  return { v: w.total_position_usd, has: true };
+                case "unrealized":
+                  return { v: w.total_unrealized_pnl, has: true };
+              }
+            };
+            const va = getValue(a), vb = getValue(b);
+            // Push wallets without data to the bottom
+            if (va.has !== vb.has) return va.has ? -1 : 1;
+            const diff = va.v - vb.v;
+            return whaleSortDir === "desc" ? -diff : diff;
+          });
+
+          return (
           <div className="space-y-3">
             <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
               <Info className="h-4 w-4 text-foreground/55 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-bold text-foreground/85 text-xs mb-1">How whales are found</div>
+                <div className="font-bold text-foreground/85 text-xs mb-1">Whale profiles</div>
                 <p>
-                  Every wallet that shows up as a top holder in any of the{" "}
-                  <span className="font-bold text-foreground/85">{funnel.deep_dive_markets}</span>{" "}
-                  deep-dived markets is captured. We then grade each one with a 0-100
-                  score from three signals: <span className="font-bold text-foreground/85">position size</span>{" "}
-                  (how much capital is on the line), <span className="font-bold text-foreground/85">unrealized
-                  PnL</span> (how the open positions are performing), and{" "}
-                  <span className="font-bold text-foreground/85">breadth</span> (how many
-                  markets they&apos;re active in). Grades S/A/B = high conviction; C/D = noise.
-                  The expanded list below shows the markets we observed them in <em>this run</em> —
-                  not necessarily their entire portfolio.
+                  A <span className="font-bold text-foreground/85">whale</span> is any wallet that appears as a top-5 holder in at least one
+                  deep-dived market (positions typically $10K+). Each whale is profiled via their{" "}
+                  <span className="font-bold text-foreground/85">historical track record</span> on
+                  Polymarket — win rate on resolved markets, realized PnL, and market breadth. Grades reflect
+                  actual performance, not just position size. Click any whale to see their active positions and past trades.
                 </p>
               </div>
             </div>
-            <div className="text-[11px] text-foreground/55 font-medium">
-              All unique whales found across deep-dived markets, graded by position size + unrealized PnL + breadth.
+
+            {/* Controls row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Grade / status filter */}
+              <div className="flex gap-1.5 flex-wrap items-center">
+                {(["all", "profiled", "S", "A", "B", "C", "D"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setWhaleFilter(f)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
+                      whaleFilter === f
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-foreground/5 text-foreground/60 border-foreground/15 hover:bg-foreground/10"
+                    )}
+                  >
+                    {f === "all" ? "All" : f === "profiled" ? "Profiled" : f}
+                  </button>
+                ))}
+              </div>
+              {/* Sort */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider">Sort</span>
+                <select
+                  value={whaleSort}
+                  onChange={(e) => setWhaleSort(e.target.value as typeof whaleSort)}
+                  className="glass-input text-xs font-semibold cursor-pointer"
+                >
+                  <option value="score">Score</option>
+                  <option value="pnl">Realized PnL</option>
+                  <option value="position">Position Size</option>
+                  <option value="unrealized">Unrealized PnL</option>
+                  <option value="win_rate">Win Rate</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setWhaleSortDir(whaleSortDir === "desc" ? "asc" : "desc")}
+                  className="rounded-lg bg-foreground/5 border border-foreground/15 px-2 py-1 text-[10px] font-bold text-foreground/70 hover:bg-foreground/10 transition-colors"
+                >
+                  {whaleSortDir === "desc" ? "↓ High" : "↑ Low"}
+                </button>
+              </div>
             </div>
-            {whales.map((w) => {
+
+            <div className="flex items-center gap-2 text-[11px] text-foreground/55 font-medium">
+              <span>{profiledCount} profiled</span>
+              <span className="text-foreground/20">·</span>
+              <span>{unprofiledCount} pending profiling</span>
+              <span className="text-foreground/20">·</span>
+              <span>{enrichedWhales.filter(w => w.profile && w.profile.win_rate >= 0.6).length} with ≥60% WR</span>
+              {whaleFilter !== "all" && (
+                <>
+                  <span className="text-foreground/20">·</span>
+                  <span className="text-primary font-bold">{sortedWhales.length} shown</span>
+                </>
+              )}
+            </div>
+
+            {sortedWhales.length === 0 ? (
+              <div className="glass-card p-8 text-center text-sm text-foreground/50">No whales match this filter</div>
+            ) : sortedWhales.map((w) => {
               const expanded = expandedWhale === w.owner_address;
+              const p = w.profile;
               return (
                 <div key={w.owner_address} className="glass-card p-4">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <GradeBadge grade={w.grade} />
+                    <GradeBadge grade={p ? (p.grade as "S"|"A"|"B"|"C"|"D") : w.grade} />
                     <a
                       href={polyscanAddr(w.owner_address)}
                       target="_blank"
@@ -656,41 +777,70 @@ export default function PolymarketPage() {
                       {truncAddr(w.owner_address, 6)}
                     </a>
                     <CopyButton text={w.owner_address} />
+                    {p && p.score >= 75 && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
+                        PROVEN
+                      </span>
+                    )}
                     <div className="flex-1" />
+                    {p ? (
+                      <>
+                        <Metric
+                          label="Win Rate"
+                          value={`${(p.win_rate * 100).toFixed(1)}%`}
+                          color={p.win_rate >= 0.6 ? "text-primary" : p.win_rate >= 0.5 ? "text-foreground" : "text-destructive"}
+                        />
+                        <Metric
+                          label="Realized PnL"
+                          value={fmtCompact(p.total_pnl_realized)}
+                          color={p.total_pnl_realized >= 0 ? "text-primary" : "text-destructive"}
+                        />
+                      </>
+                    ) : (
+                      <span className="text-[10px] text-foreground/30 italic">not profiled yet</span>
+                    )}
                     <Metric label="Position" value={fmtCompact(w.total_position_usd)} />
                     <Metric
                       label="Unrealized"
                       value={fmtCompact(w.total_unrealized_pnl)}
                       color={w.total_unrealized_pnl >= 0 ? "text-primary" : "text-destructive"}
                     />
-                    <Metric label="Markets" value={String(w.position_count)} />
+                    <Metric label="Markets" value={p ? String(p.market_count) : String(w.position_count)} />
                     <button
                       onClick={() => {
                         const next = expanded ? null : w.owner_address;
                         setExpandedWhale(next);
-                        // Polymarket data-api keys positions by the proxy
-                        // wallet, not the EOA owner. Fall back to owner if
-                        // proxy wasn't captured (older snapshots).
                         const fetchAddr = w.proxy_wallet || w.owner_address;
                         if (next) loadFullPositions(fetchAddr);
                       }}
                       className="text-[11px] font-bold text-primary hover:text-primary/80 transition-colors"
                     >
-                      {expanded ? "Hide" : "Show full book"} →
+                      {expanded ? "Hide" : "Positions"} →
                     </button>
                   </div>
+                  {/* Profiler stats row */}
+                  {p && (
+                    <div className="flex items-center gap-4 mt-2 pt-2 border-t border-foreground/[0.06] text-[10px] text-foreground/55 flex-wrap">
+                      <span>Score: <span className="font-bold text-foreground/80">{p.score}/100</span></span>
+                      <span>Resolved: <span className="font-bold text-foreground/80">{p.resolved_wins}W-{p.resolved_losses}L</span> ({p.resolved_total} total)</span>
+                      <span>Cost basis: <span className="font-mono">{fmtCompact(p.total_buy_cost)}</span></span>
+                      <span>Proceeds: <span className="font-mono">{fmtCompact(p.total_sell_proceeds)}</span></span>
+                    </div>
+                  )}
                   {expanded && (
                     <WhaleExpanded
                       walletAddress={w.owner_address}
                       deepDiveMatches={w.markets}
                       fullState={fullPositions[w.proxy_wallet || w.owner_address]}
+                      profile={p || undefined}
                     />
                   )}
                 </div>
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── Convergence tab ── */}
         {tab === "convergence" && (
@@ -743,6 +893,11 @@ export default function PolymarketPage() {
                     />
                   </div>
                   <div className="pt-3 border-t border-foreground/10 space-y-2">
+                    <div className="flex items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-wider text-foreground/40 px-0.5">
+                      <span className="flex-1">Market</span>
+                      <span>Position</span>
+                      <span className="w-16 text-right">Unrl. PnL</span>
+                    </div>
                     {w.markets.map((wm, i) => (
                       <div key={i} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
                         <div className="flex-1 min-w-0">
@@ -760,7 +915,7 @@ export default function PolymarketPage() {
                         </div>
                         <div className="font-mono tabular-nums">{fmtCompact(wm.position_usd)}</div>
                         <div className={cn(
-                          "font-mono tabular-nums text-[11px]",
+                          "font-mono tabular-nums text-[11px] w-16 text-right",
                           wm.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive"
                         )}>
                           {wm.unrealized_pnl_usd >= 0 ? "+" : ""}{fmtCompact(wm.unrealized_pnl_usd)}
@@ -1060,76 +1215,6 @@ export default function PolymarketPage() {
           </div>
         )}
 
-        {/* ── Whale Profiles tab ── */}
-        {tab === "whale-profiles" && (
-          <div className="space-y-4">
-            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
-              <Trophy className="h-4 w-4 mt-0.5 text-accent flex-shrink-0" />
-              <div>
-                <span className="font-bold text-foreground">Whale Profiles</span> — Historical performance of Polymarket
-                whales graded by actual realized PnL and win rate on Polygon, not just current position size.
-                These are the wallets whose moves trigger smart money alerts.
-              </div>
-            </div>
-            {whaleProfiles.length === 0 ? (
-              <div className="glass-card p-8 text-center text-sm text-foreground/50">
-                No whale profiles yet. Run the PM whale profiler to grade whales by historical win rate.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {whaleProfiles.map((p, i) => {
-                  const profit = p.total_pnl_realized >= 0;
-                  return (
-                    <div key={p.address} className="glass-card-sm p-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="text-[10px] text-foreground/40 tabular-nums w-5 text-right">{i + 1}</div>
-                          <GradeBadge grade={p.grade} />
-                          <div>
-                            <a
-                              href={polyscanAddr(p.address)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-mono text-foreground/80 hover:text-primary transition"
-                            >
-                              {truncAddr(p.address)}
-                            </a>
-                            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-foreground/50">
-                              <span>{p.total_trades} trades</span>
-                              <span>{p.wins}W / {p.losses}L</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Win Rate</div>
-                            <div className={cn(
-                              "text-base font-bold tabular-nums",
-                              p.win_rate >= 0.6 ? "text-profit" : p.win_rate >= 0.4 ? "text-foreground" : "text-loss"
-                            )}>
-                              {(p.win_rate * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Realized PnL</div>
-                            <div className={cn("text-base font-bold tabular-nums", profit ? "text-profit" : "text-loss")}>
-                              {profit ? "+" : ""}{fmtCompact(p.total_pnl_realized)}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-[9px] text-foreground/50 uppercase tracking-wider">Score</div>
-                            <div className="text-base font-bold text-foreground tabular-nums">{p.score}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── Footer info ── */}
         <div className="glass-card p-5 text-[11px] text-foreground/60 leading-relaxed space-y-2">
           <div className="font-bold text-foreground/80 text-xs mb-1">How this works</div>
@@ -1254,10 +1339,12 @@ function WhaleExpanded({
   walletAddress,
   deepDiveMatches,
   fullState,
+  profile,
 }: {
   walletAddress: string;
   deepDiveMatches: PMWhaleMarket[];
   fullState: PMFullPositionsResponse | "loading" | "error" | undefined;
+  profile?: PMWhaleProfile;
 }) {
   if (fullState === "loading") {
     return (
@@ -1270,16 +1357,28 @@ function WhaleExpanded({
   const hasFull = fullState && typeof fullState !== "string" && fullState.positions.length > 0;
   const list: PMWhaleMarket[] = hasFull ? fullState.positions : deepDiveMatches;
 
+  // Split profiler markets into resolved (past trades) and active
+  const pastTrades = profile?.top_markets?.filter(m => m.resolved) || [];
+  const activeProfMkts = profile?.top_markets?.filter(m => !m.resolved) || [];
+
   return (
-    <div className="mt-3 pt-3 border-t border-foreground/10 space-y-2">
+    <div className="mt-3 pt-3 border-t border-foreground/10 space-y-4">
+      {/* Active positions section */}
+      <div className="space-y-2">
       <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/45 flex items-center gap-2">
+        <span className="inline-flex items-center justify-center h-4 w-4 rounded bg-primary/20 text-primary text-[8px] font-black">●</span>
         {hasFull ? (
-          <>Full active book · {list.length} positions</>
+          <>Active positions · {list.length}</>
         ) : fullState === "error" ? (
           <>Couldn&apos;t load full book — showing deep-dive matches only</>
         ) : (
-          <>Deep-dive matches · {list.length} positions (expand to load full book)</>
+          <>Deep-dive matches · {list.length} positions</>
         )}
+      </div>
+      <div className="flex items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-wider text-foreground/40 px-0.5">
+        <span className="flex-1">Market</span>
+        <span>Position</span>
+        <span className="w-16 text-right">Unrl. PnL</span>
       </div>
       {list.map((wm, i) => (
         <div key={`${walletAddress}-${i}`} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
@@ -1303,7 +1402,7 @@ function WhaleExpanded({
           </div>
           <div
             className={cn(
-              "font-mono tabular-nums text-[11px]",
+              "font-mono tabular-nums text-[11px] w-16 text-right",
               wm.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive",
             )}
             title="Unrealized PnL"
@@ -1313,6 +1412,50 @@ function WhaleExpanded({
           </div>
         </div>
       ))}
+      </div>{/* end active positions section */}
+
+      {/* Past resolved trades from profiler */}
+      {pastTrades.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/45 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center h-4 w-4 rounded bg-foreground/10 text-foreground/50 text-[8px] font-black">✓</span>
+            Past trades (resolved) · {pastTrades.length}
+          </div>
+          <div className="flex items-center justify-between gap-3 text-[9px] font-bold uppercase tracking-wider text-foreground/40 px-0.5">
+            <span className="flex-1">Market</span>
+            <span className="w-14 text-right">Side</span>
+            <span className="w-16 text-right">Cost</span>
+            <span className="w-16 text-right">PnL</span>
+          </div>
+          {pastTrades.slice(0, 20).map((tm, i) => (
+            <div key={`past-${walletAddress}-${i}`} className="text-xs text-foreground/65 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0 truncate">
+                <span className="font-medium text-foreground/75">{tm.question || "(unknown)"}</span>
+              </div>
+              <span className={cn(
+                "w-14 text-right text-[10px] font-bold",
+                tm.side.toLowerCase().startsWith("y") ? "text-primary" : "text-destructive"
+              )}>
+                {tm.side.toUpperCase()}
+              </span>
+              <span className="w-16 text-right font-mono tabular-nums text-foreground/50">
+                {fmtCompact(tm.buy_cost)}
+              </span>
+              <span className={cn(
+                "w-16 text-right font-mono tabular-nums font-semibold",
+                tm.pnl_usd >= 0 ? "text-primary" : "text-destructive"
+              )}>
+                {tm.pnl_usd >= 0 ? "+" : ""}{fmtCompact(tm.pnl_usd)}
+              </span>
+            </div>
+          ))}
+          {pastTrades.length > 20 && (
+            <div className="text-[10px] text-foreground/40 italic">
+              +{pastTrades.length - 20} more resolved trades
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

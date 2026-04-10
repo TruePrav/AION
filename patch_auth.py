@@ -1,7 +1,7 @@
 """Patch webhook_server.py to add API key auth on sensitive endpoints."""
 import os
 
-SERVER_PATH = "/root/oracle/v3/webhook_server.py"
+SERVER_PATH = "/root/aion/v3/webhook_server.py"
 
 with open(SERVER_PATH) as f:
     c = f.read()

@@ -91,7 +91,7 @@
 
 ---
 
-## Oracle (Our Build) - Week 4 Suggestions
+## AION (Our Build) - Week 4 Suggestions
 
 ### Must-Have (proven winning features)
 - Multi-step pipeline with clear stages (like all 3 winners)
@@ -104,7 +104,7 @@
 
 1. **Cross-Market Intelligence** - Combine on-chain smart money signals with off-chain data (news sentiment, social signals, governance votes) for a holistic alpha score. W1 did Polymarket, W2 did multi-chain, W3 did filtering. Nobody combined on-chain + off-chain.
 
-2. **AI-Powered Signal Reasoning** - Use an LLM to explain WHY a signal matters in natural language. W3 said "CLI confirms the WHY" but manually. Oracle could automate the WHY with AI narration of each signal.
+2. **AI-Powered Signal Reasoning** - Use an LLM to explain WHY a signal matters in natural language. W3 said "CLI confirms the WHY" but manually. AION could automate the WHY with AI narration of each signal.
 
 3. **Real-Time Alert System with Confidence Scoring** - Not just detection but a confidence score (0-100) per signal based on multiple Nansen data points. Telegram/Discord alerts with context. Nobody showed alerting.
 
@@ -112,11 +112,11 @@
 
 5. **Multi-Timeframe Analysis** - Scan across 1h, 4h, 24h, 7d windows simultaneously. Show convergence signals (when all timeframes align = highest conviction).
 
-6. **Live Portfolio Simulation** - Show a simulated portfolio that would have been built following Oracle's signals. Track PnL over competition week. Proves value better than any metric.
+6. **Live Portfolio Simulation** - Show a simulated portfolio that would have been built following AION's signals. Track PnL over competition week. Proves value better than any metric.
 
-7. **Nansen CLI as MCP Tool** - Build Oracle as an AI agent that uses Nansen CLI as a tool, making it conversational. Ask Oracle questions and it queries Nansen in real-time. None of the winners made it interactive/conversational.
+7. **Nansen CLI as MCP Tool** - Build AION as an AI agent that uses Nansen CLI as a tool, making it conversational. Ask AION questions and it queries Nansen in real-time. None of the winners made it interactive/conversational.
 
-### Recommended Oracle Stack
+### Recommended AION Stack
 - **Backend:** Python (async) with Nansen CLI integration
 - **AI Layer:** Claude/LLM for signal reasoning and natural language explanations
 - **Frontend:** Next.js dashboard (already have oracle-v3)
@@ -152,12 +152,12 @@
 - **Rollout order:** refactor → simulation mode (auto-close dry_runs only) → kill-switch + badge → live mode behind `LIVE_TRADING=1` env flag
 
 ### Non-Custodial Copy Trade (killer demo upgrade)
-- **Zero custody, zero trust** — Oracle generates signals, users sign swaps with their own wallets
+- **Zero custody, zero trust** — AION generates signals, users sign swaps with their own wallets
 - **Stack:**
   - `@solana/wallet-adapter-react` + `@solana/wallet-adapter-react-ui` for Phantom / Solflare / Backpack connection
   - Jupiter v6 `/quote` + `/swap` endpoints for routing and tx construction
   - Frontend builds the swap transaction, wallet pops up, user signs + broadcasts
-  - Oracle never touches private keys — runs purely on the user's client
+  - AION never touches private keys — runs purely on the user's client
 - **UI flow:**
   1. User sees signal on discovery page → clicks "Copy Trade" button
   2. Modal opens with token info, size slider ($10–$500), slippage dropdown (0.5/1/3%)
@@ -166,7 +166,7 @@
   5. Frontend: `POST jup.ag/v6/swap` → receives serialized tx → wallet signs → broadcasts
   6. Tx hash recorded in localStorage against the signal ID for later P/L tracking
 - **Implementation effort:** ~1-2 days (WalletAdapter boilerplate is the main time sink)
-- **Why it matters:** Transforms Oracle from "passive viewer" into "actionable alpha terminal" without any multi-tenant backend complexity
+- **Why it matters:** Transforms AION from "passive viewer" into "actionable alpha terminal" without any multi-tenant backend complexity
 
 ### Secure Admin Control Panel
 - Public `/` site stays pure read-only (no mutation surface exposed)
@@ -178,7 +178,7 @@
 - Toggle via `NEXT_PUBLIC_READONLY_MODE=1` on public Vercel, unset locally for full control
 
 ### Public Telegram Signal Channel
-- Convert `telegram_bot.py` to post every high-conviction discovery to `@OracleAlphaSignals`
+- Convert `telegram_bot.py` to post every high-conviction discovery to `@AIONAlphaSignals`
 - Rich embeds with graph screenshot, AI reasoning, copy-paste `nansen` commands
 - `/subscribe` slash command optional — channel is public
 

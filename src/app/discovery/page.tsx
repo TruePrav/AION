@@ -69,10 +69,10 @@ export default function DiscoveryPage() {
   const [votingToken, setVotingToken] = useState<string | null>(null);
   const [userId] = useState(() => {
     if (typeof window === "undefined") return "";
-    const stored = localStorage.getItem("oracle_voter_id");
+    const stored = localStorage.getItem("aion_voter_id");
     if (stored) return stored;
     const id = crypto.randomUUID();
-    localStorage.setItem("oracle_voter_id", id);
+    localStorage.setItem("aion_voter_id", id);
     return id;
   });
 

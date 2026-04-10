@@ -2,7 +2,7 @@
 curator.py — Karpathy-style wiki curator for AION.
 
 Reads the latest discovery + polymarket snapshots from SQLite and upserts
-the corresponding wallet/token/market entity pages in /root/oracle/v3/knowledge.
+the corresponding wallet/token/market entity pages in /root/aion/v3/knowledge.
 
 Operates in two modes:
     - template  — pure templated prose. No external calls. Always works.
@@ -45,8 +45,8 @@ from db import (
     init_db,
 )
 
-KNOWLEDGE_DIR = Path(os.environ.get("AION_KNOWLEDGE_DIR", "/root/oracle/v3/knowledge"))
-DATA_DIR = Path(os.environ.get("AION_DATA_DIR", "/root/oracle/v3/data"))
+KNOWLEDGE_DIR = Path(os.environ.get("AION_KNOWLEDGE_DIR", "/root/aion/v3/knowledge"))
+DATA_DIR = Path(os.environ.get("AION_DATA_DIR", "/root/aion/v3/data"))
 
 MIN_GRADE_FOR_PAGE = {"S", "A", "B"}  # only create entity pages for these
 LLM_MODEL = os.environ.get("AION_CURATOR_MODEL", "claude-3-5-sonnet-20241022")
