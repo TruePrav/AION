@@ -277,8 +277,14 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
 
 1. Push to GitHub
 2. Import in Vercel
-3. Set environment variables in Vercel dashboard
+3. Set environment variables in Vercel dashboard:
+   - `ORACLE_BACKEND_URL` = `http://your-vps-ip:5001` (server-side only, keeps VPS IP private)
+   - `ORACLE_API_KEY` = your API key (server-side only)
+   - `ANTHROPIC_API_KEY` = your Anthropic key (server-side only)
+   - `ADMIN_ALLOW_MUTATIONS` = `1` (if you want write access from the live site)
 4. Deploy — automatic on every push
+
+**Important:** Do NOT set `NEXT_PUBLIC_API_URL` on Vercel. When it's omitted, all API calls automatically route through the server-side proxy (`/api/proxy/*`), keeping your VPS IP hidden from the browser. For local dev, set `NEXT_PUBLIC_API_URL=http://localhost:5001` in `.env.local` for direct access.
 
 ### Self-hosted (frontend)
 

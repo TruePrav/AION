@@ -1,6 +1,15 @@
 export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 /**
+ * When true, read requests route through /api/proxy/* instead of hitting
+ * NEXT_PUBLIC_API_URL directly. This keeps the VPS IP off the client.
+ *
+ * Enabled automatically when NEXT_PUBLIC_API_URL is NOT set (production
+ * deploys that use ORACLE_BACKEND_URL server-side only).
+ */
+export const USE_PROXY = !process.env.NEXT_PUBLIC_API_URL;
+
+/**
  * True on public/read-only deployments — hides admin controls (edit SL/TP,
  * close position, copy trade, settings writes). Set NEXT_PUBLIC_READONLY_MODE=1
  * in Vercel env to enable. Unset locally so you keep full admin access.
@@ -8,7 +17,12 @@ export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 export const READONLY_MODE = process.env.NEXT_PUBLIC_READONLY_MODE === "1";
 
 export async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, { cache: "no-store" });
+  // In production, route through server-side proxy to hide VPS IP.
+  // path is like "/api/discovery/wallets" — rewrite to "/api/proxy/discovery/wallets"
+  const url = USE_PROXY
+    ? path.replace(/^\/api\//, "/api/proxy/")
+    : `${API}${path}`;
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
   return res.json();
 }
