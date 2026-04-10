@@ -106,11 +106,29 @@ export default function SettingsPage() {
   const [savingAlerts, setSavingAlerts] = useState(false);
   const [watchlistInput, setWatchlistInput] = useState("");
   const [scanRunning, setScanRunning] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<{
+    running: boolean;
+    mode?: string;
+    started_at?: string;
+    finished_at?: string;
+    step?: string;
+    progress?: number;
+    summary?: string;
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     loadSettings();
     loadAlertSettings();
+    loadScanStatus();
   }, []);
+
+  // Poll scan status while running
+  useEffect(() => {
+    if (!scanStatus?.running && !scanRunning) return;
+    const interval = setInterval(loadScanStatus, 3000);
+    return () => clearInterval(interval);
+  }, [scanStatus?.running, scanRunning]);
 
   async function loadSettings() {
     try {
@@ -123,6 +141,14 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadScanStatus() {
+    try {
+      const data = await apiFetch<typeof scanStatus>("/api/discovery/scan-status");
+      setScanStatus(data);
+      if (data && !data.running) setScanRunning(null);
+    } catch { /* silent */ }
   }
 
   async function loadAlertSettings() {
@@ -722,16 +748,16 @@ export default function SettingsPage() {
                 <button
                   key={mode}
                   onClick={() => triggerScan(mode)}
-                  disabled={scanRunning !== null}
+                  disabled={scanRunning !== null || scanStatus?.running === true}
                   className={cn(
                     "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all border",
-                    scanRunning === mode
+                    scanRunning === mode || (scanStatus?.running && scanStatus?.mode === mode)
                       ? "bg-primary/25 border-primary/60 text-foreground"
                       : "bg-foreground/5 border-foreground/15 text-foreground/80 hover:bg-foreground/10 hover:border-foreground/25",
                     "disabled:opacity-40 disabled:cursor-not-allowed"
                   )}
                 >
-                  {scanRunning === mode ? (
+                  {(scanRunning === mode || (scanStatus?.running && scanStatus?.mode === mode)) ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Zap className="h-3.5 w-3.5" />
@@ -741,6 +767,74 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
+
+            {/* Scan status card */}
+            {scanStatus && (scanStatus.running || scanStatus.finished_at) && (
+              <div className={cn(
+                "mt-4 rounded-xl border p-4",
+                scanStatus.running
+                  ? "bg-primary/10 border-primary/30"
+                  : scanStatus.error
+                    ? "bg-destructive/10 border-destructive/30"
+                    : "bg-profit/10 border-profit/30"
+              )}>
+                <div className="flex items-center gap-3 mb-2">
+                  {scanStatus.running ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  ) : scanStatus.error ? (
+                    <X className="h-4 w-4 text-destructive" />
+                  ) : (
+                    <Check className="h-4 w-4 text-profit" />
+                  )}
+                  <span className="text-sm font-semibold text-foreground">
+                    {scanStatus.running
+                      ? `${scanStatus.mode?.toUpperCase()} scan running...`
+                      : scanStatus.error
+                        ? `${scanStatus.mode?.toUpperCase()} scan failed`
+                        : `${scanStatus.mode?.toUpperCase()} scan complete`}
+                  </span>
+                  {scanStatus.started_at && (
+                    <span className="text-[10px] text-foreground/50 font-mono ml-auto">
+                      {new Date(scanStatus.started_at).toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
+
+                {scanStatus.running && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-foreground/60">
+                      <span>{scanStatus.step || "initializing"}</span>
+                      <span className="font-mono">{scanStatus.progress || 0}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${scanStatus.progress || 0}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!scanStatus.running && scanStatus.summary && (
+                  <p className="text-[11px] text-foreground/60 font-mono mt-1 break-all">
+                    {scanStatus.summary}
+                  </p>
+                )}
+
+                {!scanStatus.running && scanStatus.error && (
+                  <p className="text-[11px] text-destructive/80 mt-1">{scanStatus.error}</p>
+                )}
+
+                {!scanStatus.running && scanStatus.finished_at && (
+                  <p className="text-[10px] text-foreground/40 mt-2">
+                    Finished at {new Date(scanStatus.finished_at).toLocaleTimeString()}
+                    {scanStatus.started_at && scanStatus.finished_at && (
+                      <> · {Math.round((new Date(scanStatus.finished_at).getTime() - new Date(scanStatus.started_at).getTime()) / 1000)}s</>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
           </Section>
         )}
 
