@@ -26,11 +26,11 @@ export function truncAddr(addr: string, chars = 4): string {
 }
 
 export function nansenWallet(address: string, chain = "solana"): string {
-  return `https://app.nansen.ai/nansen-connect/wallet/${chain}/${address}`;
+  return `https://app.nansen.ai/wallet/${address}?chain=${chain}`;
 }
 
 export function nansenToken(address: string, chain = "solana"): string {
-  return `https://app.nansen.ai/nansen-connect/token/${chain}/${address}`;
+  return `https://app.nansen.ai/token/${address}?chain=${chain}`;
 }
 
 export type Grade = "S" | "A" | "B" | "C" | "D";
