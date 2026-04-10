@@ -87,7 +87,7 @@ const DEFAULT_SETTINGS: Settings = {
   take_profit_tiers: [0.5, 1.0, 2.0],
   max_position_pct: 0.1,
   min_convergence_wallets: 3,
-  scan_interval_minutes: 360, // 6 hours
+  scan_interval_minutes: 240, // 4 hours (matches cron)
   mode: "dry_run",
   risk_tier: { preset: "balanced", ...TIER_PRESETS.balanced },
 };
@@ -686,13 +686,13 @@ export default function SettingsPage() {
           <Section
             icon={<Zap className="h-4 w-4" />}
             title="Manual scan"
-            description="Trigger a discovery scan on demand. Runs in background on VPS (~20 credits for EVM, ~15 for Polymarket)."
+            description="Trigger a discovery scan on demand. Runs in background on VPS. Cron runs every 4 hours automatically (~150 credits per cycle, ~900/day)."
           >
             <div className="flex items-center gap-3 flex-wrap">
               {([
-                ["evm", "EVM (Solana + Base)", "~20 credits"],
-                ["polymarket", "Polymarket", "~15 credits"],
-                ["ceiling", "Full ceiling scan", "~60 credits"],
+                ["evm", "EVM (Solana + Base)", "~116 credits"],
+                ["polymarket", "Polymarket", "~31 credits"],
+                ["ceiling", "Full ceiling scan", "~200 credits"],
               ] as const).map(([mode, label, cost]) => (
                 <button
                   key={mode}

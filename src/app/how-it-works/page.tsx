@@ -21,11 +21,10 @@ const PIPELINE = [
       "Solana, Ethereum, Base in parallel",
       "~30 raw candidates per chain",
     ],
-    cost: "1 cr/chain",
+    cost: "5 cr/chain",
     cli: [
-      "nansen smart-money inflows --chain solana --limit 30 --json",
-      "nansen smart-money inflows --chain base   --limit 30 --json",
-      "nansen smart-money inflows --chain ethereum --limit 30 --json",
+      "nansen research smart-money netflow --chain solana --limit 30 --json",
+      "nansen research smart-money netflow --chain base   --limit 30 --json",
     ],
   },
   {
@@ -37,9 +36,11 @@ const PIPELINE = [
       "Keeps wallets Nansen labels as Smart Money / Fund / Whale",
       "Drops retail noise immediately",
     ],
-    cost: "1 cr/token",
+    cost: "5 cr + 2 cr/token",
     cli: [
-      "nansen token top-traders --chain {chain} --address {token} --json",
+      "nansen research smart-money dex-trades --chain {chain} --json  # 5 cr",
+      "nansen research token who-bought-sold --token {addr} --buy-or-sell BUY --json   # 1 cr × tokens",
+      "nansen research token who-bought-sold --token {addr} --buy-or-sell SELL --json  # 1 cr × tokens",
     ],
   },
   {
@@ -51,10 +52,9 @@ const PIPELINE = [
       "Scores on PnL, win rate, trade count, consistency",
       "Assigns deterministic S / A / B / C / D tier",
     ],
-    cost: "3 cr/wallet",
+    cost: "1 cr/wallet",
     cli: [
-      "nansen profiler pnl-summary --address {wallet} --json",
-      "nansen profiler trades --address {wallet} --window 30d --json",
+      "nansen profiler pnl --address {wallet} --chain {chain} --json  # 1 cr each, up to 30 wallets",
     ],
   },
   {
@@ -67,7 +67,7 @@ const PIPELINE = [
       "Tunable weights (see Self-learning loop below)",
     ],
     cost: "0 cr (local)",
-    cli: ["# local computation — see scoring/accumulation.py"],
+    cli: ["# local computation from who-bought-sold data — see scoring/accumulation.py"],
   },
   {
     n: 5,
@@ -76,10 +76,13 @@ const PIPELINE = [
     bullets: [
       "The core unlock. Finds wallets buying ≥2 hot tokens in the same window",
       "One wallet in one token = noise. Same cluster in three = syndicate",
-      "This is the join Nansen's UI doesn't expose",
+      "Maps wallet network graph for the top 5 wallets (related-wallets endpoint)",
     ],
-    cost: "0 cr (local)",
-    cli: ["# local SQL-style join across step-2 holder lists"],
+    cost: "5 cr (graph)",
+    cli: [
+      "# local SQL-style join across step-2 holder lists",
+      "nansen profiler related-wallets --address {wallet} --json  # 1 cr × top 5 wallets",
+    ],
   },
   {
     n: 6,
@@ -228,7 +231,7 @@ export default function HowItWorksPage() {
           <div className="flex items-baseline justify-between flex-wrap gap-2">
             <h2 className="text-xl font-bold text-foreground tracking-tight">The 10-stage pipeline</h2>
             <span className="text-[11px] text-foreground/55 font-mono">
-              ~85 cr (Solana + Base) + ~65 cr (Ethereum) + ~31 cr (Polymarket) ≈ 180 credits / full run
+              ~116 cr (Solana + Base) + ~31 cr (Polymarket) ≈ 147 credits / cycle, ~900 credits/day at 4h intervals
             </span>
           </div>
 
