@@ -64,6 +64,7 @@ export default function PositionsPage() {
   const [tempTP, setTempTP] = useState<string>("");
   const [savingTargets, setSavingTargets] = useState(false);
   const [sortBy, setSortBy] = useState<"pnl_desc" | "pnl_asc" | "value_desc" | "value_asc" | "newest">("pnl_desc");
+  const [modeFilter, setModeFilter] = useState<"all" | "live" | "dry_run">("all");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -155,8 +156,14 @@ export default function PositionsPage() {
     }
   }
 
-  const totalPnl = positions.reduce((s, p) => s + (p.pnl_usd || 0), 0);
-  const totalValue = positions.reduce((s, p) => s + (p.size_usdc || 0), 0);
+  const filtered = modeFilter === "all"
+    ? positions
+    : modeFilter === "dry_run"
+      ? positions.filter((p) => p.dry_run)
+      : positions.filter((p) => !p.dry_run);
+
+  const totalPnl = filtered.reduce((s, p) => s + (p.pnl_usd || 0), 0);
+  const totalValue = filtered.reduce((s, p) => s + (p.size_usdc || 0), 0);
   const totalPnlPct = totalValue > 0 ? (totalPnl / totalValue) * 100 : 0;
 
   if (loading) {
@@ -197,7 +204,7 @@ export default function PositionsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
 label="Open positions"
-            value={String(positions.length)}
+            value={String(filtered.length)}
             icon={<Briefcase className="h-4 w-4" />}
             tone="white"
           />
@@ -218,7 +225,7 @@ label="Unrealized P&L"
         </div>
 
         {/* ── Empty State ── */}
-        {positions.length === 0 ? (
+        {filtered.length === 0 && positions.length === 0 ? (
           <div className="glass-card p-16 text-center">
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/40 border border-accent/60">
               <Briefcase className="h-6 w-6 text-foreground/70" />
@@ -231,10 +238,36 @@ label="Unrealized P&L"
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Sort controls — simple row of pills, picks one at a time.
-                Kept above the list so it's always in view when scrolling. */}
-            <div className="flex items-center gap-2 flex-wrap text-[11px]">
-              <span className="text-foreground/55 font-semibold mr-1">Sort</span>
+            {/* Mode filter + Sort controls */}
+            <div className="flex items-center gap-4 flex-wrap text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="text-foreground/55 font-semibold">Mode</span>
+                {([
+                  ["all", "All"],
+                  ["live", "Live"],
+                  ["dry_run", "Dry run"],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setModeFilter(key)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full border font-semibold transition-colors",
+                      modeFilter === key
+                        ? key === "live"
+                          ? "bg-primary/25 border-primary/60 text-foreground"
+                          : key === "dry_run"
+                            ? "bg-accent/40 border-accent/60 text-foreground"
+                            : "bg-primary/25 border-primary/60 text-foreground"
+                        : "bg-foreground/[0.04] border-foreground/15 text-foreground/65 hover:text-foreground hover:border-foreground/30"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-foreground/20">|</span>
+              <div className="flex items-center gap-2">
+              <span className="text-foreground/55 font-semibold">Sort</span>
               {([
                 ["pnl_desc", "Highest P/L"],
                 ["pnl_asc", "Lowest P/L"],
@@ -255,8 +288,15 @@ label="Unrealized P&L"
                   {label}
                 </button>
               ))}
+              </div>
             </div>
-            {[...positions]
+
+            {filtered.length === 0 ? (
+              <div className="glass-card p-10 text-center">
+                <p className="text-sm text-foreground/60">No {modeFilter === "dry_run" ? "dry run" : "live"} positions</p>
+              </div>
+            ) : null}
+            {[...filtered]
               .sort((a, b) => {
                 const aPnl = a.pnl_usd ?? 0;
                 const bPnl = b.pnl_usd ?? 0;
@@ -344,11 +384,20 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
               src={`https://dd.dexscreener.com/ds-data/tokens/${dsSlug(normalizeChain(pos.chain))}/${pos.token}.png`}
               alt=""
               className="h-10 w-10 rounded-xl bg-foreground/5 flex-shrink-0 border border-foreground/10"
-              onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+              onError={(e) => {
+                const el = e.currentTarget;
+                el.onerror = null;
+                el.style.display = "none";
+              }}
             />
-            <span className="font-bold text-foreground text-xl tracking-tight">
-              {pos.symbol || truncAddr(pos.token, 6)}
-            </span>
+            <div>
+              <span className="font-bold text-foreground text-xl tracking-tight">
+                {pos.symbol || truncAddr(pos.token, 6)}
+              </span>
+              {pos.symbol && (
+                <p className="text-[10px] text-foreground/40 font-mono">{truncAddr(pos.token, 6)}</p>
+              )}
+            </div>
             {pos.grade && <GradeBadge grade={pos.grade} size="md" />}
             {pos.accum_score != null && (
               <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/15 px-2 py-0.5 text-[10px] font-semibold font-mono text-foreground/70">
@@ -379,10 +428,10 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
               href={`https://dexscreener.com/${dsSlug(normalizeChain(pos.chain))}/${pos.token}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-full bg-foreground/5 border border-foreground/15 px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-foreground/10 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 border border-primary/40 px-3 py-1 text-xs font-semibold text-foreground hover:bg-primary/30 transition-colors"
             >
               Chart
-              <ExternalLink className="h-2.5 w-2.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
-import { apiFetch, apiUrl, Discovery } from "@/lib/api";
+import { apiFetch, apiUrl, Discovery, copyTrade, type CopyTradeResult, READONLY_MODE } from "@/lib/api";
 import { fmtUsd, truncAddr, nansenToken, nansenWallet, fmtPct } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
@@ -11,7 +11,7 @@ import AIReasoning, { type TokenReasoning } from "@/components/AIReasoning";
 import PipelineCommands, { type PipelineCommand } from "@/components/PipelineCommands";
 import ScoringEvolution, { type EvolutionStatus } from "@/components/ScoringEvolution";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info } from "lucide-react";
+import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info, Zap, Check, X, Lock } from "lucide-react";
 import ChainIcon, { normalizeChain, chainLabel, dsSlug, type ChainKey } from "@/components/ChainIcon";
 
 interface TokenRating {
@@ -75,6 +75,11 @@ export default function DiscoveryPage() {
     localStorage.setItem("aion_voter_id", id);
     return id;
   });
+
+  const [buyingToken, setBuyingToken] = useState<string | null>(null);
+  const [buyAmount, setBuyAmount] = useState<number>(10);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [buyResult, setBuyResult] = useState<CopyTradeResult | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [reasoning, setReasoning] = useState<TokenReasoning[] | null>(null);
@@ -140,6 +145,22 @@ export default function DiscoveryPage() {
       }
     } finally {
       setVotingToken(null);
+    }
+  }
+
+  async function handleQuickBuy(token: { address: string; symbol: string; chain: string; market_cap: number; token_age_days: number }) {
+    setBuyLoading(true);
+    setBuyResult(null);
+    try {
+      const result = await copyTrade(
+        { address: token.address, chain: token.chain, symbol: token.symbol, market_cap: token.market_cap, token_age_days: token.token_age_days },
+        buyAmount
+      );
+      setBuyResult(result);
+    } catch (e) {
+      setBuyResult({ success: false, error: String(e) });
+    } finally {
+      setBuyLoading(false);
     }
   }
 
@@ -668,6 +689,104 @@ export default function DiscoveryPage() {
                                 )}
                               </div>
                             </div>
+
+                            {/* ── Quick Buy ── */}
+                            {!READONLY_MODE ? (
+                              <div className="sm:col-span-3 pt-4 mt-4 border-t border-foreground/10">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <div className="flex items-center gap-2">
+                                    <Zap className="h-3.5 w-3.5 text-foreground/70" />
+                                    <span className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Quick buy</span>
+                                  </div>
+                                  <div className="flex gap-1.5 flex-wrap items-center">
+                                    {[5, 10, 25, 50, 100].map((amt) => (
+                                      <button
+                                        key={amt}
+                                        onClick={(e) => { e.stopPropagation(); setBuyAmount(amt); setBuyingToken(t.address); setBuyResult(null); }}
+                                        className={cn(
+                                          "px-3 py-1 rounded-full text-[11px] font-semibold font-mono tabular-nums transition-all",
+                                          buyingToken === t.address && buyAmount === amt
+                                            ? "bg-accent/50 border border-accent/70 text-foreground"
+                                            : "bg-foreground/5 border border-foreground/10 text-foreground/70 hover:bg-foreground/10"
+                                        )}
+                                      >
+                                        ${amt}
+                                      </button>
+                                    ))}
+                                    <div className="flex items-center gap-1 rounded-full bg-foreground/5 border border-foreground/15 px-2.5 py-0.5">
+                                      <span className="text-[11px] text-foreground/50 font-semibold">$</span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        step={1}
+                                        value={buyingToken === t.address ? buyAmount : 10}
+                                        onChange={(e) => { setBuyAmount(Math.max(1, Number(e.target.value) || 1)); setBuyingToken(t.address); setBuyResult(null); }}
+                                        className="w-14 bg-transparent text-[11px] font-mono font-semibold text-foreground tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setBuyingToken(t.address); handleQuickBuy(t); }}
+                                    disabled={buyLoading && buyingToken === t.address}
+                                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-semibold text-foreground bg-primary/80 border border-primary/60 hover:bg-primary hover:-translate-y-px transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                                  >
+                                    {buyLoading && buyingToken === t.address ? (
+                                      <>
+                                        <span className="h-3 w-3 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
+                                        Buying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Zap className="h-3 w-3" fill="currentColor" />
+                                        Buy {t.symbol} — ${buyingToken === t.address ? buyAmount : 10}
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+
+                                {/* Buy result */}
+                                {buyResult && buyingToken === t.address && (
+                                  <div className={cn(
+                                    "mt-3 rounded-xl p-3 border text-xs",
+                                    buyResult.success
+                                      ? "bg-profit/15 border-profit/40"
+                                      : "bg-destructive/15 border-destructive/40"
+                                  )}>
+                                    {buyResult.success ? (
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Check className="h-3.5 w-3.5 text-profit" />
+                                        <span className="font-semibold text-foreground">Trade submitted</span>
+                                        {buyResult.dry_run && (
+                                          <span className="rounded-full bg-accent/40 border border-accent/60 px-2 py-0.5 text-[10px] font-semibold">dry_run</span>
+                                        )}
+                                        {buyResult.tx_hash && (
+                                          <a
+                                            href={`https://solscan.io/tx/${buyResult.tx_hash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-mono text-foreground/70 hover:text-foreground underline underline-offset-2"
+                                          >
+                                            {buyResult.tx_hash.slice(0, 16)}...
+                                          </a>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <X className="h-3.5 w-3.5 text-destructive" />
+                                        <span className="font-semibold text-foreground">Failed:</span>
+                                        <span className="text-foreground/70">{buyResult.error}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="sm:col-span-3 pt-4 mt-4 border-t border-foreground/10 flex items-center gap-2 text-foreground/50">
+                                <Lock className="h-3 w-3" />
+                                <span className="text-[11px]">Copy trading available in admin mode</span>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
