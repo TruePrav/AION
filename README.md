@@ -86,19 +86,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### 5. Set up the backend (VPS)
+### 5. Set up the backend
 
-Copy the backend files to your VPS:
+The backend is a Python Flask API that wraps the Nansen CLI. You can run it **locally** or on a **VPS** — the setup is the same.
 
-```bash
-scp -r vps-snapshot/* root@YOUR_VPS_IP:/root/aion/v3/
-```
-
-On the VPS:
+#### Option A: Run everything locally
 
 ```bash
-cd /root/aion/v3
-pip3 install -r requirements.txt   # flask, gunicorn, requests, etc.
+cd vps-snapshot
+pip3 install flask gunicorn requests python-dotenv
 
 # Create .env with your keys
 cat > .env << 'EOF'
@@ -111,32 +107,75 @@ EXECUTION_MODE=dryrun          # change to 'live' for real trades
 ANTHROPIC_API_KEY=sk-ant-...   # for AI features
 EOF
 
+# Make sure Nansen CLI is installed and authenticated
+nansen auth login
+
 # Start the API server
+python3 webhook_server.py
+# or with gunicorn:
 gunicorn webhook_server:app -b 0.0.0.0:5001 --workers 2 --timeout 120
 ```
 
-### 6. Set up cron jobs (automated discovery)
+Then set your frontend `.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5001
+```
+
+#### Option B: Run backend on a VPS
+
+```bash
+scp -r vps-snapshot/* root@YOUR_VPS_IP:/root/aion/v3/
+ssh root@YOUR_VPS_IP
+cd /root/aion/v3
+pip3 install flask gunicorn requests python-dotenv
+# Create .env same as above
+gunicorn webhook_server:app -b 0.0.0.0:5001 --workers 2 --timeout 120
+```
+
+Then set your frontend `.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:5001
+```
+
+### 6. Run your first discovery
+
+```bash
+cd vps-snapshot   # or /root/aion/v3 on VPS
+
+# EVM token discovery (Solana + Base)
+python3 run_discovery_cron.py evm
+
+# Polymarket market scan + whale positions
+python3 run_discovery_cron.py polymarket
+
+# Both at once
+python3 run_discovery_cron.py ceiling
+```
+
+The dashboard will populate with data after the first run. Each run takes 2-5 minutes.
+
+### 7. (Optional) Set up cron jobs for automated discovery
 
 ```bash
 # Every 4 hours — EVM token discovery + auto-buy
-0 */4 * * * cd /root/aion/v3 && python3 run_discovery_cron.py evm >> /tmp/evm_cron.log 2>&1
+0 */4 * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py evm >> /tmp/evm_cron.log 2>&1
 
-# Every 6 hours — Polymarket market scanning + whale analysis  
-0 */6 * * * cd /root/aion/v3 && python3 run_discovery_cron.py polymarket >> /tmp/pm_cron.log 2>&1
+# Every 6 hours — Polymarket market scanning + whale analysis
+0 */6 * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py polymarket >> /tmp/pm_cron.log 2>&1
 
 # Every hour — check stop-loss / take-profit on open positions
-0 * * * * cd /root/aion/v3 && python3 run_discovery_cron.py auto_exit >> /tmp/exit_cron.log 2>&1
+0 * * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py auto_exit >> /tmp/exit_cron.log 2>&1
 ```
 
-### 7. Profile Polymarket whales
+### 8. (Optional) Profile Polymarket whales
 
 ```bash
-cd /root/aion/v3
+cd vps-snapshot   # or /root/aion/v3 on VPS
 
-# Profile top 350 whales (costs ~1-10 credits per whale)
+# Profile top 350 whales (costs ~1-10 Nansen credits per whale)
 python3 pm_whale_profiler.py 350
 
-# Or only profile whales with positions/PnL > $5K
+# Or only profile whales with positions/PnL > $5K to save credits
 python3 pm_whale_profiler.py 350 5000
 ```
 
@@ -146,7 +185,7 @@ python3 pm_whale_profiler.py 350 5000
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | Backend API URL (e.g. `http://your-vps:5001`) |
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API URL (`http://localhost:5001` for local, or `http://your-vps:5001`) |
 | `NEXT_PUBLIC_ORACLE_API_KEY` | Yes | API key for write operations (trading, settings). Without this, dashboard is read-only. |
 | `ANTHROPIC_API_KEY` | No | Enables "Ask AION" AI chat. Server-side only. |
 | `NANSEN_API_KEY` | Yes (backend) | Your Nansen API key for CLI calls |
@@ -161,7 +200,7 @@ python3 pm_whale_profiler.py 350 5000
 
 ```
 ┌──────────────────────────────┐      ┌──────────────────────────────┐
-│    Frontend (this repo)      │      │      Backend (VPS)           │
+│    Frontend (this repo)      │      │   Backend (local or VPS)     │
 │                              │      │                              │
 │  Next.js 14 + TypeScript     │─────>│  Flask API + Gunicorn        │
 │  Tailwind CSS (Ocean theme)  │      │  Nansen CLI integration      │
