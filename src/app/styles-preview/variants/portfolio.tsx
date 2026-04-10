@@ -1,5 +1,5 @@
-// 5 style variants for the Portfolio/Positions page (summary cards + position rows).
-import { Briefcase, Wallet, TrendingUp } from "lucide-react";
+// 10 style variants for the Portfolio/Positions page (summary cards + position rows).
+import { Briefcase, Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Shield, Target } from "lucide-react";
 import { MOCK_POSITIONS, fmtUsd } from "../mock";
 
 const totalPnl = MOCK_POSITIONS.reduce((s, p) => s + p.pnl_usd, 0);
@@ -322,6 +322,356 @@ export function PortfolioV5() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V6 — OBSIDIAN PRO (Linear/Stripe · emerald · soft shadow)
+// ═══════════════════════════════════════════════════════
+export function PortfolioV6() {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-[#0b0d10] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_60px_-20px_rgba(0,0,0,0.8)]">
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <div className="text-[11px] text-zinc-500 tracking-wide uppercase mb-2">Unrealized P&L</div>
+          <div className="flex items-baseline gap-3">
+            <span className={`text-4xl font-semibold tracking-tight tabular-nums ${totalPnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+              {totalPnl >= 0 ? "+" : ""}{fmtUsd(totalPnl)}
+            </span>
+            <span className={`inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-1.5 py-0.5 ${totalPnl >= 0 ? "bg-emerald-400/10 text-emerald-400" : "bg-rose-400/10 text-rose-400"}`}>
+              {totalPnl >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {totalPct.toFixed(2)}%
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-6 text-right">
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Positions</div>
+            <div className="text-xl font-semibold text-zinc-100 tabular-nums">{MOCK_POSITIONS.length}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Invested</div>
+            <div className="text-xl font-semibold text-zinc-100 tabular-nums">{fmtUsd(totalSize)}</div>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {MOCK_POSITIONS.map((p, i) => {
+          const profit = p.pnl_pct >= 0;
+          return (
+            <div key={i} className="group rounded-xl border border-white/[0.05] bg-gradient-to-b from-white/[0.02] to-transparent p-4 hover:border-emerald-400/20 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-400/20 to-emerald-600/5 border border-emerald-400/20 flex items-center justify-center text-[11px] font-semibold text-emerald-300">
+                    {p.symbol.slice(0, 3)}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-zinc-100">{p.symbol}</span>
+                      <span className="text-[9px] font-medium rounded bg-emerald-400/10 text-emerald-300 border border-emerald-400/20 px-1.5 py-0.5">{p.grade} · {p.accum}</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-500 tabular-nums mt-0.5 font-mono">
+                      {fmtUsd(p.size)} · entry ${p.entry} → ${p.now}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-xl font-semibold tabular-nums ${profit ? "text-emerald-400" : "text-rose-400"}`}>
+                    {profit ? "+" : ""}{p.pnl_pct.toFixed(2)}%
+                  </div>
+                  <div className={`text-[11px] tabular-nums ${profit ? "text-emerald-400/60" : "text-rose-400/60"}`}>
+                    {profit ? "+" : ""}{fmtUsd(p.pnl_usd)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V7 — TANGERINE (CMC · orange accents · dense tabular)
+// ═══════════════════════════════════════════════════════
+export function PortfolioV7() {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-[#0d1014]">
+      <div className="grid grid-cols-4 border-b border-zinc-800">
+        <div className="px-5 py-4 border-r border-zinc-800">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Positions</div>
+          <div className="text-2xl font-bold text-zinc-100 tabular-nums mt-1">{MOCK_POSITIONS.length}</div>
+        </div>
+        <div className="px-5 py-4 border-r border-zinc-800">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Invested</div>
+          <div className="text-2xl font-bold text-zinc-100 tabular-nums mt-1">{fmtUsd(totalSize)}</div>
+        </div>
+        <div className="px-5 py-4 border-r border-zinc-800">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Unreal P&L</div>
+          <div className={`text-2xl font-bold tabular-nums mt-1 ${totalPnl >= 0 ? "text-[#16c784]" : "text-[#ea3943]"}`}>
+            {totalPnl >= 0 ? "+" : ""}{fmtUsd(totalPnl)}
+          </div>
+        </div>
+        <div className="px-5 py-4">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wider">% Return</div>
+          <div className={`text-2xl font-bold tabular-nums mt-1 ${totalPnl >= 0 ? "text-[#16c784]" : "text-[#ea3943]"}`}>
+            {totalPnl >= 0 ? "+" : ""}{totalPct.toFixed(2)}%
+          </div>
+        </div>
+      </div>
+      <table className="w-full text-[12px]">
+        <thead>
+          <tr className="bg-[#12161c] text-zinc-500 text-[10px] uppercase tracking-wider">
+            <th className="px-4 py-2 text-left font-medium w-10">#</th>
+            <th className="px-4 py-2 text-left font-medium">Token</th>
+            <th className="px-4 py-2 text-right font-medium">Entry</th>
+            <th className="px-4 py-2 text-right font-medium">Now</th>
+            <th className="px-4 py-2 text-right font-medium">Size</th>
+            <th className="px-4 py-2 text-right font-medium">P&L %</th>
+            <th className="px-4 py-2 text-right font-medium">P&L USD</th>
+            <th className="px-4 py-2 text-center font-medium">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_POSITIONS.map((p, i) => {
+            const profit = p.pnl_pct >= 0;
+            return (
+              <tr key={i} className="border-t border-zinc-800/60 hover:bg-[#12161c] transition">
+                <td className="px-4 py-3 text-zinc-500 tabular-nums">{i + 1}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-[#f7931a]/10 border border-[#f7931a]/30 flex items-center justify-center text-[9px] font-bold text-[#f7931a]">
+                      {p.symbol.slice(0, 3)}
+                    </div>
+                    <div className="font-semibold text-zinc-100">{p.symbol}</div>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-zinc-300 tabular-nums">${p.entry}</td>
+                <td className="px-4 py-3 text-right font-mono text-zinc-100 tabular-nums">${p.now}</td>
+                <td className="px-4 py-3 text-right font-mono text-zinc-300 tabular-nums">{fmtUsd(p.size)}</td>
+                <td className={`px-4 py-3 text-right font-semibold tabular-nums ${profit ? "text-[#16c784]" : "text-[#ea3943]"}`}>
+                  {profit ? "+" : ""}{p.pnl_pct.toFixed(2)}%
+                </td>
+                <td className={`px-4 py-3 text-right font-mono tabular-nums ${profit ? "text-[#16c784]" : "text-[#ea3943]"}`}>
+                  {profit ? "+" : ""}{fmtUsd(p.pnl_usd)}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className="text-[10px] font-bold text-[#f7931a] bg-[#f7931a]/10 border border-[#f7931a]/30 rounded px-1.5 py-0.5">{p.grade}</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V8 — OCEAN (Navy gradient · cyan rim-light · trading)
+// ═══════════════════════════════════════════════════════
+export function PortfolioV8() {
+  return (
+    <div className="space-y-4">
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#041024] via-[#030814] to-[#050b1a] border border-cyan-400/10 p-6">
+        <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="relative grid grid-cols-3 gap-6">
+          <div>
+            <div className="text-[10px] text-cyan-300/50 uppercase tracking-[0.15em]">Open Positions</div>
+            <div className="text-3xl font-light text-white tabular-nums mt-1">{MOCK_POSITIONS.length}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-cyan-300/50 uppercase tracking-[0.15em]">Invested</div>
+            <div className="text-3xl font-light text-white tabular-nums mt-1">{fmtUsd(totalSize)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-cyan-300/50 uppercase tracking-[0.15em]">Unrealized P&L</div>
+            <div className={`text-3xl font-light tabular-nums mt-1 bg-gradient-to-r ${totalPnl >= 0 ? "from-cyan-300 to-emerald-300" : "from-rose-300 to-orange-300"} bg-clip-text text-transparent`}>
+              {totalPnl >= 0 ? "+" : ""}{fmtUsd(totalPnl)}
+            </div>
+          </div>
+        </div>
+      </div>
+      {MOCK_POSITIONS.map((p, i) => {
+        const profit = p.pnl_pct >= 0;
+        return (
+          <div key={i} className="relative rounded-xl overflow-hidden border border-cyan-400/[0.08] bg-gradient-to-br from-[#061228] to-[#030814] p-5">
+            <div className={`absolute inset-y-0 left-0 w-[2px] ${profit ? "bg-gradient-to-b from-cyan-400 to-emerald-400" : "bg-gradient-to-b from-rose-400 to-orange-400"}`} />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className={`absolute inset-0 rounded-full blur-md ${profit ? "bg-cyan-400/30" : "bg-rose-400/30"}`} />
+                  <div className="relative h-12 w-12 rounded-full border border-cyan-400/30 bg-[#071a34] flex items-center justify-center text-[11px] font-semibold text-cyan-100">
+                    {p.symbol.slice(0, 3)}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-medium text-white tracking-tight">{p.symbol}</span>
+                    <span className="text-[9px] font-mono text-cyan-300/70 bg-cyan-400/10 border border-cyan-400/20 rounded px-1.5 py-0.5 tracking-wider">{p.grade}</span>
+                  </div>
+                  <div className="text-[11px] text-cyan-200/40 mt-1 tabular-nums font-mono">
+                    ${p.entry} → ${p.now} · {fmtUsd(p.size)}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl font-light tabular-nums bg-gradient-to-r bg-clip-text text-transparent ${profit ? "from-cyan-300 to-emerald-300" : "from-rose-300 to-orange-300"}`}>
+                  {profit ? "+" : ""}{p.pnl_pct.toFixed(2)}%
+                </div>
+                <div className={`text-[11px] tabular-nums ${profit ? "text-cyan-300/60" : "text-rose-300/60"}`}>
+                  {profit ? "+" : ""}{fmtUsd(p.pnl_usd)}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V9 — IVORY (Luxury editorial · serif · cream + forest)
+// ═══════════════════════════════════════════════════════
+export function PortfolioV9() {
+  return (
+    <div className="rounded-sm bg-[#faf8f3] border border-[#14532d]/15 p-8">
+      <div className="flex items-end justify-between pb-6 border-b border-[#14532d]/15 mb-6">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-[#14532d]/60 mb-2">The Ledger</div>
+          <div className="flex items-baseline gap-3">
+            <span className="text-5xl text-[#14532d] tracking-tight tabular-nums" style={{ fontFamily: "Georgia, serif" }}>
+              {totalPnl >= 0 ? "+" : ""}{fmtUsd(totalPnl)}
+            </span>
+            <span className="text-sm text-[#14532d]/60 italic">unrealized · {totalPct.toFixed(2)}%</span>
+          </div>
+        </div>
+        <div className="flex gap-8 text-right">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#14532d]/50">Holdings</div>
+            <div className="text-2xl text-[#14532d] tabular-nums mt-1" style={{ fontFamily: "Georgia, serif" }}>{MOCK_POSITIONS.length}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#14532d]/50">Capital</div>
+            <div className="text-2xl text-[#14532d] tabular-nums mt-1" style={{ fontFamily: "Georgia, serif" }}>{fmtUsd(totalSize)}</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        {MOCK_POSITIONS.map((p, i) => {
+          const profit = p.pnl_pct >= 0;
+          return (
+            <div key={i} className="flex items-center justify-between py-5 border-b border-[#14532d]/10 last:border-0">
+              <div className="flex items-center gap-5">
+                <span className="text-xs text-[#14532d]/40 tabular-nums italic" style={{ fontFamily: "Georgia, serif" }}>№ {String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <div className="text-xl text-[#14532d] tracking-tight" style={{ fontFamily: "Georgia, serif" }}>{p.symbol}</div>
+                  <div className="text-[11px] text-[#14532d]/50 italic mt-0.5 tabular-nums">
+                    {fmtUsd(p.size)} · entered ${p.entry} · grade {p.grade}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl tabular-nums ${profit ? "text-[#14532d]" : "text-[#8b1a1a]"}`} style={{ fontFamily: "Georgia, serif" }}>
+                  {profit ? "+" : ""}{p.pnl_pct.toFixed(2)}%
+                </div>
+                <div className={`text-[11px] italic ${profit ? "text-[#14532d]/60" : "text-[#8b1a1a]/60"} tabular-nums`}>
+                  {profit ? "+" : ""}{fmtUsd(p.pnl_usd)}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V10 — VOID (Pure black · yellow · Bybit dense pro)
+// ═══════════════════════════════════════════════════════
+export function PortfolioV10() {
+  return (
+    <div className="bg-black border border-zinc-900">
+      <div className="grid grid-cols-5 border-b border-zinc-900 divide-x divide-zinc-900 font-mono">
+        <div className="px-4 py-3">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider">OPEN</div>
+          <div className="text-lg font-bold text-white tabular-nums">{MOCK_POSITIONS.length}</div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider">MARGIN</div>
+          <div className="text-lg font-bold text-white tabular-nums">{fmtUsd(totalSize)}</div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider">UPL</div>
+          <div className={`text-lg font-bold tabular-nums ${totalPnl >= 0 ? "text-[#facc15]" : "text-[#f87171]"}`}>
+            {totalPnl >= 0 ? "+" : ""}{fmtUsd(totalPnl)}
+          </div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider">ROE%</div>
+          <div className={`text-lg font-bold tabular-nums ${totalPnl >= 0 ? "text-[#facc15]" : "text-[#f87171]"}`}>
+            {totalPnl >= 0 ? "+" : ""}{totalPct.toFixed(2)}%
+          </div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider">RISK</div>
+          <div className="text-lg font-bold text-white tabular-nums">0.24</div>
+        </div>
+      </div>
+      <table className="w-full text-[11px] font-mono">
+        <thead>
+          <tr className="text-zinc-600 text-[9px] uppercase tracking-wider border-b border-zinc-900">
+            <th className="px-3 py-2 text-left">Symbol</th>
+            <th className="px-3 py-2 text-right">Size</th>
+            <th className="px-3 py-2 text-right">Entry</th>
+            <th className="px-3 py-2 text-right">Mark</th>
+            <th className="px-3 py-2 text-right">UPL</th>
+            <th className="px-3 py-2 text-right">ROE%</th>
+            <th className="px-3 py-2 text-right">Liq. Est</th>
+            <th className="px-3 py-2 text-center">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_POSITIONS.map((p, i) => {
+            const profit = p.pnl_pct >= 0;
+            return (
+              <tr key={i} className="border-b border-zinc-900/60 hover:bg-zinc-950 transition">
+                <td className="px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-1.5 w-1.5 rounded-full ${profit ? "bg-[#facc15]" : "bg-[#f87171]"}`} />
+                    <span className="font-bold text-white">{p.symbol}</span>
+                    <span className="text-zinc-600">/USDT</span>
+                  </div>
+                </td>
+                <td className="px-3 py-2.5 text-right text-zinc-300 tabular-nums">{fmtUsd(p.size)}</td>
+                <td className="px-3 py-2.5 text-right text-zinc-400 tabular-nums">{p.entry}</td>
+                <td className="px-3 py-2.5 text-right text-white tabular-nums">{p.now}</td>
+                <td className={`px-3 py-2.5 text-right tabular-nums ${profit ? "text-[#facc15]" : "text-[#f87171]"}`}>
+                  {profit ? "+" : ""}{fmtUsd(p.pnl_usd)}
+                </td>
+                <td className={`px-3 py-2.5 text-right font-bold tabular-nums ${profit ? "text-[#facc15]" : "text-[#f87171]"}`}>
+                  {profit ? "+" : ""}{p.pnl_pct.toFixed(2)}%
+                </td>
+                <td className="px-3 py-2.5 text-right text-zinc-600 tabular-nums">--</td>
+                <td className="px-3 py-2.5 text-center">
+                  <span className="text-[9px] font-bold text-[#facc15] bg-[#facc15]/10 border border-[#facc15]/30 px-1.5 py-0.5 rounded-sm">{p.grade}</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-t border-zinc-900 text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> Isolated</span>
+          <span className="flex items-center gap-1"><Target className="h-2.5 w-2.5" /> Cross: OFF</span>
+        </div>
+        <div>Latency: 42ms · Engine: LIVE</div>
+      </div>
     </div>
   );
 }

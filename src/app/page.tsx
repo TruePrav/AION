@@ -63,8 +63,25 @@ export default function HomePage() {
     );
   }
 
-  const topTokens = [...tokens].sort((a, b) => b.net_flow_7d - a.net_flow_7d).slice(0, 6);
+  // Only show tokens that can produce a real dexscreener link + logo. Anything
+  // missing an address or symbol is almost certainly a junk row from a partial
+  // scrape — we drop it so users never see "ghost" cards with broken images.
+  const isRenderable = (t: DiscoveryToken) =>
+    !!t.address && !!t.symbol && t.address.length >= 30;
+  const topTokens = [...tokens]
+    .filter(isRenderable)
+    .sort((a, b) => b.net_flow_7d - a.net_flow_7d)
+    .slice(0, 6);
   const closedTrades = trades.filter((t) => t.status === "closed").slice(0, 5);
+
+  // DexScreener chain slugs. We normalize whatever the API returns so
+  // "SOLANA", "Base", "eth" all map to valid URL segments.
+  const dsChain = (raw?: string) => {
+    const c = (raw || "solana").toLowerCase();
+    if (c === "eth" || c === "ethereum") return "ethereum";
+    if (c === "bsc" || c === "binance") return "bsc";
+    return c; // solana, base, arbitrum, polygon, etc.
+  };
 
   return (
     <div className="glass-bg min-h-screen">
@@ -80,7 +97,9 @@ export default function HomePage() {
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] max-w-4xl text-foreground">
             Smart Money.
             <br />
-            <span className="text-foreground/50">Decoded.</span>
+            <span className="bg-gradient-to-r from-primary via-fuchsia-400 to-cyan-300 bg-clip-text text-transparent drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]">
+              Decoded.
+            </span>
           </h1>
           <p className="text-base text-foreground/70 max-w-xl leading-relaxed">
             AION hunts the wallets that move markets. We grade them. We track them. You eat.
@@ -149,10 +168,12 @@ export default function HomePage() {
             emptyHint="Run /discover on Telegram to start."
           >
             <div className="space-y-2">
-              {topTokens.map((t) => (
+              {topTokens.map((t) => {
+                const chain = dsChain(t.chain);
+                return (
                 <a
                   key={t.address}
-                  href={`https://dexscreener.com/solana/${t.address}`}
+                  href={`https://dexscreener.com/${chain}/${t.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between rounded-xl bg-foreground/[0.04] border border-foreground/10 p-3 hover:bg-foreground/[0.08] transition-colors"
@@ -160,7 +181,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-3 min-w-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.address}.png`}
+                      src={`https://dd.dexscreener.com/ds-data/tokens/${chain}/${t.address}.png`}
                       alt=""
                       loading="lazy"
                       className="h-8 w-8 rounded-lg bg-foreground/5 border border-foreground/10 flex-shrink-0"
@@ -202,7 +223,8 @@ export default function HomePage() {
                     </div>
                   </div>
                 </a>
-              ))}
+                );
+              })}
             </div>
           </Panel>
 

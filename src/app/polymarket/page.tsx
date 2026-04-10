@@ -5,7 +5,44 @@ import { API } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter } from "lucide-react";
+
+// ─────────────────────────────────────────────
+// Category normalization
+// ─────────────────────────────────────────────
+// Polymarket market tags are messy: "US Election", "Global Elections",
+// "World Elections", "Elections" and "Primaries" are all really the
+// same bucket. "Trump", "Politics", "Congress", "Midterms" overlap too.
+// We fold them into a small set of canonical categories so the filter
+// bar stays readable. Anything unrecognised falls into "Other".
+const CATEGORY_GROUPS: { key: string; label: string; emoji: string; match: RegExp }[] = [
+  { key: "politics",    label: "Politics",      emoji: "🏛️", match: /\b(politic|politics|congress|senate|president|primar|midterm|foreign policy|white house|supreme court|scotus|gop|dnc|democrat|republican|trump|biden|harris|vance|zelensky|khamenei|shelton|powell(?!.+crypto)|fed rates|fomc|fed\b|rbi)\b/i },
+  { key: "elections",   label: "Elections",     emoji: "🗳️", match: /\b(election|elections|us election|global election|world election|eu election|hungary election|primaries|vote|voting|macro election)\b/i },
+  { key: "geopolitics", label: "Geopolitics",   emoji: "🌐", match: /\b(geopolitic|middle east|iran|israel|ukraine|russia|china|strait of hormuz|kharg|ceasefire|regime|us.?x.?iran|israel.?x.?iran|trump.?zelenskyy|peace deal|oil|military|war|nato|taiwan)\b/i },
+  { key: "crypto",      label: "Crypto",        emoji: "🪙", match: /\b(crypto|bitcoin|btc|ethereum|eth|solana|sol|xrp|doge|memecoin|defi|altcoin|etf|coinbase|binance|tether|usdt|usdc|stablecoin|nft|l2|rollup)\b/i },
+  { key: "ai_tech",     label: "AI & Tech",     emoji: "🤖", match: /\b(ai|artificial intelligence|gpt|llm|openai|anthropic|claude|gemini|google|apple|meta|microsoft|nvidia|tesla|spacex|tech|technology|startup|ipo)\b/i },
+  { key: "sports",      label: "Sports",        emoji: "🏆", match: /\b(sports|nba|nfl|mlb|nhl|mls|ufc|pga|golf|tennis|soccer|football|basketball|hockey|baseball|cricket|rugby|boxing|esports|champions league|premier league|world cup|fifa|augusta|masters|ncaa|olympics|f1|formula)\b/i },
+  { key: "culture",     label: "Culture & Fun", emoji: "🎭", match: /\b(pop culture|culture|celeb|celebrities|celebrity|awards|music|movie|movies|film|tv|reality|kardashian|grammy|oscar|emmy|taylor swift|drake|beyonce|travis|kanye|netflix|box office)\b/i },
+  { key: "finance",     label: "Finance",       emoji: "💸", match: /\b(finance|economy|economic|gdp|stock|stocks|earnings|inflation|jobs|cpi|hit price|commodities|s&p|nasdaq|dow|macro|recession|mortgage|rate|rates)\b/i },
+  { key: "science",     label: "Science",       emoji: "🔬", match: /\b(science|weather|climate|space|nasa|asteroid|hurricane|earthquake|temperature|snow|rain|discovery|vaccine|pandemic|covid|health|medical)\b/i },
+];
+
+function normalizeCategory(tag: string): { key: string; label: string; emoji: string } {
+  const t = (tag || "").trim();
+  if (!t) return { key: "other", label: "Other", emoji: "❓" };
+  for (const g of CATEGORY_GROUPS) {
+    if (g.match.test(t)) return { key: g.key, label: g.label, emoji: g.emoji };
+  }
+  return { key: "other", label: "Other", emoji: "❓" };
+}
+
+/** Collapse a market's raw tags into the unique set of canonical category keys. */
+function marketCategoryKeys(tags: string[] | undefined): Set<string> {
+  const out = new Set<string>();
+  for (const t of tags || []) out.add(normalizeCategory(t).key);
+  if (out.size === 0) out.add("other");
+  return out;
+}
 
 // ─────────────────────────────────────────────
 // Types
@@ -70,8 +107,17 @@ interface PMWhaleMarket {
   unrealized_pnl_usd: number;
 }
 
+interface PMFullPositionsResponse {
+  owner_address: string;
+  position_count: number;
+  total_position_usd: number;
+  total_unrealized_pnl: number;
+  positions: PMWhaleMarket[];
+}
+
 interface PMWhale {
   owner_address: string;
+  proxy_wallet?: string;
   total_position_usd: number;
   total_unrealized_pnl: number;
   position_count: number;
@@ -98,6 +144,33 @@ interface PMData {
   credits: { before: number; after: number; used: number };
 }
 
+interface PMBet {
+  rank: number;
+  market_id: string;
+  question: string;
+  slug: string;
+  end_date: string;
+  side: "yes" | "no";
+  entry_price: number;
+  size_usd: number;
+  shares: number;
+  reasoning: string;
+  volume_24hr: number;
+  volume_1wk: number;
+  opened_at: string;
+  status: string;
+  current_price: number;
+  pnl_usd: number;
+  pnl_pct: number;
+}
+
+interface PMBetsResponse {
+  bets: PMBet[];
+  updated_at: string;
+  total_pnl_usd: number;
+  total_size_usd: number;
+}
+
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
@@ -108,14 +181,44 @@ function fmtCompact(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-function fmtRelTime(iso: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const delta = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (delta < 60) return `${delta}s ago`;
-  if (delta < 3600) return `${Math.floor(delta / 60)}m ago`;
-  if (delta < 86400) return `${Math.floor(delta / 3600)}h ago`;
-  return `${Math.floor(delta / 86400)}d ago`;
+/**
+ * Robust relative-time formatter. Handles:
+ *  - ISO strings ("2025-04-09T...")
+ *  - Unix seconds and unix milliseconds (raw numbers or numeric strings)
+ *  - Negative deltas (clock skew or future-dated trades) — rendered as "in Xh"
+ *
+ * The previous version returned `${delta}s ago` when delta was negative, which
+ * is what produced the "-12136s ago" garbage the user reported.
+ */
+function fmtRelTime(input: string | number | undefined | null): string {
+  if (input == null || input === "") return "—";
+
+  let ms: number;
+  if (typeof input === "number") {
+    // Heuristic: numbers under 1e12 are unix seconds, otherwise milliseconds.
+    ms = input < 1e12 ? input * 1000 : input;
+  } else {
+    const trimmed = String(input).trim();
+    if (/^\d+$/.test(trimmed)) {
+      const n = Number(trimmed);
+      ms = n < 1e12 ? n * 1000 : n;
+    } else {
+      ms = new Date(trimmed).getTime();
+    }
+  }
+  if (!Number.isFinite(ms)) return "—";
+
+  const deltaSec = Math.round((Date.now() - ms) / 1000);
+  const future = deltaSec < 0;
+  const abs = Math.abs(deltaSec);
+
+  let body: string;
+  if (abs < 60) body = `${abs}s`;
+  else if (abs < 3600) body = `${Math.floor(abs / 60)}m`;
+  else if (abs < 86400) body = `${Math.floor(abs / 3600)}h`;
+  else body = `${Math.floor(abs / 86400)}d`;
+
+  return future ? `in ${body}` : `${body} ago`;
 }
 
 function polyscanAddr(addr: string): string {
@@ -133,9 +236,29 @@ export default function PolymarketPage() {
   const [data, setData] = useState<PMData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"markets" | "whales" | "convergence">("markets");
+  const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets">("markets");
   const [expandedMarket, setExpandedMarket] = useState<string | null>(null);
   const [expandedWhale, setExpandedWhale] = useState<string | null>(null);
+  const [bets, setBets] = useState<PMBetsResponse | null>(null);
+  // Tag/category filter — null = "all categories". Selecting one or more
+  // chips narrows the markets list to events tagged with any of those tags.
+  const [tagFilter, setTagFilter] = useState<Set<string> | null>(null);
+  // Cache of fetched full-portfolio data per whale (only fetched on expand
+  // so we don't hammer the polymarket API on page load).
+  const [fullPositions, setFullPositions] = useState<Record<string, PMFullPositionsResponse | "loading" | "error">>({});
+
+  async function loadFullPositions(addr: string) {
+    if (fullPositions[addr]) return; // already cached or in-flight
+    setFullPositions((prev) => ({ ...prev, [addr]: "loading" }));
+    try {
+      const res = await fetch(`${API}/api/polymarket/positions/${addr}`);
+      if (!res.ok) throw new Error(`api ${res.status}`);
+      const json = (await res.json()) as PMFullPositionsResponse;
+      setFullPositions((prev) => ({ ...prev, [addr]: json }));
+    } catch {
+      setFullPositions((prev) => ({ ...prev, [addr]: "error" }));
+    }
+  }
 
   useEffect(() => {
     fetch(`${API}/api/polymarket/discovery/latest`, { cache: "no-store" })
@@ -146,6 +269,17 @@ export default function PolymarketPage() {
       .then((d: PMData) => setData(d))
       .catch((e) => setError(e.message || "Failed to load Polymarket data"))
       .finally(() => setLoading(false));
+
+    // Load AION paper bets (top 10 dry-run picks). Non-fatal — bets tab
+    // just shows empty state if the endpoint is missing or returns nothing.
+    fetch(`${API}/api/polymarket/bets`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b: PMBetsResponse | null) => {
+        if (b && b.bets) setBets(b);
+      })
+      .catch(() => {
+        /* silent */
+      });
   }, []);
 
   if (loading) {
@@ -174,6 +308,36 @@ export default function PolymarketPage() {
   }
 
   const { funnel, markets, hot_markets, whales, convergence, credits, timestamp } = data;
+
+  // Build canonical-category counts across this run. Each market counts
+  // once per unique canonical category its raw tags resolve to, so markets
+  // don't double-count just because they carry "Politics" AND "Trump".
+  const categoryCounts = new Map<string, number>();
+  for (const m of markets) {
+    // Array.from keeps us compatible with the project's existing
+    // downlevelIteration-off setting.
+    Array.from(marketCategoryKeys(m.tags)).forEach((key) => {
+      categoryCounts.set(key, (categoryCounts.get(key) || 0) + 1);
+    });
+  }
+  // Keep category order stable (matches CATEGORY_GROUPS definition order),
+  // then append any stray keys (e.g. "other") at the end.
+  const canonicalOrder = [...CATEGORY_GROUPS.map((g) => g.key), "other"];
+  const allCategoryKeys = canonicalOrder.filter((k) => categoryCounts.has(k));
+  const categoryLabel = (key: string) => {
+    const g = CATEGORY_GROUPS.find((x) => x.key === key);
+    if (g) return { label: g.label, emoji: g.emoji };
+    return { label: "Other", emoji: "❓" };
+  };
+
+  // Apply category filter. `tagFilter` now holds canonical keys, not raw tags.
+  const visibleMarkets =
+    tagFilter === null
+      ? markets
+      : markets.filter((m) => {
+          const keys = Array.from(marketCategoryKeys(m.tags));
+          return keys.some((k) => tagFilter.has(k));
+        });
 
   return (
     <div className="glass-bg min-h-screen">
@@ -219,16 +383,93 @@ export default function PolymarketPage() {
           <TabButton active={tab === "markets"} onClick={() => setTab("markets")} label={`Markets (${markets.length})`} />
           <TabButton active={tab === "whales"} onClick={() => setTab("whales")} label={`Whales (${whales.length})`} />
           <TabButton active={tab === "convergence"} onClick={() => setTab("convergence")} label={`Convergence (${convergence.length})`} highlight />
+          {bets && bets.bets.length > 0 && (
+            <TabButton
+              active={tab === "bets"}
+              onClick={() => setTab("bets")}
+              label={`AION Paper Bets (${bets.bets.length})`}
+              highlight
+            />
+          )}
         </div>
 
         {/* ── Markets tab ── */}
         {tab === "markets" && (
           <div className="space-y-4">
+            {/* Methodology / explainer card */}
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Info className="h-4 w-4 text-foreground/55 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-bold text-foreground/85 text-xs mb-1">How markets are scored</div>
+                <p>
+                  We pull the top live markets from Polymarket sorted by 24h volume,
+                  filter out closed/resolved bets, and deep-dive the busiest{" "}
+                  <span className="font-bold text-foreground/85">{funnel.deep_dive_markets}</span>{" "}
+                  to extract their top holders and recent trade flow. Every other market
+                  is shown but only the deep-dives have the holder/trade detail.
+                </p>
+              </div>
+            </div>
+
+            {/* Canonical category filter chips */}
+            {allCategoryKeys.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/45 inline-flex items-center gap-1">
+                  <Filter className="h-3 w-3" /> Category
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTagFilter(null)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
+                    tagFilter === null
+                      ? "bg-primary/25 border-primary/55 text-foreground"
+                      : "bg-foreground/5 border-foreground/15 text-foreground/65 hover:bg-foreground/10",
+                  )}
+                >
+                  All ({markets.length})
+                </button>
+                {allCategoryKeys.map((key) => {
+                  const active = tagFilter !== null && tagFilter.has(key);
+                  const { label, emoji } = categoryLabel(key);
+                  const count = categoryCounts.get(key) || 0;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setTagFilter((prev) => {
+                          if (prev === null) return new Set([key]);
+                          const next = new Set(prev);
+                          if (next.has(key)) next.delete(key);
+                          else next.add(key);
+                          return next.size === 0 ? null : next;
+                        });
+                      }}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors inline-flex items-center gap-1.5",
+                        active
+                          ? "bg-primary/25 border-primary/55 text-foreground"
+                          : "bg-foreground/5 border-foreground/15 text-foreground/65 hover:bg-foreground/10",
+                      )}
+                    >
+                      <span>{emoji}</span>
+                      <span>{label}</span>
+                      <span className="text-foreground/40">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             <div className="text-[11px] text-foreground/55 font-medium">
-              Sorted by 24h volume. Top {hot_markets.length} markets are deep-dived with whale positions + recent trades.
+              Sorted by 24h volume. Showing{" "}
+              <span className="text-foreground/80 font-bold">{visibleMarkets.length}</span>{" "}
+              of {markets.length} markets · {hot_markets.length} are deep-dived with whale
+              positions + recent trades.
             </div>
             <div className="space-y-3">
-              {markets.map((m) => {
+              {visibleMarkets.map((m) => {
                 const isHot = hot_markets.find((h) => h.market_id === m.market_id);
                 const expanded = expandedMarket === m.market_id;
                 return (
@@ -241,11 +482,15 @@ export default function PolymarketPage() {
                               DEEP DIVE
                             </span>
                           )}
-                          {m.tags.slice(0, 3).map((t) => (
-                            <span key={t} className="text-[9px] font-semibold text-foreground/55 bg-foreground/5 border border-foreground/10 px-1.5 py-0.5 rounded">
-                              {t}
-                            </span>
-                          ))}
+                          {Array.from(marketCategoryKeys(m.tags)).slice(0, 3).map((key) => {
+                            const { label, emoji } = categoryLabel(key);
+                            return (
+                              <span key={key} className="text-[9px] font-semibold text-foreground/60 bg-foreground/5 border border-foreground/10 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                <span>{emoji}</span>
+                                <span>{label}</span>
+                              </span>
+                            );
+                          })}
                         </div>
                         <h3 className="text-base font-bold text-foreground leading-tight mb-3">
                           {m.question}
@@ -288,6 +533,24 @@ export default function PolymarketPage() {
         {/* ── Whales tab ── */}
         {tab === "whales" && (
           <div className="space-y-3">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Info className="h-4 w-4 text-foreground/55 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-bold text-foreground/85 text-xs mb-1">How whales are found</div>
+                <p>
+                  Every wallet that shows up as a top holder in any of the{" "}
+                  <span className="font-bold text-foreground/85">{funnel.deep_dive_markets}</span>{" "}
+                  deep-dived markets is captured. We then grade each one with a 0-100
+                  score from three signals: <span className="font-bold text-foreground/85">position size</span>{" "}
+                  (how much capital is on the line), <span className="font-bold text-foreground/85">unrealized
+                  PnL</span> (how the open positions are performing), and{" "}
+                  <span className="font-bold text-foreground/85">breadth</span> (how many
+                  markets they&apos;re active in). Grades S/A/B = high conviction; C/D = noise.
+                  The expanded list below shows the markets we observed them in <em>this run</em> —
+                  not necessarily their entire portfolio.
+                </p>
+              </div>
+            </div>
             <div className="text-[11px] text-foreground/55 font-medium">
               All unique whales found across deep-dived markets, graded by position size + unrealized PnL + breadth.
             </div>
@@ -315,39 +578,26 @@ export default function PolymarketPage() {
                     />
                     <Metric label="Markets" value={String(w.position_count)} />
                     <button
-                      onClick={() => setExpandedWhale(expanded ? null : w.owner_address)}
+                      onClick={() => {
+                        const next = expanded ? null : w.owner_address;
+                        setExpandedWhale(next);
+                        // Polymarket data-api keys positions by the proxy
+                        // wallet, not the EOA owner. Fall back to owner if
+                        // proxy wasn't captured (older snapshots).
+                        const fetchAddr = w.proxy_wallet || w.owner_address;
+                        if (next) loadFullPositions(fetchAddr);
+                      }}
                       className="text-[11px] font-bold text-primary hover:text-primary/80 transition-colors"
                     >
-                      {expanded ? "Hide" : "Show"} →
+                      {expanded ? "Hide" : "Show full book"} →
                     </button>
                   </div>
                   {expanded && (
-                    <div className="mt-3 pt-3 border-t border-foreground/10 space-y-2">
-                      {w.markets.map((wm, i) => (
-                        <div key={i} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
-                          <div className="flex-1 min-w-0">
-                            <span className="font-semibold text-foreground">{wm.question}</span>
-                            <span
-                              className={cn(
-                                "ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded",
-                                wm.side === "Yes"
-                                  ? "bg-primary/20 text-primary"
-                                  : "bg-destructive/20 text-destructive"
-                              )}
-                            >
-                              {wm.side.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="font-mono tabular-nums">{fmtCompact(wm.position_usd)}</div>
-                          <div className={cn(
-                            "font-mono tabular-nums text-[11px]",
-                            wm.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive"
-                          )}>
-                            {wm.unrealized_pnl_usd >= 0 ? "+" : ""}{fmtCompact(wm.unrealized_pnl_usd)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <WhaleExpanded
+                      walletAddress={w.owner_address}
+                      deepDiveMatches={w.markets}
+                      fullState={fullPositions[w.proxy_wallet || w.owner_address]}
+                    />
                   )}
                 </div>
               );
@@ -358,6 +608,21 @@ export default function PolymarketPage() {
         {/* ── Convergence tab ── */}
         {tab === "convergence" && (
           <div className="space-y-3">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Info className="h-4 w-4 text-foreground/55 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-bold text-foreground/85 text-xs mb-1">How convergence works</div>
+                <p>
+                  Convergence wallets are addresses that appear as top holders in{" "}
+                  <span className="font-bold text-foreground/85">two or more</span> of the
+                  deep-dived markets in the same run. The reasoning: if a wallet is
+                  betting big on multiple separate questions, they&apos;re running a portfolio,
+                  not making a one-off gut call — that&apos;s the same insight the token side of
+                  AION uses for &quot;smart money consensus&quot;. The more markets they show up in,
+                  the stronger the signal.
+                </p>
+              </div>
+            </div>
             <div className="text-[11px] text-foreground/55 font-medium">
               Wallets appearing as top holders in ≥2 hot markets — these are systematic traders, not one-off gamblers.
             </div>
@@ -418,6 +683,138 @@ export default function PolymarketPage() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {/* ── AION Paper Bets tab ── */}
+        {tab === "bets" && bets && (
+          <div className="space-y-4">
+            <div className="glass-card p-4 flex items-start gap-3 text-[12px] text-foreground/75 leading-relaxed">
+              <Info className="h-4 w-4 text-foreground/55 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-bold text-foreground/85 text-xs mb-1">How AION picks bets</div>
+                <p>
+                  For each deep-dived market, AION splits top holders by YES/NO side and scores each
+                  side by position size weighted by unrealized PnL (winning whales = stronger signal),
+                  then blends in recent trade flow. The 10 markets with the highest conviction delta
+                  get a <span className="font-bold text-foreground/85">$100 dry-run paper bet</span>{" "}
+                  on the winning side. Mark-to-market updates on every Polymarket scan.
+                </p>
+              </div>
+            </div>
+
+            {/* Summary tiles */}
+            <div className="grid grid-cols-3 gap-3 max-w-md">
+              <div className="rounded-xl border border-foreground/15 bg-foreground/[0.05] p-3">
+                <div className="text-2xl font-bold text-foreground font-mono tabular-nums">
+                  {bets.bets.length}
+                </div>
+                <div className="text-[10px] text-foreground/60 font-bold tracking-wider">BETS OPEN</div>
+              </div>
+              <div className="rounded-xl border border-foreground/15 bg-foreground/[0.05] p-3">
+                <div className="text-2xl font-bold text-foreground font-mono tabular-nums">
+                  ${bets.total_size_usd.toFixed(0)}
+                </div>
+                <div className="text-[10px] text-foreground/60 font-bold tracking-wider">TOTAL STAKED</div>
+              </div>
+              <div
+                className={cn(
+                  "rounded-xl border p-3",
+                  bets.total_pnl_usd >= 0
+                    ? "border-primary/40 bg-primary/10"
+                    : "border-destructive/40 bg-destructive/10"
+                )}
+              >
+                <div
+                  className={cn(
+                    "text-2xl font-bold font-mono tabular-nums",
+                    bets.total_pnl_usd >= 0 ? "text-primary" : "text-destructive"
+                  )}
+                >
+                  {bets.total_pnl_usd >= 0 ? "+" : ""}
+                  ${bets.total_pnl_usd.toFixed(2)}
+                </div>
+                <div className="text-[10px] text-foreground/60 font-bold tracking-wider">UNREALIZED P/L</div>
+              </div>
+            </div>
+
+            {/* Bets list */}
+            <div className="space-y-2">
+              {bets.bets.map((b) => (
+                <div key={b.market_id} className="glass-card p-4">
+                  <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <span className="text-[10px] font-mono font-bold tracking-wider text-foreground/50">
+                      #{b.rank}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full border",
+                        b.side === "yes"
+                          ? "bg-primary/20 text-primary border-primary/50"
+                          : "bg-destructive/20 text-destructive border-destructive/50"
+                      )}
+                    >
+                      {b.side.toUpperCase()} @ {(b.entry_price * 100).toFixed(1)}¢
+                    </span>
+                    <a
+                      href={polymarketUrl(b.slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-bold text-foreground hover:text-primary transition-colors flex-1 min-w-0 truncate flex items-center gap-1"
+                    >
+                      {b.question}
+                      <ExternalLink className="h-3 w-3 flex-shrink-0 text-foreground/40" />
+                    </a>
+                    <div className="text-right">
+                      <div
+                        className={cn(
+                          "text-sm font-mono font-bold tabular-nums",
+                          b.pnl_usd >= 0 ? "text-primary" : "text-destructive"
+                        )}
+                      >
+                        {b.pnl_usd >= 0 ? "+" : ""}${b.pnl_usd.toFixed(2)}
+                      </div>
+                      <div
+                        className={cn(
+                          "text-[10px] font-mono font-medium tabular-nums",
+                          b.pnl_pct >= 0 ? "text-primary/70" : "text-destructive/70"
+                        )}
+                      >
+                        {b.pnl_pct >= 0 ? "+" : ""}
+                        {b.pnl_pct.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-foreground/10 grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px] text-foreground/60 font-mono">
+                    <div>
+                      <div className="text-foreground/40 text-[9px] font-bold tracking-wider">ENTRY</div>
+                      <div className="text-foreground/80">{(b.entry_price * 100).toFixed(1)}¢</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground/40 text-[9px] font-bold tracking-wider">CURRENT</div>
+                      <div className="text-foreground/80">{(b.current_price * 100).toFixed(1)}¢</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground/40 text-[9px] font-bold tracking-wider">SHARES</div>
+                      <div className="text-foreground/80">{b.shares.toFixed(0)}</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground/40 text-[9px] font-bold tracking-wider">WEEK VOL</div>
+                      <div className="text-foreground/80">${(b.volume_1wk / 1000).toFixed(0)}k</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-foreground/10 text-[11px] text-foreground/60 leading-relaxed">
+                    <span className="font-bold text-foreground/75">AI reasoning:</span> {b.reasoning}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {bets.updated_at && (
+              <div className="text-[10px] text-foreground/40 font-mono text-right">
+                Bets opened {fmtRelTime(bets.updated_at)}
+              </div>
             )}
           </div>
         )}
@@ -537,6 +934,78 @@ function Metric({
   );
 }
 
+/**
+ * WhaleExpanded — body that appears under a whale row when expanded.
+ * Renders the on-demand full position book if it has loaded, otherwise
+ * falls back to the deep-dive matches from the discovery snapshot.
+ */
+function WhaleExpanded({
+  walletAddress,
+  deepDiveMatches,
+  fullState,
+}: {
+  walletAddress: string;
+  deepDiveMatches: PMWhaleMarket[];
+  fullState: PMFullPositionsResponse | "loading" | "error" | undefined;
+}) {
+  if (fullState === "loading") {
+    return (
+      <div className="mt-3 pt-3 border-t border-foreground/10 text-[11px] text-foreground/55 flex items-center gap-2">
+        <RefreshCw className="h-3 w-3 animate-spin" /> Loading full position book…
+      </div>
+    );
+  }
+
+  const hasFull = fullState && typeof fullState !== "string" && fullState.positions.length > 0;
+  const list: PMWhaleMarket[] = hasFull ? fullState.positions : deepDiveMatches;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-foreground/10 space-y-2">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-foreground/45 flex items-center gap-2">
+        {hasFull ? (
+          <>Full active book · {list.length} positions</>
+        ) : fullState === "error" ? (
+          <>Couldn&apos;t load full book — showing deep-dive matches only</>
+        ) : (
+          <>Deep-dive matches · {list.length} positions (expand to load full book)</>
+        )}
+      </div>
+      {list.map((wm, i) => (
+        <div key={`${walletAddress}-${i}`} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <span className="font-semibold text-foreground">{wm.question || "(unknown market)"}</span>
+            {wm.side && (
+              <span
+                className={cn(
+                  "ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded",
+                  wm.side.toLowerCase().startsWith("y")
+                    ? "bg-primary/20 text-primary"
+                    : "bg-destructive/20 text-destructive",
+                )}
+              >
+                {wm.side.toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="font-mono tabular-nums" title="Position size in USD">
+            {fmtCompact(wm.position_usd)}
+          </div>
+          <div
+            className={cn(
+              "font-mono tabular-nums text-[11px]",
+              wm.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive",
+            )}
+            title="Unrealized PnL"
+          >
+            {wm.unrealized_pnl_usd >= 0 ? "+" : ""}
+            {fmtCompact(wm.unrealized_pnl_usd)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function HotMarketDetail({ market }: { market: PMHotMarket }) {
   return (
     <div className="mt-4 pt-4 border-t border-foreground/10 space-y-4">
@@ -544,6 +1013,16 @@ function HotMarketDetail({ market }: { market: PMHotMarket }) {
       <div>
         <div className="text-[10px] font-bold tracking-wider text-foreground/60 mb-2">
           TOP HOLDERS ({market.top_holders.length})
+        </div>
+        {/* Column headers — without these the right-side numbers were
+            ambiguous (size? PnL? both?), which is what the user flagged. */}
+        <div className="flex items-center gap-3 px-3 pb-1.5 text-[9px] font-bold uppercase tracking-wider text-foreground/40">
+          <span className="w-5">#</span>
+          <span className="w-[88px]">Wallet</span>
+          <span className="w-12">Side</span>
+          <div className="flex-1" />
+          <span className="text-right">Position size</span>
+          <span className="w-20 text-right">Unrealized PnL</span>
         </div>
         <div className="space-y-1.5">
           {market.top_holders.slice(0, 10).map((h, i) => (
@@ -553,19 +1032,26 @@ function HotMarketDetail({ market }: { market: PMHotMarket }) {
                 href={polyscanAddr(h.owner_address)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono text-foreground hover:text-primary transition-colors"
+                className="font-mono text-foreground hover:text-primary transition-colors w-[88px]"
               >
                 {truncAddr(h.owner_address, 5)}
               </a>
               <span className={cn(
-                "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                "text-[10px] font-bold px-1.5 py-0.5 rounded w-12 text-center",
                 h.side === "Yes" ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"
               )}>
                 {h.side.toUpperCase()}
               </span>
               <div className="flex-1" />
-              <span className="font-mono tabular-nums font-semibold">{fmtCompact(h.position_usd)}</span>
-              <span className={cn(
+              <span
+                title="Total USD value of this wallet's open position in this market"
+                className="font-mono tabular-nums font-semibold"
+              >
+                {fmtCompact(h.position_usd)}
+              </span>
+              <span
+                title="Mark-to-market PnL on the open position (unrealized)"
+                className={cn(
                 "font-mono tabular-nums text-[11px] w-20 text-right",
                 h.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive"
               )}>

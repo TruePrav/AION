@@ -89,8 +89,28 @@ function SkeletonCard() {
   );
 }
 
+// Higher rank = show first. We sort so users always see the strongest
+// conviction tokens at the top instead of relying on whatever order the
+// backend emitted (which is insertion order from the pipeline).
+const VERDICT_RANK: Record<TokenReasoning["verdict"], number> = {
+  strong_buy: 4,
+  buy: 3,
+  watch: 2,
+  avoid: 1,
+};
+
 export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Sort a local copy — don't mutate the prop. Highest rated first, ties
+  // broken by confidence desc so the most confident Strong Buys bubble up.
+  const sortedReasoning = reasoning
+    ? [...reasoning].sort((a, b) => {
+        const rankDiff = VERDICT_RANK[b.verdict] - VERDICT_RANK[a.verdict];
+        if (rankDiff !== 0) return rankDiff;
+        return (b.confidence || 0) - (a.confidence || 0);
+      })
+    : null;
 
   function toggle(addr: string) {
     setExpanded((prev) => {
@@ -113,9 +133,9 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
             <h2 className="text-lg font-bold text-foreground tracking-tight">
               AION AI Analysis
             </h2>
-            {reasoning && (
+            {sortedReasoning && (
               <span className="inline-flex items-center rounded-full bg-foreground/5 border border-foreground/10 px-2 py-0 text-[10px] font-semibold font-mono text-foreground/70">
-                {reasoning.length}
+                {sortedReasoning.length}
               </span>
             )}
           </div>
@@ -141,7 +161,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
       )}
 
       {/* ── Empty ── */}
-      {!loading && !reasoning && (
+      {!loading && !sortedReasoning && (
         <div className="glass-card p-10 flex flex-col items-center justify-center text-center">
           <Brain className="h-8 w-8 text-foreground/25 mb-3" strokeWidth={1.5} />
           <p className="text-sm font-semibold text-foreground/60">
@@ -153,10 +173,10 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
         </div>
       )}
 
-      {/* ── Reasoning cards ── */}
-      {!loading && reasoning && reasoning.length > 0 && (
+      {/* ── Reasoning cards (sorted: strongest verdict first) ── */}
+      {!loading && sortedReasoning && sortedReasoning.length > 0 && (
         <div className="space-y-2.5">
-          {reasoning.map((r) => {
+          {sortedReasoning.map((r) => {
             const v = VERDICT[r.verdict];
             const isOpen = expanded.has(r.address);
 

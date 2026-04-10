@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { toast } from "sonner";
+import { dsSlug, normalizeChain } from "@/components/ChainIcon";
 import {
   Briefcase,
   Wallet,
@@ -16,8 +17,10 @@ import {
   Lock,
   ExternalLink,
   Pencil,
-  X as XIcon,
+  XCircle,
   AlertTriangle,
+  Loader2,
+  Zap,
 } from "lucide-react";
 
 interface OpenPosition {
@@ -60,6 +63,7 @@ export default function PositionsPage() {
   const [tempSL, setTempSL] = useState<string>("");
   const [tempTP, setTempTP] = useState<string>("");
   const [savingTargets, setSavingTargets] = useState(false);
+  const [sortBy, setSortBy] = useState<"pnl_desc" | "pnl_asc" | "value_desc" | "value_asc" | "newest">("pnl_desc");
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -227,7 +231,47 @@ label="Unrealized P&L"
           </div>
         ) : (
           <div className="space-y-4">
-            {positions.map((pos) => (
+            {/* Sort controls — simple row of pills, picks one at a time.
+                Kept above the list so it's always in view when scrolling. */}
+            <div className="flex items-center gap-2 flex-wrap text-[11px]">
+              <span className="text-foreground/55 font-semibold mr-1">Sort</span>
+              {([
+                ["pnl_desc", "Highest P/L"],
+                ["pnl_asc", "Lowest P/L"],
+                ["value_desc", "Largest value"],
+                ["value_asc", "Smallest value"],
+                ["newest", "Newest"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSortBy(key)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full border font-semibold transition-colors",
+                    sortBy === key
+                      ? "bg-primary/25 border-primary/60 text-foreground"
+                      : "bg-foreground/[0.04] border-foreground/15 text-foreground/65 hover:text-foreground hover:border-foreground/30"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {[...positions]
+              .sort((a, b) => {
+                const aPnl = a.pnl_usd ?? 0;
+                const bPnl = b.pnl_usd ?? 0;
+                const aVal = (a.current_price ?? a.entry_price) && a.size_usdc ? a.size_usdc + (a.pnl_usd ?? 0) : a.size_usdc;
+                const bVal = (b.current_price ?? b.entry_price) && b.size_usdc ? b.size_usdc + (b.pnl_usd ?? 0) : b.size_usdc;
+                switch (sortBy) {
+                  case "pnl_desc": return bPnl - aPnl;
+                  case "pnl_asc":  return aPnl - bPnl;
+                  case "value_desc": return bVal - aVal;
+                  case "value_asc":  return aVal - bVal;
+                  case "newest": return (new Date(b.timestamp).getTime()) - (new Date(a.timestamp).getTime());
+                  default: return 0;
+                }
+              })
+              .map((pos) => (
               <PositionCard
                 key={pos.id}
                 pos={pos}
@@ -297,7 +341,7 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`https://dd.dexscreener.com/ds-data/tokens/solana/${pos.token}.png`}
+              src={`https://dd.dexscreener.com/ds-data/tokens/${dsSlug(normalizeChain(pos.chain))}/${pos.token}.png`}
               alt=""
               className="h-10 w-10 rounded-xl bg-foreground/5 flex-shrink-0 border border-foreground/10"
               onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
@@ -332,7 +376,7 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
               </span>
             )}
             <a
-              href={`https://dexscreener.com/solana/${pos.token}`}
+              href={`https://dexscreener.com/${dsSlug(normalizeChain(pos.chain))}/${pos.token}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-full bg-foreground/5 border border-foreground/15 px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-foreground/10 transition-colors"
@@ -457,22 +501,58 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
 
         {!READONLY_MODE && (
           <div className="flex items-center gap-2 ml-auto">
-            <Button size="sm" variant="outline" onClick={() => onClose("manual")} disabled={closing}>
-              {closing ? "Closing..." : (
+            {/*
+              Modernised close button:
+              - pill-shaped, monochrome by default so it doesn't fight the
+                bigger SL/TP / target chips for attention
+              - flips to a destructive red glow on hover so the destructive
+                intent only surfaces when the user actually targets it
+              - replaces the bare X with a filled XCircle (clearer affordance
+                at small sizes) and shows a spinner mid-close
+            */}
+            <button
+              type="button"
+              onClick={() => onClose("manual")}
+              disabled={closing}
+              aria-label="Close position"
+              className={cn(
+                "group inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5",
+                "text-[11px] font-bold uppercase tracking-wider transition-all border",
+                "bg-foreground/5 border-foreground/15 text-foreground/75",
+                "hover:bg-destructive/15 hover:border-destructive/45 hover:text-foreground",
+                "hover:shadow-[0_4px_16px_-6px_hsl(var(--destructive)/0.55)]",
+                "active:scale-[0.97]",
+                "disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-foreground/5",
+              )}
+            >
+              {closing ? (
                 <>
-                  <XIcon className="h-3 w-3" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Closing
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-3.5 w-3.5 transition-colors group-hover:text-destructive" />
                   Close
                 </>
               )}
-            </Button>
+            </button>
             {pos.trailing_stop_triggered && (
-              <Button
-                size="sm"
-                variant="destructive"
+              <button
+                type="button"
                 onClick={() => onClose(pos.stop_reason || "target_hit")}
+                aria-label="Exit immediately"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5",
+                  "text-[11px] font-bold uppercase tracking-wider transition-all",
+                  "bg-destructive text-white border border-destructive",
+                  "shadow-[0_4px_18px_-4px_hsl(var(--destructive)/0.6)]",
+                  "hover:brightness-110 active:scale-[0.97]",
+                )}
               >
-                Exit Now
-              </Button>
+                <Zap className="h-3.5 w-3.5" />
+                Exit now
+              </button>
             )}
           </div>
         )}

@@ -31,6 +31,29 @@ import {
 
 type Grade = "S" | "A" | "B" | "C" | "D";
 
+/**
+ * Build a DexScreener token chart URL filtered to a specific maker
+ * (wallet). DexScreener supports `?maker=<addr>` which paints buy/sell
+ * markers from that wallet directly on the chart — exactly what users
+ * want when looking at a wallet's traded tokens.
+ */
+function dexFor(tokenAddress: string, walletAddress: string, chain?: string): string {
+  const c = (chain || "solana").toLowerCase();
+  const slug = c === "eth" ? "ethereum" : c === "bnb" || c === "binance" ? "bsc" : c;
+  return `https://dexscreener.com/${slug}/${tokenAddress}?maker=${walletAddress}`;
+}
+
+/** Block explorer URL for the wallet address itself (chain-aware). */
+function explorerFor(walletAddress: string, chain?: string): string {
+  const c = (chain || "solana").toLowerCase();
+  if (c === "base") return `https://basescan.org/address/${walletAddress}`;
+  if (c === "ethereum" || c === "eth") return `https://etherscan.io/address/${walletAddress}`;
+  if (c === "bsc" || c === "bnb") return `https://bscscan.com/address/${walletAddress}`;
+  if (c === "arbitrum") return `https://arbiscan.io/address/${walletAddress}`;
+  if (c === "polygon") return `https://polygonscan.com/address/${walletAddress}`;
+  return `https://solscan.io/account/${walletAddress}`;
+}
+
 export default function WalletPage() {
   const params = useParams();
   const address = params.address as string;
@@ -124,12 +147,13 @@ export default function WalletPage() {
             </div>
             <div className="flex gap-2 flex-wrap items-center">
               <a
-                href={`https://dexscreener.com/solana/${wallet.address}`}
+                href={explorerFor(wallet.address, wallet.chain)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass-btn text-xs"
+                title="Open this wallet on the chain's block explorer"
               >
-                DexScreener <ExternalLink className="h-3 w-3" />
+                Explorer <ExternalLink className="h-3 w-3" />
               </a>
               <a
                 href={nansenWallet(wallet.address, wallet.chain || "solana")}
@@ -379,12 +403,13 @@ export default function WalletPage() {
                           <p className="text-foreground/50 text-[10px] font-mono">{truncAddr(t.address)}</p>
                         </div>
                         <a
-                          href={`https://dexscreener.com/solana/${t.address}`}
+                          href={dexFor(t.address, wallet.address, wallet.chain)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="Open chart with this wallet's buy/sell markers"
                           className="text-[10px] font-semibold text-foreground/70 hover:text-foreground inline-flex items-center gap-0.5 ml-1"
                         >
-                          Dex <ExternalLink className="h-2.5 w-2.5" />
+                          Dex chart <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                         <CopyButton text={t.address} />
                       </div>
@@ -450,12 +475,13 @@ export default function WalletPage() {
                           <p className="text-foreground/50 text-[10px] font-mono">{truncAddr(t.address)}</p>
                         </div>
                         <a
-                          href={`https://dexscreener.com/solana/${t.address}`}
+                          href={dexFor(t.address, wallet.address, wallet.chain)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="Open chart with this wallet's buy/sell markers"
                           className="text-[10px] font-semibold text-foreground/70 hover:text-foreground inline-flex items-center gap-0.5 ml-1"
                         >
-                          Dex <ExternalLink className="h-2.5 w-2.5" />
+                          Dex chart <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                       </div>
                     </td>
@@ -516,12 +542,13 @@ export default function WalletPage() {
                           {truncAddr(t.address)}
                         </span>
                         <a
-                          href={`https://dexscreener.com/solana/${t.address}`}
+                          href={dexFor(t.address, wallet.address, wallet.chain)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="Open chart with this wallet's buy/sell markers"
                           className="text-[10px] font-semibold text-foreground/70 hover:text-foreground inline-flex items-center gap-0.5"
                         >
-                          Dex <ExternalLink className="h-2.5 w-2.5" />
+                          Dex chart <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                       </div>
                     </td>

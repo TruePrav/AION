@@ -115,6 +115,33 @@ const FEATURES: Feature[] = [
   },
   {
     phase: "2",
+    status: "shipped",
+    title: "Telegram Discovery Summaries",
+    description: "Push-only notifications. After every 4h discovery run (EVM + Polymarket), the bot sends a summary to the user/group with the top 5 tokens/markets and live DexScreener chart links.",
+    tag: "phase 1",
+    highlights: [
+      "Fires from run_discovery_cron.py — no polling daemon needed",
+      "HTML formatting with inline chart links",
+      "Separate messages for EVM + Polymarket runs",
+      "Auto-retries swallowed so telegram downtime never breaks cron",
+    ],
+  },
+  {
+    phase: "2",
+    status: "planned",
+    title: "Telegram Trading Controls",
+    description: "Phase 2 of the bot — interactive controls beyond notifications. Inline Buy/Skip buttons on each summary, /buy /close slash commands, and opt-in auto-buy for high-conviction signals.",
+    eta: "3-4 days",
+    tag: "phase 2",
+    highlights: [
+      "Inline Buy $10 / $25 / $100 buttons per token",
+      "/positions, /close, /status slash commands",
+      "/autobuy on|off toggle with per-user budget",
+      "Long-polling webhook daemon (systemd unit)",
+    ],
+  },
+  {
+    phase: "2",
     status: "planned",
     title: "Public Telegram Signal Channel",
     description: "@AIONSignals — free public broadcast of every high-conviction discovery with rich embeds (graph, reasoning, CLI commands).",
@@ -185,10 +212,14 @@ const FEATURES: Feature[] = [
 ];
 
 function StatusBadge({ status }: { status: Feature["status"] }) {
+  // Each pill keeps a tinted background for the colour cue but the LABEL is
+  // always rendered against `text-foreground` so it stays legible in both
+  // light and dark themes. The previous `text-primary` / `text-accent`
+  // approach collapsed into the background in light mode.
   const cfg = {
-    shipped: { label: "SHIPPED", color: "bg-primary/25 text-primary border-primary/50" },
-    in_progress: { label: "IN PROGRESS", color: "bg-accent/25 text-accent border-accent/50" },
-    planned: { label: "PLANNED", color: "bg-foreground/5 text-foreground/60 border-foreground/15" },
+    shipped: { label: "SHIPPED", color: "bg-primary/25 text-foreground border-primary/60" },
+    in_progress: { label: "IN PROGRESS", color: "bg-accent/30 text-foreground border-accent/60" },
+    planned: { label: "PLANNED", color: "bg-foreground/5 text-foreground/70 border-foreground/15" },
   }[status];
   return (
     <span className={`text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full border ${cfg.color}`}>
@@ -259,7 +290,7 @@ function FeatureCard({ feature }: { feature: Feature }) {
         <>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="mt-3 text-[11px] font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+            className="mt-3 text-[11px] font-bold text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1"
           >
             <span>{open ? "Hide" : "Show"} details</span>
             <svg
@@ -306,7 +337,7 @@ export default function RoadmapPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 pointer-events-none" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-mono font-bold tracking-wider text-primary bg-primary/20 border border-primary/40 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono font-bold tracking-wider text-foreground bg-primary/25 border border-primary/50 px-2 py-0.5 rounded">
                 ROADMAP
               </span>
               <span className="text-[10px] text-foreground/55 font-semibold">
@@ -321,17 +352,23 @@ export default function RoadmapPage() {
               what&apos;s coming next, and what we&apos;re dreaming about.
             </p>
 
+            {/*
+              Stat tiles: numbers and labels now use `text-foreground`
+              instead of `text-primary` / `text-accent` so they stay readable
+              in both themes. The tile background still carries the colour
+              cue (primary tint, accent tint, neutral).
+            */}
             <div className="grid grid-cols-3 gap-3 mt-6 max-w-md">
               <div className="rounded-xl border border-primary/40 bg-primary/15 p-3">
-                <div className="text-2xl font-bold text-primary font-mono tabular-nums">{counts.shipped}</div>
-                <div className="text-[10px] text-primary/80 font-bold tracking-wider">SHIPPED</div>
+                <div className="text-2xl font-bold text-foreground font-mono tabular-nums">{counts.shipped}</div>
+                <div className="text-[10px] text-foreground/75 font-bold tracking-wider">SHIPPED</div>
               </div>
-              <div className="rounded-xl border border-accent/40 bg-accent/15 p-3">
-                <div className="text-2xl font-bold text-accent font-mono tabular-nums">{counts.inProgress}</div>
-                <div className="text-[10px] text-accent/80 font-bold tracking-wider">IN PROGRESS</div>
+              <div className="rounded-xl border border-accent/50 bg-accent/20 p-3">
+                <div className="text-2xl font-bold text-foreground font-mono tabular-nums">{counts.inProgress}</div>
+                <div className="text-[10px] text-foreground/75 font-bold tracking-wider">IN PROGRESS</div>
               </div>
               <div className="rounded-xl border border-foreground/15 bg-foreground/5 p-3">
-                <div className="text-2xl font-bold text-foreground/80 font-mono tabular-nums">{counts.planned}</div>
+                <div className="text-2xl font-bold text-foreground font-mono tabular-nums">{counts.planned}</div>
                 <div className="text-[10px] text-foreground/60 font-bold tracking-wider">PLANNED</div>
               </div>
             </div>
@@ -339,12 +376,16 @@ export default function RoadmapPage() {
         </div>
 
         {/* ── Phase sections ── */}
+        {/*
+          Phase pill colours: tinted background carries the visual cue,
+          text uses `text-foreground` so it works in both themes.
+        */}
         <PhaseSection
           phase="1"
           title="Live today"
           subtitle="shipped for Nansen CLI competition Week 4"
           features={p1}
-          accent="bg-primary/20 text-primary"
+          accent="bg-primary/25 text-foreground border border-primary/50"
         />
 
         <PhaseSection
@@ -352,7 +393,7 @@ export default function RoadmapPage() {
           title="Coming next"
           subtitle="post-competition, next 1–2 weeks"
           features={p2}
-          accent="bg-accent/20 text-accent"
+          accent="bg-accent/25 text-foreground border border-accent/50"
         />
 
         <PhaseSection
@@ -360,7 +401,7 @@ export default function RoadmapPage() {
           title="The vision"
           subtitle="long-term bets"
           features={p3}
-          accent="bg-foreground/10 text-foreground/70"
+          accent="bg-foreground/10 text-foreground/80 border border-foreground/15"
         />
 
         {/* ── Footer CTA ── */}

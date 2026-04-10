@@ -130,9 +130,18 @@ export default function GradingPage() {
         {/* ── Scoring Factors ── */}
         <section className="space-y-5">
           <h2 className="text-lg font-bold text-foreground tracking-tight">The 5 scoring factors</h2>
+          {/*
+            5 items in a 2-column grid would leave the 5th orphaned in the
+            left slot. The `last:` variant makes the 5th card span both
+            columns and center itself at the same visual width as a single
+            cell so it doesn't look stranded.
+          */}
           <div className="grid gap-4 sm:grid-cols-2">
             {scoringFactors.map((factor) => (
-              <div key={factor.name} className="glass-card p-5 space-y-4">
+              <div
+                key={factor.name}
+                className="glass-card p-5 space-y-4 last:sm:col-span-2 last:sm:max-w-[calc(50%-0.5rem)] last:sm:mx-auto last:sm:w-full"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-foreground/5 border border-foreground/15 flex items-center justify-center text-foreground">

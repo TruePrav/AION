@@ -55,4 +55,10 @@ export const STYLE_NAMES = [
   { id: "v3", label: "Premium Minimal", tagline: "Linear/Stripe-style · whitespace heavy" },
   { id: "v4", label: "Brutalist", tagline: "Thick borders · hard shadows · flat fills" },
   { id: "v5", label: "Neo-Data", tagline: "Dense Nansen-style · cyan accents · tight grid" },
+  // ── NEW PREMIUM VARIANTS (inspired by OpenSea / CoinMarketCap / Linear / Bybit) ──
+  { id: "v6", label: "Obsidian Pro", tagline: "Deep charcoal · emerald · soft inner-shadow cards" },
+  { id: "v7", label: "Tangerine", tagline: "CMC-inspired · warm orange accents · dense tabular" },
+  { id: "v8", label: "Ocean", tagline: "Deep navy · electric cyan rim lights · premium trading" },
+  { id: "v9", label: "Ivory", tagline: "Luxury editorial · serif display · cream + forest green" },
+  { id: "v10", label: "Void", tagline: "Pure black · yellow accents · Bybit-dense pro" },
 ];

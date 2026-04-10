@@ -169,7 +169,7 @@ function renderInline(text: string, keyPrefix: string, onWikiLink: (p: string) =
 }
 
 function renderMarkdown(src: string, onWikiLink: (p: string) => void): React.ReactNode {
-  const { body, fm } = stripFrontmatter(src);
+  const { body } = stripFrontmatter(src);
   const lines = body.split(/\r?\n/);
   const out: React.ReactNode[] = [];
   let i = 0;
@@ -376,27 +376,10 @@ function renderMarkdown(src: string, onWikiLink: (p: string) => void): React.Rea
     );
   }
 
-  return (
-    <div>
-      {Object.keys(fm).length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(fm)
-            .filter(([key]) => !["tags"].includes(key))
-            .slice(0, 6)
-            .map(([key, val]) => (
-              <span
-                key={key}
-                className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-foreground/[0.04] px-2.5 py-1 text-[10px] font-medium text-foreground/60"
-              >
-                <span className="text-foreground/40">{key}:</span>
-                <span className="text-foreground/80 font-mono">{String(val).slice(0, 40)}</span>
-              </span>
-            ))}
-        </div>
-      )}
-      {out}
-    </div>
-  );
+  // Frontmatter is metadata for the curator (type/origin/auto_regenerated/
+  // discovered/etc) — useful for the pipeline, noisy for human readers. We
+  // hide it entirely now and rely on the markdown body to communicate.
+  return <div>{out}</div>;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -628,9 +611,13 @@ export default function KnowledgePage() {
             Knowledge Wiki
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">What AION has learned</h1>
-          <p className="mt-1 max-w-2xl text-[13px] text-foreground/60">
-            A self-maintained wiki. The curator compiles what the system has seen into entity pages,
-            concept notes, and weekly digests. Hand-edits are preserved across regenerations.
+          <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-foreground/70">
+            Every discovery run hands its findings to a curator that turns them into wiki pages —
+            one per token, wallet, market, and concept the pipeline has touched. Pages are
+            re-written automatically each cycle, but they keep accumulating context, so the wiki
+            doubles as <em>AION&apos;s memory</em> and as the human-readable trail behind every
+            grade you see on the dashboard. Browse the tree on the left, or search to jump
+            straight to a token / wallet / event.
           </p>
         </div>
         <div className="flex items-center gap-3">

@@ -11,7 +11,8 @@ import AIReasoning, { type TokenReasoning } from "@/components/AIReasoning";
 import PipelineCommands, { type PipelineCommand } from "@/components/PipelineCommands";
 import ScoringEvolution, { type EvolutionStatus } from "@/components/ScoringEvolution";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info } from "lucide-react";
+import ChainIcon, { normalizeChain, chainLabel, dsSlug, type ChainKey } from "@/components/ChainIcon";
 
 interface TokenRating {
   address: string;
@@ -49,6 +50,10 @@ export default function DiscoveryPage() {
   const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
   const [sortField, setSortField] = useState<TokenSortField>("mcap");
   const [sortDir, setSortDir] = useState<SortDirection>("desc");
+  // Chain filter: default to ALL selected. `null` sentinel means "all chains",
+  // which we reset to whenever the user clicks the "All" chip. Individual
+  // chain chips toggle presence in a Set.
+  const [chainFilter, setChainFilter] = useState<Set<ChainKey> | null>(null);
 
   function toggleSort(field: TokenSortField) {
     if (sortField === field) {
@@ -169,7 +174,19 @@ export default function DiscoveryPage() {
   const validated = data.validated_tokens ?? [];
   const blockedSet = new Set(blocklist.map((b) => b.address));
 
-  const tokens = [...rawTokens].sort((a, b) => {
+  // Which chains actually appear in this run — used to build the filter row
+  // (we never show a chip for a chain that has zero tokens, to avoid clicking
+  // into an empty state).
+  const availableChains: ChainKey[] = Array.from(
+    new Set(rawTokens.map((t) => normalizeChain(t.chain))),
+  );
+
+  const filteredByChain =
+    chainFilter === null
+      ? rawTokens
+      : rawTokens.filter((t) => chainFilter.has(normalizeChain(t.chain)));
+
+  const tokens = [...filteredByChain].sort((a, b) => {
     const getVal = (t: typeof a): number => {
       switch (sortField) {
         case "mcap":
@@ -196,9 +213,17 @@ export default function DiscoveryPage() {
         {/* ── Page Header ── */}
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Discovery</h1>
-          <p className="text-sm text-foreground/60 mt-1">
-            Chain <span className="text-foreground font-mono font-semibold">{data.chain}</span> · {tokens.length} tokens ·{" "}
-            {wallets.length} wallets
+          <p className="text-sm text-foreground/60 mt-1 flex items-center gap-2 flex-wrap">
+            <span>Chains</span>
+            <span className="inline-flex items-center gap-1">
+              {availableChains.map((c) => (
+                <ChainIcon key={c} chain={c} size="xs" />
+              ))}
+            </span>
+            <span className="text-foreground/30">·</span>
+            <span>{tokens.length} tokens</span>
+            <span className="text-foreground/30">·</span>
+            <span>{wallets.length} wallets</span>
           </p>
         </div>
 
@@ -240,7 +265,71 @@ export default function DiscoveryPage() {
                 {tokens.length}
               </span>
             </div>
-            <span className="text-[11px] text-foreground/50">
+          </div>
+
+          {/* Chain filter chips — default is "All" (chainFilter === null). */}
+          {availableChains.length > 1 && (
+            <div className="mb-3 flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/45">
+                Chain
+              </span>
+              <button
+                type="button"
+                onClick={() => setChainFilter(null)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
+                  chainFilter === null
+                    ? "bg-primary/25 border-primary/55 text-foreground"
+                    : "bg-foreground/5 border-foreground/15 text-foreground/65 hover:bg-foreground/10",
+                )}
+              >
+                All
+              </button>
+              {availableChains.map((c) => {
+                const active = chainFilter === null || chainFilter.has(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      // Build the new Set based on current state. The sentinel
+                      // `null` means "all selected", so a click on one chip
+                      // should collapse to just that chain (common UX pattern
+                      // for chain pickers in portfolio apps).
+                      setChainFilter((prev) => {
+                        if (prev === null) return new Set<ChainKey>([c]);
+                        const next = new Set(prev);
+                        if (next.has(c)) {
+                          next.delete(c);
+                        } else {
+                          next.add(c);
+                        }
+                        // Empty set collapses back to "all" so we never render
+                        // an empty table just because the user unticked
+                        // everything.
+                        if (next.size === 0) return null;
+                        return next;
+                      });
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
+                      active
+                        ? "bg-primary/25 border-primary/55 text-foreground"
+                        : "bg-foreground/5 border-foreground/15 text-foreground/55 hover:bg-foreground/10",
+                    )}
+                  >
+                    <ChainIcon chain={c} size="xs" />
+                    {chainLabel(c)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Sort hint sits right above the table, top-right aligned,
+              so the user sees it as they reach for the column headers. */}
+          <div className="mb-2 flex justify-end">
+            <span className="text-[11px] text-foreground/50 italic">
               Click a column header to sort
             </span>
           </div>
@@ -292,8 +381,32 @@ export default function DiscoveryPage() {
                     sortDir={sortDir}
                     onClick={toggleSort}
                   />
-                  <th className="text-center px-3 py-3 font-semibold">Accum</th>
-                  <th className="text-center px-3 py-3 font-semibold">Tier</th>
+                  <th className="text-center px-3 py-3 font-semibold">
+                    <span className="inline-flex items-center gap-1">
+                      Accum
+                      <span
+                        tabIndex={0}
+                        title="Accumulation grade (S/A/B/C/D) scored from buy/sell ratio, unique buyers, smart-money presence and volume consistency."
+                        aria-label="Accumulation grade explainer"
+                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
+                      >
+                        <Info className="h-2.5 w-2.5" />
+                      </span>
+                    </span>
+                  </th>
+                  <th className="text-center px-3 py-3 font-semibold">
+                    <span className="inline-flex items-center gap-1">
+                      Tier
+                      <span
+                        tabIndex={0}
+                        title="Risk gate (degen / balanced / conservative). ✓ means the token passed your current tier's mcap, age and buyer thresholds."
+                        aria-label="Tier explainer"
+                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
+                      >
+                        <Info className="h-2.5 w-2.5" />
+                      </span>
+                    </span>
+                  </th>
                   <th className="text-center px-5 py-3 font-semibold">Rating</th>
                 </tr>
               </thead>
@@ -308,15 +421,18 @@ export default function DiscoveryPage() {
                         <div className="flex items-center gap-2.5">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.address}.png`}
+                            src={`https://dd.dexscreener.com/ds-data/tokens/${dsSlug(normalizeChain(t.chain))}/${t.address}.png`}
                             alt=""
                             className="h-7 w-7 rounded-lg bg-foreground/5 border border-foreground/15 flex-shrink-0"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = "none";
+                              // Detach then hide — never set src="".
+                              const el = e.currentTarget;
+                              el.onerror = null;
+                              el.style.display = "none";
                             }}
                           />
                           <a
-                            href={`https://dexscreener.com/${t.chain || "solana"}/${t.address}`}
+                            href={`https://dexscreener.com/${dsSlug(normalizeChain(t.chain))}/${t.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-foreground font-semibold text-sm hover:underline underline-offset-2"
@@ -324,16 +440,8 @@ export default function DiscoveryPage() {
                           >
                             {t.symbol}
                           </a>
-                          <span className={cn(
-                            "text-[9px] font-bold uppercase tracking-wider rounded-full px-1.5 py-0 border",
-                            t.chain === "base"
-                              ? "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30"
-                              : t.chain === "ethereum"
-                              ? "bg-foreground/10 text-foreground/70 dark:text-foreground/80 border-foreground/20"
-                              : "bg-primary/25 text-emerald-800 dark:text-emerald-300 border-primary/40"
-                          )}>
-                            {t.chain === "ethereum" ? "ETH" : (t.chain || "SOL").toUpperCase()}
-                          </span>
+                          {/* Replace the text chain tag with the real chain logo */}
+                          <ChainIcon chain={t.chain} size="xs" />
                           {t.sectors && t.sectors.length > 0 && (
                             <span className="text-[10px] text-foreground/60 bg-foreground/5 border border-foreground/15 rounded-full px-1.5 py-0">
                               {t.sectors[0]}
@@ -483,7 +591,7 @@ export default function DiscoveryPage() {
                                     Nansen <ExternalLink className="h-2.5 w-2.5" />
                                   </a>
                                   <a
-                                    href={`https://dexscreener.com/solana/${t.address}`}
+                                    href={`https://dexscreener.com/${dsSlug(normalizeChain(t.chain))}/${t.address}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 rounded-full bg-secondary/30 border border-secondary/50 px-2 py-0.5 text-[10px] font-semibold text-foreground hover:bg-secondary/40 transition-colors"
@@ -591,7 +699,7 @@ export default function DiscoveryPage() {
                   <th className="text-right px-3 py-3 font-semibold">Score</th>
                   <th className="text-left px-4 py-3 font-semibold">Address</th>
                   <th className="text-left px-4 py-3 font-semibold">Label</th>
-                  <th className="text-right px-3 py-3 font-semibold">Convergence</th>
+                  <th className="text-right px-3 py-3 font-semibold">Realized PnL</th>
                   <th className="text-right px-4 py-3 font-semibold">Hot buys</th>
                 </tr>
               </thead>
@@ -629,8 +737,18 @@ export default function DiscoveryPage() {
                           <span className="text-foreground/30 text-xs">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono text-foreground/80 text-xs tabular-nums">
-                        {w.convergence_score}
+                      <td className="px-3 py-3 text-right font-mono text-xs tabular-nums">
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-md px-1.5 py-0.5 font-bold",
+                            w.total_pnl_realized >= 0
+                              ? "text-profit bg-profit/15"
+                              : "text-loss bg-loss/15",
+                          )}
+                        >
+                          {w.total_pnl_realized >= 0 ? "+" : ""}
+                          {fmtUsd(w.total_pnl_realized)}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right text-foreground/60 text-xs tabular-nums">
                         {w.hot_token_buys?.length ?? 0}
@@ -643,16 +761,15 @@ export default function DiscoveryPage() {
                             <span>
                               Win rate <span className="text-foreground font-mono font-semibold">{fmtPct(w.win_rate)}</span>
                             </span>
-                            <span>
-                              Realized PnL{" "}
-                              <span
-                                className={cn(
-                                  "font-mono font-semibold",
-                                  w.total_pnl_realized >= 0 ? "text-profit" : "text-loss"
-                                )}
-                              >
-                                {fmtUsd(w.total_pnl_realized)}
+                            <span
+                              title="How many of this wallet's recent buys overlap with tokens other top-graded wallets are also buying. Higher = more consensus."
+                              className="inline-flex items-center gap-1"
+                            >
+                              Convergence{" "}
+                              <span className="text-foreground font-mono font-semibold">
+                                {w.convergence_score}
                               </span>
+                              <Info className="h-3 w-3 text-foreground/40" />
                             </span>
                             <span>
                               W/L <span className="text-foreground font-mono font-semibold">{w.wins}W / {w.losses}L</span>
@@ -681,9 +798,10 @@ export default function DiscoveryPage() {
                                 <div className="flex items-center justify-between mb-1.5">
                                   <span className="font-semibold text-foreground">{tok.symbol}</span>
                                   <a
-                                    href={`https://dexscreener.com/solana/${tok.address}`}
+                                    href={`https://dexscreener.com/${dsSlug(normalizeChain(w.chain))}/${tok.address}?maker=${w.address}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    title="Open chart with this wallet's buy/sell markers"
                                     className="text-[10px] text-foreground/60 hover:text-foreground transition-colors flex items-center gap-0.5"
                                   >
                                     Dex <ExternalLink className="h-2.5 w-2.5" />

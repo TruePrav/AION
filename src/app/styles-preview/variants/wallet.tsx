@@ -1,5 +1,5 @@
-// 5 style variants for the Wallet Profile Header surface.
-import { ArrowLeft, Copy, ExternalLink, Trophy, TrendingUp, Activity, Coins, Zap, Sparkles } from "lucide-react";
+// 10 style variants for the Wallet Profile Header surface.
+import { ArrowLeft, Copy, ExternalLink, Trophy, TrendingUp, Activity, Coins, Zap, Sparkles, Shield, CheckCircle2 } from "lucide-react";
 import { MOCK_WALLET, fmtUsd, fmtPct } from "../mock";
 
 const w = MOCK_WALLET;
@@ -280,6 +280,300 @@ export function WalletV5() {
             <div className="text-[9px] font-mono text-zinc-500 mt-0.5">{d}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V6 — OBSIDIAN PRO (Linear/Stripe · emerald · soft shadow)
+// ═══════════════════════════════════════════════════════
+export function WalletV6() {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-[#0b0d10] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_60px_-20px_rgba(0,0,0,0.8)]">
+      <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 mb-5">
+        <ArrowLeft className="h-3 w-3" />
+        <span>Back to wallets</span>
+      </div>
+      <div className="flex items-start justify-between mb-7 gap-6">
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-2xl bg-emerald-400/10 blur-xl" />
+            <div className="relative h-16 w-16 rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/15 to-emerald-400/[0.03] flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <span className="text-2xl font-semibold text-emerald-300">{w.grade}</span>
+            </div>
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5 mb-2">
+              <CheckCircle2 className="h-2.5 w-2.5" /> Elite · Verified
+            </div>
+            <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight mb-1">{w.label}</h1>
+            <div className="inline-flex items-center gap-2 text-[11px] font-mono text-zinc-500">
+              <span>{w.address.slice(0, 14)}...{w.address.slice(-6)}</span>
+              <Copy className="h-3 w-3 hover:text-zinc-200 cursor-pointer" />
+              <span className="text-zinc-700">·</span>
+              <ExternalLink className="h-3 w-3 hover:text-zinc-200 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Overall Score</div>
+          <div className="flex items-baseline gap-1 justify-end">
+            <span className="text-5xl font-semibold text-zinc-100 tabular-nums leading-none">{w.score}</span>
+            <span className="text-lg text-zinc-600 tabular-nums">/100</span>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { l: "Win rate", v: fmtPct(w.win_rate), i: Trophy },
+          { l: "Realized P&L", v: `+${fmtUsd(w.realized)}`, i: TrendingUp, accent: true },
+          { l: "Trades", v: w.trades, i: Activity },
+          { l: "Volume", v: fmtUsd(w.volume), i: Coins },
+        ].map(({ l, v, i: I, accent }) => (
+          <div key={l} className="rounded-xl border border-white/[0.05] bg-gradient-to-b from-white/[0.02] to-transparent p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{l}</span>
+              <I className="h-3 w-3 text-zinc-600" />
+            </div>
+            <div className={`text-lg font-semibold tabular-nums ${accent ? "text-emerald-400" : "text-zinc-100"}`}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V7 — TANGERINE (CMC · orange accents · dense)
+// ═══════════════════════════════════════════════════════
+export function WalletV7() {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-[#0d1014] overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-2.5 border-b border-zinc-800 bg-[#12161c] text-[11px] text-zinc-500">
+        <ArrowLeft className="h-3 w-3" />
+        <span>Wallets</span>
+        <span className="text-zinc-700">/</span>
+        <span className="text-zinc-300 font-mono">{w.address.slice(0, 10)}...</span>
+      </div>
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-6 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-full bg-[#f7931a]/10 border-2 border-[#f7931a]/40 flex items-center justify-center">
+              <span className="text-xl font-bold text-[#f7931a]">{w.grade}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl font-bold text-zinc-100">{w.label}</h1>
+                <span className="text-[10px] font-bold text-[#f7931a] bg-[#f7931a]/10 border border-[#f7931a]/40 rounded px-1.5 py-0.5 uppercase tracking-wider">Top 1%</span>
+              </div>
+              <div className="text-[11px] font-mono text-zinc-500 flex items-center gap-1.5">
+                <span>{w.address.slice(0, 16)}...{w.address.slice(-4)}</span>
+                <Copy className="h-3 w-3 hover:text-[#f7931a] cursor-pointer" />
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Rank Score</div>
+            <div className="text-4xl font-bold text-[#f7931a] tabular-nums leading-none mt-1">{w.score}</div>
+            <div className="h-1 w-24 rounded-full bg-zinc-800 overflow-hidden mt-2">
+              <div className="h-full bg-[#f7931a]" style={{ width: `${w.score}%` }} />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-5 gap-0 border-t border-zinc-800/60 divide-x divide-zinc-800/60">
+          {[
+            { l: "Win Rate", v: fmtPct(w.win_rate) },
+            { l: "Realized P&L", v: `+${fmtUsd(w.realized)}`, accent: true },
+            { l: "Unreal P&L", v: `+${fmtUsd(w.unrealized)}`, accent: true },
+            { l: "Trades", v: w.trades.toString() },
+            { l: "Volume", v: fmtUsd(w.volume) },
+          ].map((s, i) => (
+            <div key={i} className="px-4 py-3 first:pl-0">
+              <div className="text-[9px] text-zinc-500 uppercase tracking-wider">{s.l}</div>
+              <div className={`text-base font-bold tabular-nums mt-1 ${s.accent ? "text-[#16c784]" : "text-zinc-100"}`}>{s.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V8 — OCEAN (Navy gradient · cyan rim-light)
+// ═══════════════════════════════════════════════════════
+export function WalletV8() {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-[#041024] via-[#030814] to-[#050b1a] p-8">
+      <div className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="absolute bottom-0 right-1/3 h-48 w-48 rounded-full bg-emerald-400/5 blur-3xl" />
+      <div className="relative">
+        <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/50 mb-6">
+          <ArrowLeft className="h-3 w-3" />
+          <span className="uppercase tracking-[0.15em]">Back</span>
+        </div>
+        <div className="flex items-start justify-between mb-8 gap-6">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-cyan-400/30 blur-xl animate-pulse" />
+              <div className="relative h-20 w-20 rounded-full border border-cyan-400/40 bg-[#071a34] flex items-center justify-center">
+                <div className="absolute inset-1 rounded-full border border-cyan-400/20" />
+                <span className="text-3xl font-light bg-gradient-to-b from-cyan-200 to-cyan-400 bg-clip-text text-transparent">{w.grade}</span>
+              </div>
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[10px] text-cyan-300 border border-cyan-400/30 bg-cyan-400/5 rounded-full px-2.5 py-0.5 mb-3 uppercase tracking-[0.15em]">
+                <Sparkles className="h-2.5 w-2.5" /> Elite Smart Money
+              </div>
+              <h1 className="text-3xl font-light text-white tracking-tight mb-2">{w.label}</h1>
+              <div className="inline-flex items-center gap-2 text-[11px] font-mono text-cyan-200/50 border border-cyan-400/10 rounded-full px-3 py-1 bg-cyan-400/[0.03]">
+                <span>{w.address.slice(0, 18)}...{w.address.slice(-6)}</span>
+                <Copy className="h-3 w-3 hover:text-cyan-300 cursor-pointer" />
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-cyan-300/50 uppercase tracking-[0.15em]">Score</div>
+            <div className="text-7xl font-light bg-gradient-to-b from-cyan-200 to-cyan-400 bg-clip-text text-transparent tabular-nums leading-none mt-1">
+              {w.score}
+            </div>
+            <div className="text-[11px] text-cyan-300/40 tabular-nums mt-1">of 100</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { l: "Win rate", v: fmtPct(w.win_rate), i: Trophy },
+            { l: "Realized P&L", v: `+${fmtUsd(w.realized)}`, i: TrendingUp, accent: true },
+            { l: "Trades", v: w.trades, i: Activity },
+            { l: "Volume", v: fmtUsd(w.volume), i: Coins },
+          ].map(({ l, v, i: I, accent }) => (
+            <div key={l} className="rounded-xl border border-cyan-400/[0.08] bg-gradient-to-b from-cyan-400/[0.03] to-transparent p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-cyan-300/40 uppercase tracking-[0.1em]">{l}</span>
+                <I className="h-3 w-3 text-cyan-300/40" />
+              </div>
+              <div className={`text-xl font-light tabular-nums ${accent ? "bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent" : "text-white"}`}>
+                {v}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V9 — IVORY (Luxury editorial · serif · cream + forest)
+// ═══════════════════════════════════════════════════════
+export function WalletV9() {
+  return (
+    <div className="bg-[#faf8f3] border border-[#14532d]/15 p-10">
+      <div className="flex items-center gap-1.5 text-[11px] text-[#14532d]/50 mb-6 italic">
+        <ArrowLeft className="h-3 w-3" />
+        <span>Return to archive</span>
+      </div>
+      <div className="flex items-start justify-between pb-8 mb-8 border-b border-[#14532d]/15 gap-6">
+        <div className="flex-1">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-[#14532d]/60 mb-3">Wallet Profile · Grade {w.grade}</div>
+          <h1 className="text-5xl text-[#14532d] tracking-tight mb-3 leading-tight" style={{ fontFamily: "Georgia, serif" }}>
+            {w.label}
+          </h1>
+          <div className="text-[11px] text-[#14532d]/50 italic font-mono">
+            {w.address}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#14532d]/50 mb-2">Composite</div>
+          <div className="flex items-baseline gap-1 justify-end">
+            <span className="text-7xl text-[#14532d] tracking-tight tabular-nums leading-none" style={{ fontFamily: "Georgia, serif" }}>
+              {w.score}
+            </span>
+            <span className="text-xl text-[#14532d]/40 tabular-nums italic">/100</span>
+          </div>
+          <div className="text-[11px] text-[#14532d]/60 italic mt-2">Top 1% · Elite tier</div>
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-8">
+        {[
+          { l: "Win rate", v: fmtPct(w.win_rate), d: `${w.wins} wins / ${w.losses} losses` },
+          { l: "Realized", v: `+${fmtUsd(w.realized)}`, d: "net profit · 90d", accent: true },
+          { l: "Activity", v: w.trades.toString(), d: `${w.tokens} tokens traded` },
+          { l: "Volume", v: fmtUsd(w.volume), d: "total throughput" },
+        ].map((s, i) => (
+          <div key={i}>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#14532d]/50 mb-2">{s.l}</div>
+            <div className={`text-3xl tabular-nums ${s.accent ? "text-[#14532d]" : "text-[#14532d]"}`} style={{ fontFamily: "Georgia, serif" }}>
+              {s.v}
+            </div>
+            <div className="text-[11px] italic text-[#14532d]/50 mt-1">{s.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V10 — VOID (Pure black · yellow · Bybit pro dense)
+// ═══════════════════════════════════════════════════════
+export function WalletV10() {
+  return (
+    <div className="bg-black border border-zinc-900 font-mono">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-900 bg-zinc-950 text-[9px] uppercase tracking-wider text-zinc-600">
+        <div className="flex items-center gap-3">
+          <ArrowLeft className="h-3 w-3" />
+          <span>Wallets</span>
+          <span className="text-zinc-700">/</span>
+          <span className="text-white">{w.address.slice(0, 8)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-[#facc15] animate-pulse" />
+          <span>LIVE · 42ms</span>
+        </div>
+      </div>
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-5 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 border-2 border-[#facc15] bg-[#facc15]/5 flex items-center justify-center">
+              <span className="text-2xl font-bold text-[#facc15]">{w.grade}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl font-bold text-white tracking-tight">{w.label}</span>
+                <span className="text-[9px] font-bold text-[#facc15] bg-[#facc15]/10 border border-[#facc15]/40 px-1.5 py-0.5 uppercase tracking-wider">VIP · TIER S</span>
+              </div>
+              <div className="text-[10px] text-zinc-500 flex items-center gap-1.5">
+                <span>{w.address}</span>
+                <Copy className="h-3 w-3 hover:text-[#facc15] cursor-pointer" />
+              </div>
+            </div>
+          </div>
+          <div className="text-right border border-zinc-900 bg-zinc-950 px-4 py-2">
+            <div className="text-[9px] text-zinc-600 uppercase tracking-wider">SCORE</div>
+            <div className="text-3xl font-bold text-[#facc15] tabular-nums leading-none">{w.score}</div>
+            <div className="text-[9px] text-zinc-600 tabular-nums">/100</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-6 gap-0 border border-zinc-900 divide-x divide-zinc-900 bg-zinc-950">
+          {[
+            { l: "WIN%", v: fmtPct(w.win_rate), i: Trophy },
+            { l: "REAL_PNL", v: `+${fmtUsd(w.realized)}`, i: TrendingUp, accent: true },
+            { l: "UNREAL", v: `+${fmtUsd(w.unrealized)}`, i: TrendingUp, accent: true },
+            { l: "TRADES", v: w.trades.toString(), i: Activity },
+            { l: "TOKENS", v: w.tokens.toString(), i: Coins },
+            { l: "VOL", v: fmtUsd(w.volume), i: Shield },
+          ].map(({ l, v, i: I, accent }) => (
+            <div key={l} className="px-3 py-2.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <I className="h-2.5 w-2.5 text-zinc-600" />
+                <span className="text-[9px] text-zinc-600 uppercase tracking-wider">{l}</span>
+              </div>
+              <div className={`text-sm font-bold tabular-nums ${accent ? "text-[#facc15]" : "text-white"}`}>{v}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

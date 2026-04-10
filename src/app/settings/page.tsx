@@ -151,8 +151,10 @@ export default function SettingsPage() {
                   disabled={READONLY_MODE}
                   className={cn(
                     "relative px-4 py-3.5 rounded-xl text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                    // Match the risk-tier active style so both selections use
+                    // the same secondary-tinted look.
                     active
-                      ? "bg-primary/25 border-2 border-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]"
+                      ? "bg-secondary/60 border-2 border-foreground ring-2 ring-secondary/40 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--secondary)/0.55)]"
                       : "bg-foreground/[0.05] border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25"
                   )}
                 >
@@ -164,7 +166,7 @@ export default function SettingsPage() {
                   <div className={cn("font-bold text-xs mb-0.5 uppercase tracking-wider pr-6", active ? "text-foreground" : "text-foreground/80")}>
                     {mode.label}
                   </div>
-                  <div className={cn("text-[11px] leading-tight", active ? "text-foreground/80 font-medium" : "text-foreground/55")}>{mode.desc}</div>
+                  <div className={cn("text-[11px] leading-tight", active ? "text-foreground/75 font-medium" : "text-foreground/55")}>{mode.desc}</div>
                 </button>
               );
             })}
@@ -234,32 +236,57 @@ export default function SettingsPage() {
                 { key: "min_sm_traders" as const, label: "Min SM traders", step: 1, min: 0, max: 20 },
                 { key: "min_accum_score" as const, label: "Min accum score", step: 5, min: 0, max: 100 },
                 { key: "min_sm_buyers" as const, label: "Min SM buyers", step: 1, min: 0, max: 10 },
-              ].map((param) => (
-                <div key={param.key}>
-                  <label className="text-[10px] text-foreground/60 font-semibold block mb-1.5">
-                    {param.label}
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {param.prefix && <span className="text-xs font-bold text-foreground/75">{param.prefix}</span>}
-                    <Input
-                      type="number"
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      value={localSettings.risk_tier?.[param.key] ?? 0}
-                      disabled={localSettings.risk_tier?.preset !== "custom" || READONLY_MODE}
-                      onChange={(e) => {
-                        const rt = { ...(localSettings.risk_tier || DEFAULT_SETTINGS.risk_tier) };
-                        rt[param.key] = Number(e.target.value);
-                        rt.preset = "custom";
-                        update("risk_tier", rt);
-                      }}
-                      className="h-7 text-xs font-mono"
-                    />
-                    {param.suffix && <span className="text-xs text-foreground/60">{param.suffix}</span>}
+              ].map((param) => {
+                const editable = localSettings.risk_tier?.preset === "custom" && !READONLY_MODE;
+                const raw = localSettings.risk_tier?.[param.key] ?? 0;
+                // Format the read-only display so it's still legible in dark
+                // mode (the shadcn Input's disabled state washes the value
+                // almost to invisible). When the preset is locked we render
+                // a static chip instead of a disabled <input>.
+                const display =
+                  param.key === "min_mcap"
+                    ? raw >= 1_000_000
+                      ? `${(raw / 1_000_000).toFixed(raw % 1_000_000 === 0 ? 0 : 1)}M`
+                      : raw >= 1_000
+                        ? `${(raw / 1_000).toFixed(0)}K`
+                        : String(raw)
+                    : String(raw);
+                return (
+                  <div key={param.key}>
+                    <label className="text-[10px] text-foreground/60 font-semibold block mb-1.5">
+                      {param.label}
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {param.prefix && <span className="text-xs font-bold text-foreground/75">{param.prefix}</span>}
+                      {editable ? (
+                        <Input
+                          type="number"
+                          min={param.min}
+                          max={param.max}
+                          step={param.step}
+                          value={raw}
+                          onChange={(e) => {
+                            const rt = { ...(localSettings.risk_tier || DEFAULT_SETTINGS.risk_tier) };
+                            rt[param.key] = Number(e.target.value);
+                            rt.preset = "custom";
+                            update("risk_tier", rt);
+                          }}
+                          className="h-7 text-xs font-mono"
+                        />
+                      ) : (
+                        <div
+                          className="h-7 flex-1 rounded-lg border border-foreground/15 bg-foreground/[0.06] px-2.5 flex items-center text-xs font-mono font-semibold text-foreground tabular-nums"
+                          aria-label={`${param.label} (locked)`}
+                          title="Switch tier to Custom to edit"
+                        >
+                          {display}
+                        </div>
+                      )}
+                      {param.suffix && <span className="text-xs text-foreground/60">{param.suffix}</span>}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Section>

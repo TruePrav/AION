@@ -6,14 +6,17 @@ import { apiFetch, type DiscoveryWallet } from "@/lib/api";
 import { fmtUsd, fmtPct, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { AlertTriangle, TrendingUp, Target, Activity, ArrowUpRight } from "lucide-react";
+import { AlertTriangle, TrendingUp, Target, Activity, ArrowUpRight, Info } from "lucide-react";
 
 type Grade = "S" | "A" | "B" | "C" | "D";
+
+type SortKey = "score" | "pnl" | "winrate" | "trades" | "unrealized";
 
 export default function WalletsPage() {
   const [wallets, setWallets] = useState<DiscoveryWallet[]>([]);
   const [filter, setFilter] = useState<Grade | "ALL">("ALL");
-  const [sort, setSort] = useState<"score" | "pnl" | "winrate">("score");
+  const [sort, setSort] = useState<SortKey>("score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,12 +46,33 @@ export default function WalletsPage() {
     );
   }
 
-  const filtered = wallets
+  // Sort that pushes wallets with no signal (e.g. win_rate=0 because they
+  // have no closed trades yet) to the BOTTOM regardless of direction. That
+  // fixes the "broken sort" complaint where sorting by win rate showed a sea
+  // of zero-trade wallets at the top.
+  const filtered = [...wallets]
     .filter((w) => filter === "ALL" || w.grade === filter)
     .sort((a, b) => {
-      if (sort === "score") return b.score - a.score;
-      if (sort === "pnl") return b.total_pnl_realized - a.total_pnl_realized;
-      return b.win_rate - a.win_rate;
+      const getKey = (w: DiscoveryWallet): { value: number; valid: boolean } => {
+        switch (sort) {
+          case "score":
+            return { value: w.score || 0, valid: (w.score || 0) > 0 };
+          case "pnl":
+            return { value: w.total_pnl_realized || 0, valid: w.total_trades > 0 };
+          case "winrate":
+            return { value: w.win_rate || 0, valid: w.total_trades > 0 };
+          case "trades":
+            return { value: w.total_trades || 0, valid: true };
+          case "unrealized":
+            return { value: w.total_pnl_unrealized || 0, valid: true };
+        }
+      };
+      const ka = getKey(a);
+      const kb = getKey(b);
+      // Always sink invalid rows to the end so they don't dominate the top.
+      if (ka.valid !== kb.valid) return ka.valid ? -1 : 1;
+      const diff = ka.value - kb.value;
+      return sortDir === "desc" ? -diff : diff;
     });
 
   return (
@@ -97,14 +121,39 @@ export default function WalletsPage() {
             <span className="text-[11px] text-foreground/50 font-semibold uppercase tracking-wider">Sort</span>
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value as "score" | "pnl" | "winrate")}
+              onChange={(e) => setSort(e.target.value as SortKey)}
               className="glass-input text-xs font-semibold cursor-pointer"
             >
               <option value="score">Score</option>
               <option value="pnl">Realized PnL</option>
+              <option value="unrealized">Unrealized PnL</option>
               <option value="winrate">Win rate</option>
+              <option value="trades">Trade count</option>
             </select>
+            <button
+              type="button"
+              onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
+              title={`Switch to ${sortDir === "desc" ? "ascending" : "descending"} order`}
+              className="rounded-lg bg-foreground/5 border border-foreground/15 px-2.5 py-1.5 text-[11px] font-bold text-foreground/80 hover:bg-foreground/10 transition-colors"
+            >
+              {sortDir === "desc" ? "↓ High first" : "↑ Low first"}
+            </button>
           </div>
+        </div>
+
+        {/* Win rate explainer — answers the user's "100% win rate but
+            unrealized losses?" confusion. Win rate only counts CLOSED
+            trades; open positions can be down without affecting it. */}
+        <div className="rounded-xl bg-foreground/[0.04] border border-foreground/10 px-4 py-3 flex items-start gap-2.5 text-[12px] text-foreground/70 leading-relaxed">
+          <Info className="h-3.5 w-3.5 text-foreground/50 mt-0.5 flex-shrink-0" />
+          <p>
+            <span className="font-bold text-foreground/85">Win rate</span> is the share of
+            this wallet&apos;s <em>closed</em> trades that ended profitably. Open positions
+            (which feed the <span className="font-bold text-foreground/85">Unrealized</span>
+            {" "}row) are <em>not</em> in this calculation, so it&apos;s normal to see a 100% win
+            rate alongside negative unrealized PnL — it just means every realized exit was
+            green but some held positions are currently down.
+          </p>
         </div>
 
         {/* ── Wallet Grid ── */}
@@ -146,8 +195,9 @@ export default function WalletsPage() {
 
 function WalletCard({ w }: { w: DiscoveryWallet }) {
   const pnlPos = w.total_pnl_realized >= 0;
-  const winHigh = w.win_rate >= 0.7;
-  const winMid = w.win_rate >= 0.5 && w.win_rate < 0.7;
+  const hasClosedTrades = w.total_trades > 0;
+  const winHigh = hasClosedTrades && w.win_rate >= 0.7;
+  const winMid = hasClosedTrades && w.win_rate >= 0.5 && w.win_rate < 0.7;
 
   return (
     <div className="glass-card p-5 group hover:bg-foreground/[0.07] transition-colors">
@@ -186,10 +236,19 @@ function WalletCard({ w }: { w: DiscoveryWallet }) {
         <Kpi
           icon={<Target className="h-3 w-3" />}
           label="Win rate"
-          value={w.win_rate > 0 ? fmtPct(w.win_rate) : "—"}
+          value={hasClosedTrades ? fmtPct(w.win_rate) : "—"}
+          // No closed trades = render as muted, not as red. Red implies a
+          // bad signal; "no signal" should look neutral.
           valueClass={
-            winHigh ? "text-profit" : winMid ? "text-foreground" : "text-loss"
+            !hasClosedTrades
+              ? "text-foreground/40"
+              : winHigh
+                ? "text-profit"
+                : winMid
+                  ? "text-foreground"
+                  : "text-loss"
           }
+          tooltip="Share of CLOSED trades that ended profitably. Open positions don't count — that's why a 100% win rate can coexist with negative unrealized PnL."
         />
         <Kpi
           icon={<Activity className="h-3 w-3" />}
@@ -265,17 +324,23 @@ function Kpi({
   label,
   value,
   valueClass,
+  tooltip,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   valueClass?: string;
+  tooltip?: string;
 }) {
   return (
-    <div className="rounded-lg bg-foreground/[0.035] border border-foreground/10 px-2.5 py-2">
+    <div
+      className="rounded-lg bg-foreground/[0.035] border border-foreground/10 px-2.5 py-2"
+      title={tooltip}
+    >
       <div className="flex items-center gap-1 text-foreground/45 text-[9px] font-bold uppercase tracking-wider">
         {icon}
         {label}
+        {tooltip && <Info className="h-2.5 w-2.5 opacity-60" />}
       </div>
       <div
         className={cn(

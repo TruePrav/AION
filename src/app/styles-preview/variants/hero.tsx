@@ -258,3 +258,246 @@ export function HeroV5() {
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// V6 — OBSIDIAN PRO  (Linear / Stripe inspired)
+// Deep charcoal, emerald accent, soft inner-shadow cards, generous padding
+// ═══════════════════════════════════════════════════════
+export function HeroV6() {
+  return (
+    <div className="rounded-3xl border border-white/[0.07] bg-[#0b0d10] p-10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+      <div className="flex items-center gap-2 mb-7">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.08] px-2.5 py-1 text-[10px] font-semibold text-emerald-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live intelligence
+        </span>
+        <span className="text-[11px] text-zinc-500">· mainnet-beta · 02:14 UTC</span>
+      </div>
+      <h1 className="text-[44px] font-semibold tracking-[-0.025em] leading-[1.05] text-white mb-3">
+        Smart money,<br />
+        <span className="text-zinc-400">fully decoded.</span>
+      </h1>
+      <p className="text-[13px] text-zinc-400 leading-relaxed max-w-xl mb-9">
+        AION tracks {s.wallets.toLocaleString()} top-tier wallets across Solana, Base, Ethereum and Polymarket. Alpha signals drop as they happen — no delay, no human filter.
+      </p>
+      <div className="grid grid-cols-5 gap-0 rounded-xl border border-white/[0.06] bg-[#0e1115] divide-x divide-white/[0.05] overflow-hidden">
+        {[
+          ["Tokens", s.tokens_tracked, null],
+          ["Wallets", s.wallets.toLocaleString(), null],
+          ["Trades", s.trades, null],
+          ["Win rate", fmtPct(s.win_rate), "text-emerald-400"],
+          ["P/L", `+${fmtUsd(s.total_pnl)}`, "text-emerald-400"],
+        ].map(([k, v, c]) => (
+          <div key={k as string} className="px-5 py-4">
+            <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-1">{k}</div>
+            <div className={`text-xl font-semibold tabular-nums ${c || "text-white"}`}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-7 flex items-center gap-3">
+        <button className="rounded-lg bg-white text-[#0b0d10] px-4 py-2 text-xs font-semibold hover:bg-zinc-100 transition-colors inline-flex items-center gap-1.5">
+          View discovery <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+        <button className="rounded-lg border border-white/[0.09] bg-white/[0.02] px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-white/[0.05]">
+          Connect wallet
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V7 — TANGERINE  (CoinMarketCap-inspired)
+// Warm orange accents, dark neutral, dense tabular data
+// ═══════════════════════════════════════════════════════
+export function HeroV7() {
+  return (
+    <div className="rounded-2xl border border-[#1d2025] bg-[#0d1014] overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[#1d2025] px-6 py-3">
+        <div className="flex items-center gap-3">
+          <div className="h-6 w-6 rounded-md bg-gradient-to-br from-[#f7931a] to-[#ff6b1a] flex items-center justify-center">
+            <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+          </div>
+          <span className="text-sm font-semibold text-white">AION</span>
+          <span className="text-[10px] font-mono text-zinc-500 px-1.5 py-0.5 rounded bg-[#1a1d22]">PRO</span>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+          <span>Cryptocurrencies: <span className="text-white">{s.tokens_tracked}</span></span>
+          <span>Smart wallets: <span className="text-white">{s.wallets.toLocaleString()}</span></span>
+          <span className="text-[#4ade80]">● Market is bullish</span>
+        </div>
+      </div>
+      <div className="px-6 pt-7 pb-6">
+        <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
+          Today&apos;s <span className="text-[#f7931a]">smart money</span> moves
+        </h1>
+        <p className="text-xs text-zinc-400 mb-6">
+          The global crypto intelligence feed. Live updates on whale accumulation, grades, and win rates.
+        </p>
+        <div className="grid grid-cols-5 gap-px bg-[#1a1d22] rounded-lg overflow-hidden border border-[#1d2025]">
+          {[
+            ["Tokens Tracked", s.tokens_tracked, "#f7931a"],
+            ["Smart Wallets", s.wallets.toLocaleString(), "#f7931a"],
+            ["Live Trades", s.trades, "#4ade80"],
+            ["Win Rate", fmtPct(s.win_rate), "#4ade80"],
+            ["Total P/L", `+${fmtUsd(s.total_pnl)}`, "#4ade80"],
+          ].map(([k, v, c]) => (
+            <div key={k as string} className="bg-[#0d1014] px-4 py-3">
+              <div className="text-[9px] text-zinc-500 font-semibold uppercase tracking-[0.08em] mb-1">{k}</div>
+              <div className="text-lg font-bold tabular-nums" style={{ color: c as string }}>{v}</div>
+              <div className="text-[9px] text-zinc-500 mt-0.5">+2.34% (24h)</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V8 — OCEAN  (Deep navy premium trading platform)
+// Electric cyan rim-lights, gradient fills, subtle shimmer
+// ═══════════════════════════════════════════════════════
+export function HeroV8() {
+  return (
+    <div className="relative rounded-[28px] p-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.4), rgba(6,182,212,0.15) 40%, rgba(59,130,246,0.05) 70%, rgba(59,130,246,0.3))" }}>
+      <div className="relative rounded-[27px] bg-[#030814] p-10 overflow-hidden">
+        <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-br from-cyan-500/[0.06] via-blue-500/[0.03] to-transparent pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-cyan-400/[0.06] blur-3xl pointer-events-none" />
+        <div className="absolute top-6 right-6 h-px w-32 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/[0.08] px-3 py-1 mb-6">
+            <Activity className="h-3 w-3 text-cyan-300" />
+            <span className="text-[11px] font-semibold text-cyan-200">Real-time signals</span>
+          </div>
+          <h1 className="text-5xl font-bold tracking-[-0.02em] leading-[1.05] mb-4">
+            <span className="bg-gradient-to-br from-white via-white to-cyan-200 bg-clip-text text-transparent">The smart money</span>
+            <br />
+            <span className="bg-gradient-to-br from-cyan-300 via-blue-400 to-cyan-500 bg-clip-text text-transparent">never sleeps.</span>
+          </h1>
+          <p className="text-sm text-slate-400 max-w-xl leading-relaxed mb-8">
+            AION surfaces convergence patterns from {s.wallets.toLocaleString()} wallets. See who&apos;s accumulating before the chart moves.
+          </p>
+          <div className="grid grid-cols-5 gap-3">
+            {[
+              ["TOKENS", s.tokens_tracked],
+              ["WALLETS", s.wallets.toLocaleString()],
+              ["TRADES", s.trades],
+              ["WIN", fmtPct(s.win_rate)],
+              ["P/L", `+${fmtUsd(s.total_pnl)}`],
+            ].map(([k, v]) => (
+              <div key={k as string} className="rounded-xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-transparent p-4 backdrop-blur-sm">
+                <div className="text-[9px] text-cyan-300/60 font-bold tracking-[0.15em] mb-1.5">{k}</div>
+                <div className="text-lg font-bold text-white tabular-nums">{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V9 — IVORY  (Luxury editorial — Hermès / Vogue feel)
+// Cream, deep forest green, serif display, generous whitespace
+// ═══════════════════════════════════════════════════════
+export function HeroV9() {
+  return (
+    <div className="rounded-[4px] border border-stone-300 bg-[#faf8f3] p-12">
+      <div className="flex items-center justify-between mb-10 pb-4 border-b border-stone-200">
+        <div className="flex items-baseline gap-3">
+          <span className="text-[10px] tracking-[0.3em] text-stone-500 uppercase">EST · 2024</span>
+          <span className="text-[10px] tracking-[0.3em] text-stone-400">·</span>
+          <span className="text-[10px] tracking-[0.3em] text-stone-500 uppercase">Vol. IV · Issue 12</span>
+        </div>
+        <span className="text-[10px] tracking-[0.25em] text-stone-500 uppercase">Smart Money Weekly</span>
+      </div>
+      <h1 className="text-[56px] leading-[0.98] tracking-[-0.01em] text-stone-900 mb-4 font-serif">
+        The quiet art of
+        <br />
+        <em className="text-[#14532d] not-italic font-medium">smart money</em>
+      </h1>
+      <div className="flex items-start gap-12 mt-10">
+        <div className="flex-1 max-w-md">
+          <p className="text-sm text-stone-600 leading-[1.7] font-light">
+            For years, only a handful of wallets moved the market before it moved. AION makes that signal public — a curated intelligence feed for the discerning trader.
+          </p>
+          <button className="mt-8 inline-flex items-center gap-2 border-b border-stone-900 pb-1 text-xs font-semibold tracking-wider text-stone-900 uppercase hover:text-[#14532d] hover:border-[#14532d] transition-colors">
+            Read the brief <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-8 text-stone-800">
+          {[
+            ["Tokens", s.tokens_tracked],
+            ["Wallets", s.wallets.toLocaleString()],
+            ["Trades", s.trades],
+            ["P/L", `+${fmtUsd(s.total_pnl)}`],
+          ].map(([k, v]) => (
+            <div key={k as string}>
+              <div className="text-[9px] tracking-[0.25em] text-stone-500 uppercase mb-1">{k}</div>
+              <div className="text-3xl font-serif tabular-nums">{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V10 — VOID  (Bybit / Binance dense pro)
+// Pure black, yellow primary, dense data, monospace numbers
+// ═══════════════════════════════════════════════════════
+export function HeroV10() {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-black overflow-hidden">
+      <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-2.5 bg-zinc-950">
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-5 rounded-sm bg-[#facc15] flex items-center justify-center">
+            <BarChart3 className="h-3 w-3 text-black" strokeWidth={3} />
+          </div>
+          <span className="text-xs font-bold text-white tracking-wide">AION·PRO</span>
+          <span className="text-[9px] font-mono text-zinc-500 ml-2">v3.2.1</span>
+        </div>
+        <div className="flex items-center gap-4 text-[10px] font-mono">
+          <span className="text-zinc-500">BTC <span className="text-[#4ade80]">$67,420</span> <span className="text-[#4ade80]">+2.4%</span></span>
+          <span className="text-zinc-500">ETH <span className="text-[#4ade80]">$3,412</span> <span className="text-[#ef4444]">-0.8%</span></span>
+          <span className="text-zinc-500">SOL <span className="text-[#4ade80]">$198</span> <span className="text-[#4ade80]">+5.1%</span></span>
+        </div>
+      </div>
+      <div className="px-5 py-6">
+        <div className="flex items-start justify-between gap-8 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight mb-1">
+              Smart Money <span className="text-[#facc15]">Intelligence</span>
+            </h1>
+            <p className="text-[11px] text-zinc-500">Tracking {s.wallets.toLocaleString()} wallets · Updated 14s ago</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="rounded bg-[#facc15] text-black px-3 py-1.5 text-[11px] font-bold hover:bg-[#fde047]">
+              TRADE NOW
+            </button>
+            <button className="rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[11px] font-bold text-zinc-300 hover:bg-zinc-900">
+              SIGNALS
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-5 gap-0 border-y border-zinc-800 divide-x divide-zinc-800">
+          {[
+            ["Tokens Tracked", s.tokens_tracked, null, "+12"],
+            ["Smart Wallets", s.wallets.toLocaleString(), null, "+248"],
+            ["Trades Today", s.trades, null, "+45"],
+            ["Win Rate", fmtPct(s.win_rate), "text-[#4ade80]", "+1.2%"],
+            ["Unrealized P/L", `+${fmtUsd(s.total_pnl)}`, "text-[#4ade80]", "+5.8%"],
+          ].map(([k, v, c, ch]) => (
+            <div key={k as string} className="px-4 py-3">
+              <div className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mb-0.5">{k}</div>
+              <div className={`text-lg font-mono font-bold tabular-nums ${c || "text-white"}`}>{v}</div>
+              <div className="text-[9px] font-mono text-[#4ade80] mt-0.5">{ch}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

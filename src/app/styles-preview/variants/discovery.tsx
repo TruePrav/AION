@@ -314,3 +314,301 @@ export function DiscoveryV5() {
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// V6 — OBSIDIAN PRO — premium table with soft inner shadow
+// ═══════════════════════════════════════════════════════
+export function DiscoveryV6() {
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-[#0b0d10] overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Smart money inflow</h3>
+          <p className="text-[11px] text-zinc-500 mt-0.5">{MOCK_TOKENS.length} tokens · sorted by 7d net flow</p>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-2.5 py-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-semibold text-emerald-300">Live</span>
+        </div>
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">
+            <th className="text-left px-6 py-3">Token</th>
+            <th className="text-right px-3 py-3">Market cap</th>
+            <th className="text-right px-3 py-3">7d inflow</th>
+            <th className="text-right px-3 py-3">24h</th>
+            <th className="text-center px-3 py-3">Traders</th>
+            <th className="text-center px-6 py-3">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_TOKENS.map((t) => (
+            <tr key={t.symbol} className="border-t border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.06] flex items-center justify-center text-[10px] font-semibold text-white">
+                    {t.symbol.slice(0, 2)}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-white">{t.symbol}</div>
+                    <div className="text-[10px] text-zinc-500 font-mono">{t.address}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-3 py-4 text-right text-sm text-white tabular-nums">{fmtUsd(t.mcap)}</td>
+              <td className={`px-3 py-4 text-right text-sm font-semibold tabular-nums ${t.flow7d >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {t.flow7d >= 0 ? "+" : ""}{fmtUsd(t.flow7d)}
+              </td>
+              <td className={`px-3 py-4 text-right text-[11px] tabular-nums ${t.flow24h >= 0 ? "text-emerald-400/70" : "text-red-400/70"}`}>
+                {t.flow24h >= 0 ? "+" : ""}{fmtUsd(t.flow24h)}
+              </td>
+              <td className="px-3 py-4 text-center text-sm text-zinc-300 tabular-nums">{t.traders}</td>
+              <td className="px-6 py-4 text-center">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${GRADE_STYLES_DARK[t.accum.grade]}`}>
+                  {t.accum.grade} · {t.accum.score}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V7 — TANGERINE — CMC-style dense with orange accents
+// ═══════════════════════════════════════════════════════
+export function DiscoveryV7() {
+  return (
+    <div className="rounded-xl border border-[#1d2025] bg-[#0d1014] overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[#1d2025] px-5 py-3 bg-[#0a0c10]">
+        <div className="flex items-center gap-3">
+          <Flame className="h-4 w-4 text-[#f7931a]" />
+          <h3 className="text-sm font-bold text-white">Trending · Smart Money</h3>
+          <span className="text-[10px] text-zinc-500">Top {MOCK_TOKENS.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="text-[10px] font-bold text-zinc-500 hover:text-white">1h</button>
+          <button className="text-[10px] font-bold text-white bg-[#f7931a]/15 border border-[#f7931a]/30 rounded px-2 py-0.5">24h</button>
+          <button className="text-[10px] font-bold text-zinc-500 hover:text-white">7d</button>
+        </div>
+      </div>
+      <table className="w-full text-[12px]">
+        <thead className="bg-[#0a0c10]">
+          <tr className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider border-b border-[#1d2025]">
+            <th className="text-left px-4 py-2.5">#</th>
+            <th className="text-left px-3 py-2.5">Name</th>
+            <th className="text-right px-3 py-2.5">Market Cap</th>
+            <th className="text-right px-3 py-2.5">7d Flow</th>
+            <th className="text-right px-3 py-2.5">24h %</th>
+            <th className="text-center px-3 py-2.5">SM Score</th>
+            <th className="text-right px-4 py-2.5">Traders</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_TOKENS.map((t, i) => (
+            <tr key={t.symbol} className="border-b border-[#14171c] last:border-0 hover:bg-[#12151a]">
+              <td className="px-4 py-2.5 text-zinc-500 tabular-nums">{i + 1}</td>
+              <td className="px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-full bg-gradient-to-br from-[#f7931a] to-[#ff6b1a] text-[9px] font-bold text-white flex items-center justify-center">{t.symbol.slice(0, 1)}</div>
+                  <span className="font-bold text-white text-[12px]">{t.symbol}</span>
+                  <span className="text-[10px] text-zinc-500">{t.age}</span>
+                </div>
+              </td>
+              <td className="px-3 py-2.5 text-right text-white tabular-nums">{fmtUsd(t.mcap)}</td>
+              <td className={`px-3 py-2.5 text-right font-bold tabular-nums ${t.flow7d >= 0 ? "text-[#4ade80]" : "text-[#ef4444]"}`}>
+                {t.flow7d >= 0 ? "▲" : "▼"} {fmtUsd(Math.abs(t.flow7d))}
+              </td>
+              <td className={`px-3 py-2.5 text-right tabular-nums ${t.flow24h >= 0 ? "text-[#4ade80]" : "text-[#ef4444]"}`}>
+                {t.flow24h >= 0 ? "+" : ""}{((t.flow24h / t.mcap) * 100).toFixed(2)}%
+              </td>
+              <td className="px-3 py-2.5 text-center">
+                <div className="inline-flex items-center gap-1">
+                  <div className="h-1.5 w-10 rounded-full bg-[#1a1d22] overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#f7931a] to-[#ff6b1a]" style={{ width: `${t.accum.score}%` }} />
+                  </div>
+                  <span className="text-[11px] font-bold text-white tabular-nums w-6">{t.accum.score}</span>
+                </div>
+              </td>
+              <td className="px-4 py-2.5 text-right text-zinc-400 tabular-nums">{t.traders}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V8 — OCEAN — deep navy with electric cyan accents
+// ═══════════════════════════════════════════════════════
+export function DiscoveryV8() {
+  return (
+    <div className="relative rounded-[24px] p-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.1) 50%, rgba(59,130,246,0.2))" }}>
+      <div className="rounded-[23px] bg-[#030814] overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
+          <div className="flex items-center gap-2.5">
+            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
+              <TrendingUp className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+            </div>
+            <h3 className="text-sm font-semibold text-white">Convergence signals</h3>
+          </div>
+          <span className="text-[10px] text-cyan-300/60 font-mono tracking-wider">{MOCK_TOKENS.length} ACTIVE</span>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr className="text-[10px] text-cyan-300/50 font-semibold uppercase tracking-[0.1em]">
+              <th className="text-left px-6 py-3">Token</th>
+              <th className="text-right px-3 py-3">Mcap</th>
+              <th className="text-right px-3 py-3">7d flow</th>
+              <th className="text-center px-3 py-3">Traders</th>
+              <th className="text-center px-6 py-3">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MOCK_TOKENS.map((t) => (
+              <tr key={t.symbol} className="border-t border-white/[0.04] hover:bg-gradient-to-r hover:from-cyan-500/[0.03] hover:to-transparent transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-400/20 flex items-center justify-center text-[11px] font-bold text-cyan-200">
+                      {t.symbol.slice(0, 2)}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-white">{t.symbol}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">{t.age} old</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-3 py-4 text-right text-sm text-white/90 tabular-nums">{fmtUsd(t.mcap)}</td>
+                <td className="px-3 py-4 text-right">
+                  <div className={`text-sm font-bold tabular-nums ${t.flow7d >= 0 ? "text-cyan-300" : "text-red-400"}`}>
+                    {t.flow7d >= 0 ? "+" : ""}{fmtUsd(t.flow7d)}
+                  </div>
+                </td>
+                <td className="px-3 py-4 text-center text-sm text-slate-300 tabular-nums">{t.traders}</td>
+                <td className="px-6 py-4 text-center">
+                  <div className="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-cyan-400/30 bg-gradient-to-b from-cyan-500/[0.08] to-transparent">
+                    <span className="text-sm font-bold text-cyan-200 tabular-nums">{t.accum.score}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V9 — IVORY — luxury editorial with serif and forest green
+// ═══════════════════════════════════════════════════════
+export function DiscoveryV9() {
+  return (
+    <div className="rounded-sm border border-stone-300 bg-[#faf8f3] overflow-hidden">
+      <div className="border-b border-stone-300 px-8 py-5 flex items-baseline justify-between">
+        <div>
+          <div className="text-[10px] tracking-[0.25em] text-stone-500 uppercase mb-1">Section I</div>
+          <h3 className="text-xl font-serif text-stone-900">The Accumulation Ledger</h3>
+        </div>
+        <span className="text-[10px] tracking-[0.2em] text-stone-500 uppercase">Curated · {MOCK_TOKENS.length} entries</span>
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="text-[9px] tracking-[0.2em] text-stone-500 uppercase border-b border-stone-200">
+            <th className="text-left px-8 py-4 font-medium">Symbol</th>
+            <th className="text-right px-3 py-4 font-medium">Capitalisation</th>
+            <th className="text-right px-3 py-4 font-medium">Weekly flow</th>
+            <th className="text-center px-3 py-4 font-medium">Observers</th>
+            <th className="text-right px-8 py-4 font-medium">Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_TOKENS.map((t) => (
+            <tr key={t.symbol} className="border-b border-stone-200 last:border-0 hover:bg-stone-100/50">
+              <td className="px-8 py-4">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-lg font-serif text-stone-900">{t.symbol}</span>
+                  <span className="text-[10px] text-stone-500 italic">{t.age}</span>
+                </div>
+              </td>
+              <td className="px-3 py-4 text-right text-sm text-stone-800 font-serif tabular-nums">{fmtUsd(t.mcap)}</td>
+              <td className={`px-3 py-4 text-right text-sm font-semibold tabular-nums ${t.flow7d >= 0 ? "text-[#14532d]" : "text-red-800"}`}>
+                {t.flow7d >= 0 ? "+ " : "− "}{fmtUsd(Math.abs(t.flow7d))}
+              </td>
+              <td className="px-3 py-4 text-center text-sm text-stone-700 tabular-nums">{t.traders}</td>
+              <td className="px-8 py-4 text-right">
+                <span className="inline-block px-3 py-1 border border-stone-400 text-[10px] tracking-[0.15em] font-bold text-stone-800 uppercase">
+                  {t.accum.grade} · {t.accum.score}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// V10 — VOID — pure black Bybit-dense pro
+// ═══════════════════════════════════════════════════════
+export function DiscoveryV10() {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-black overflow-hidden">
+      <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-2 bg-zinc-950">
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] font-bold text-white">Markets</span>
+          <button className="text-[10px] font-bold text-[#facc15] border-b border-[#facc15] pb-0.5">Smart Money</button>
+          <button className="text-[10px] font-bold text-zinc-500 hover:text-white">Volume</button>
+          <button className="text-[10px] font-bold text-zinc-500 hover:text-white">Gainers</button>
+        </div>
+        <div className="text-[10px] font-mono text-zinc-500">Last update: 02:14:32</div>
+      </div>
+      <table className="w-full text-[11px]">
+        <thead>
+          <tr className="border-b border-zinc-800 text-[9px] text-zinc-500 font-bold uppercase tracking-wider">
+            <th className="text-left px-5 py-2">Pair</th>
+            <th className="text-right px-3 py-2">Mcap</th>
+            <th className="text-right px-3 py-2">SM Inflow 7D</th>
+            <th className="text-right px-3 py-2">Change</th>
+            <th className="text-center px-3 py-2">Traders</th>
+            <th className="text-right px-5 py-2">Grade</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-900">
+          {MOCK_TOKENS.map((t) => (
+            <tr key={t.symbol} className="hover:bg-zinc-950/80 font-mono">
+              <td className="px-5 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-sans font-bold">{t.symbol}</span>
+                  <span className="text-[9px] text-zinc-500">/USDT</span>
+                </div>
+              </td>
+              <td className="px-3 py-2 text-right text-zinc-300 tabular-nums">{fmtUsd(t.mcap)}</td>
+              <td className={`px-3 py-2 text-right font-bold tabular-nums ${t.flow7d >= 0 ? "text-[#4ade80]" : "text-[#ef4444]"}`}>
+                {t.flow7d >= 0 ? "+" : ""}{fmtUsd(t.flow7d)}
+              </td>
+              <td className={`px-3 py-2 text-right tabular-nums ${t.flow24h >= 0 ? "text-[#4ade80]" : "text-[#ef4444]"}`}>
+                {t.flow24h >= 0 ? "+" : ""}{((t.flow24h / t.mcap) * 100).toFixed(2)}%
+              </td>
+              <td className="px-3 py-2 text-center text-zinc-400 tabular-nums">{t.traders}</td>
+              <td className="px-5 py-2 text-right">
+                <span className="inline-block px-1.5 py-0.5 bg-[#facc15]/10 border border-[#facc15]/30 text-[#facc15] text-[9px] font-bold rounded-sm">
+                  {t.accum.grade}·{t.accum.score}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="border-t border-zinc-800 px-5 py-1.5 bg-zinc-950 flex items-center justify-between text-[9px] font-mono text-zinc-500">
+        <span>Rows: {MOCK_TOKENS.length}</span>
+        <span>Server latency: 12ms</span>
+      </div>
+    </div>
+  );
+}

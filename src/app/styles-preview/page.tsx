@@ -1,16 +1,16 @@
-// Style preview page — shows 5 variants of each key surface side-by-side
+// Style preview page — shows 10 variants of each key surface side-by-side
 // for visual comparison. Not linked from the main nav; navigate directly.
 
-import { HeroV1, HeroV2, HeroV3, HeroV4, HeroV5 } from "./variants/hero";
-import { DiscoveryV1, DiscoveryV2, DiscoveryV3, DiscoveryV4, DiscoveryV5 } from "./variants/discovery";
-import { PortfolioV1, PortfolioV2, PortfolioV3, PortfolioV4, PortfolioV5 } from "./variants/portfolio";
-import { WalletV1, WalletV2, WalletV3, WalletV4, WalletV5 } from "./variants/wallet";
+import { HeroV1, HeroV2, HeroV3, HeroV4, HeroV5, HeroV6, HeroV7, HeroV8, HeroV9, HeroV10 } from "./variants/hero";
+import { DiscoveryV1, DiscoveryV2, DiscoveryV3, DiscoveryV4, DiscoveryV5, DiscoveryV6, DiscoveryV7, DiscoveryV8, DiscoveryV9, DiscoveryV10 } from "./variants/discovery";
+import { PortfolioV1, PortfolioV2, PortfolioV3, PortfolioV4, PortfolioV5, PortfolioV6, PortfolioV7, PortfolioV8, PortfolioV9, PortfolioV10 } from "./variants/portfolio";
+import { WalletV1, WalletV2, WalletV3, WalletV4, WalletV5, WalletV6, WalletV7, WalletV8, WalletV9, WalletV10 } from "./variants/wallet";
 import { STYLE_NAMES } from "./mock";
 
-const HERO_VARIANTS = [HeroV1, HeroV2, HeroV3, HeroV4, HeroV5];
-const DISCOVERY_VARIANTS = [DiscoveryV1, DiscoveryV2, DiscoveryV3, DiscoveryV4, DiscoveryV5];
-const PORTFOLIO_VARIANTS = [PortfolioV1, PortfolioV2, PortfolioV3, PortfolioV4, PortfolioV5];
-const WALLET_VARIANTS = [WalletV1, WalletV2, WalletV3, WalletV4, WalletV5];
+const HERO_VARIANTS = [HeroV1, HeroV2, HeroV3, HeroV4, HeroV5, HeroV6, HeroV7, HeroV8, HeroV9, HeroV10];
+const DISCOVERY_VARIANTS = [DiscoveryV1, DiscoveryV2, DiscoveryV3, DiscoveryV4, DiscoveryV5, DiscoveryV6, DiscoveryV7, DiscoveryV8, DiscoveryV9, DiscoveryV10];
+const PORTFOLIO_VARIANTS = [PortfolioV1, PortfolioV2, PortfolioV3, PortfolioV4, PortfolioV5, PortfolioV6, PortfolioV7, PortfolioV8, PortfolioV9, PortfolioV10];
+const WALLET_VARIANTS = [WalletV1, WalletV2, WalletV3, WalletV4, WalletV5, WalletV6, WalletV7, WalletV8, WalletV9, WalletV10];
 
 export default function StylesPreviewPage() {
   return (
@@ -20,9 +20,9 @@ export default function StylesPreviewPage() {
         <div className="max-w-[1280px] mx-auto">
           <h1 className="text-3xl font-semibold tracking-tight mb-2">AION — Style Variants</h1>
           <p className="text-sm text-zinc-400">
-            5 style directions × 4 key surfaces. Pick your favorite per surface (or mix & match).
+            10 style directions × 4 key surfaces. V6–V10 are the new premium set (OpenSea / CMC / Linear inspired). Pick your favorite per surface (or mix & match).
           </p>
-          <div className="mt-5 grid grid-cols-5 gap-3">
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {STYLE_NAMES.map((s, i) => (
               <div key={s.id} className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3">
                 <div className="text-[10px] font-mono text-cyan-400 tracking-wider">V{i + 1}</div>
