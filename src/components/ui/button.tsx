@@ -26,7 +26,7 @@ const buttonVariants = cva(
         default:
           "rounded-lg font-semibold bg-primary/90 text-[hsl(0_0%_8%)] border border-foreground/15 shadow-[0_4px_16px_-6px_hsl(var(--primary)/0.45)] hover:bg-primary hover:-translate-y-px active:translate-y-0",
         outline:
-          "rounded-lg font-semibold bg-foreground/[0.06] text-foreground border border-foreground/15 backdrop-blur-md hover:bg-foreground/[0.1] hover:border-foreground/25 hover:-translate-y-px active:translate-y-0",
+          "rounded-lg font-semibold bg-foreground/[0.06] text-foreground border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25 hover:-translate-y-px active:translate-y-0",
         secondary:
           "rounded-lg font-semibold bg-secondary/80 text-[hsl(0_0%_8%)] border border-foreground/15 hover:bg-secondary hover:-translate-y-px active:translate-y-0",
         ghost:

@@ -150,7 +150,7 @@ export default function SettingsPage() {
                   onClick={() => update("mode", mode.key)}
                   disabled={READONLY_MODE}
                   className={cn(
-                    "relative px-4 py-3.5 rounded-xl text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md",
+                    "relative px-4 py-3.5 rounded-xl text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed",
                     active
                       ? "bg-primary/25 border-2 border-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]"
                       : "bg-foreground/[0.05] border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25"
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   }}
                   disabled={READONLY_MODE}
                   className={cn(
-                    "relative px-3 py-3 rounded-xl text-left transition-all disabled:opacity-50 backdrop-blur-md",
+                    "relative px-3 py-3 rounded-xl text-left transition-all disabled:opacity-50",
                     active
                       ? "bg-secondary/60 border-2 border-foreground ring-2 ring-secondary/40 ring-offset-2 ring-offset-background shadow-[0_8px_24px_-8px_hsl(var(--secondary)/0.55)]"
                       : "bg-foreground/[0.05] border border-foreground/15 hover:bg-foreground/[0.1] hover:border-foreground/25"
@@ -211,7 +211,7 @@ export default function SettingsPage() {
 
           <div
             className={cn(
-              "rounded-xl border p-4 transition-colors backdrop-blur-md",
+              "rounded-xl border p-4 transition-colors",
               localSettings.risk_tier?.preset === "custom"
                 ? "border-primary/40 bg-primary/[0.08]"
                 : "border-foreground/15 bg-foreground/[0.04]"
@@ -298,7 +298,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex gap-2 flex-wrap">
                 {localSettings.take_profit_tiers.map((tier, i) => (
-                  <div key={i} className="flex items-center gap-1.5 rounded-xl border border-foreground/15 bg-foreground/[0.05] px-2.5 py-1.5 backdrop-blur-md">
+                  <div key={i} className="flex items-center gap-1.5 rounded-xl border border-foreground/15 bg-foreground/[0.05] px-2.5 py-1.5">
                     <span className="text-[10px] text-foreground/60 font-bold">T{i + 1}</span>
                     <Input
                       type="number"

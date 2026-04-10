@@ -71,7 +71,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
         {/* ══ HERO ══ */}
         <section className="py-6 space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 border border-primary/40 px-3 py-1 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 border border-primary/40 px-3 py-1">
             <Zap className="h-3.5 w-3.5 text-foreground" fill="currentColor" />
             <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">
               Live Tracking
@@ -162,10 +162,17 @@ export default function HomePage() {
                     <img
                       src={`https://dd.dexscreener.com/ds-data/tokens/solana/${t.address}.png`}
                       alt=""
+                      loading="lazy"
                       className="h-8 w-8 rounded-lg bg-foreground/5 border border-foreground/10 flex-shrink-0"
                       onError={(e) => {
-                        const el = e.target as HTMLImageElement;
-                        el.src = "";
+                        // CRITICAL: never set src="" — that resolves to the
+                        // current page URL, fails to load as an image, and
+                        // re-fires onError in an infinite loop that pegs the
+                        // browser. Hide the element and detach the handler
+                        // so it can't fire again.
+                        const el = e.currentTarget;
+                        el.onerror = null;
+                        el.style.display = "none";
                       }}
                     />
                     <GradeBadge grade={t.accumulation.grade as "S" | "A" | "B" | "C" | "D"} size="sm" />

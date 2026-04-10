@@ -11,9 +11,11 @@ const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/discovery", label: "Discovery" },
   { href: "/wallets", label: "Wallets" },
+  { href: "/polymarket", label: "Polymarket" },
   { href: "/positions", label: "Positions" },
   { href: "/trades", label: "Trades" },
   { href: "/grading", label: "Grading" },
+  { href: "/knowledge", label: "Wiki" },
   { href: "/settings", label: "Settings" },
   { href: "/how-it-works", label: "How" },
   { href: "/roadmap", label: "Roadmap" },
@@ -24,7 +26,7 @@ export default function Navbar() {
   const { theme, toggle } = useTheme();
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl border-b bg-background/70 border-foreground/10">
+    <nav className="sticky top-0 z-50 border-b bg-background/90 border-foreground/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
         {/* ── Brand ── */}
         <Link href="/" className="flex items-center flex-shrink-0 group">

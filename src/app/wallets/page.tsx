@@ -63,7 +63,7 @@ export default function WalletsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 border border-foreground/15 px-2.5 py-1 text-[11px] font-semibold text-foreground/80 backdrop-blur-md">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 border border-foreground/15 px-2.5 py-1 text-[11px] font-semibold text-foreground/80">
               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-dot" />
               {wallets.length} tracked
             </span>
@@ -81,7 +81,7 @@ export default function WalletsPage() {
                   key={g}
                   onClick={() => setFilter(g)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all backdrop-blur-md border",
+                    "px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all border",
                     isActive
                       ? "bg-foreground text-background border-foreground shadow-[0_4px_16px_-4px_hsl(var(--foreground)/0.3)]"
                       : "bg-foreground/5 text-foreground/70 border-foreground/15 hover:bg-foreground/10 hover:text-foreground"

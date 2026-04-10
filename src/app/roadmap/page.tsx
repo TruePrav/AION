@@ -161,6 +161,21 @@ const FEATURES: Feature[] = [
     description: "Combine on-chain smart-money signals with Polymarket, Farcaster sentiment, and governance vote data for a holistic alpha score.",
   },
   {
+    phase: "1",
+    status: "shipped",
+    title: "Polymarket Whale Intelligence",
+    description: "Same discovery playbook on prediction markets. Uses Nansen's new prediction-market endpoints to scan hot markets, extract top holders, grade them, and surface wallets betting across multiple events.",
+    tag: "cross-market",
+    highlights: [
+      "Nansen research prediction-market: market-screener + top-holders + trades-by-market",
+      "Grades whales S/A/B/C/D by position size + unrealized PnL + breadth",
+      "Convergence detection: wallets appearing in ≥2 hot markets",
+      "Deep-dive view with top holders and recent trade flow per market",
+      "~31 credits per run, 6h default cadence, on-demand triggers",
+      "Full tab at /polymarket",
+    ],
+  },
+  {
     phase: "3",
     status: "planned",
     title: "AION MCP Server",
@@ -307,15 +322,15 @@ export default function RoadmapPage() {
             </p>
 
             <div className="grid grid-cols-3 gap-3 mt-6 max-w-md">
-              <div className="rounded-xl border border-primary/40 bg-primary/15 p-3 backdrop-blur-md">
+              <div className="rounded-xl border border-primary/40 bg-primary/15 p-3">
                 <div className="text-2xl font-bold text-primary font-mono tabular-nums">{counts.shipped}</div>
                 <div className="text-[10px] text-primary/80 font-bold tracking-wider">SHIPPED</div>
               </div>
-              <div className="rounded-xl border border-accent/40 bg-accent/15 p-3 backdrop-blur-md">
+              <div className="rounded-xl border border-accent/40 bg-accent/15 p-3">
                 <div className="text-2xl font-bold text-accent font-mono tabular-nums">{counts.inProgress}</div>
                 <div className="text-[10px] text-accent/80 font-bold tracking-wider">IN PROGRESS</div>
               </div>
-              <div className="rounded-xl border border-foreground/15 bg-foreground/5 p-3 backdrop-blur-md">
+              <div className="rounded-xl border border-foreground/15 bg-foreground/5 p-3">
                 <div className="text-2xl font-bold text-foreground/80 font-mono tabular-nums">{counts.planned}</div>
                 <div className="text-[10px] text-foreground/60 font-bold tracking-wider">PLANNED</div>
               </div>

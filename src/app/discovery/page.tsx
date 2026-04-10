@@ -326,9 +326,11 @@ export default function DiscoveryPage() {
                           </a>
                           <span className={cn(
                             "text-[9px] font-bold uppercase tracking-wider rounded-full px-1.5 py-0 border",
-                            t.chain === "base" ? "bg-[hsl(220_70%_50%)]/15 text-[hsl(220_70%_50%)] border-[hsl(220_70%_50%)]/30"
-                              : t.chain === "ethereum" ? "bg-[hsl(240_10%_50%)]/15 text-[hsl(240_10%_60%)] border-[hsl(240_10%_50%)]/30"
-                              : "bg-primary/15 text-primary border-primary/30"
+                            t.chain === "base"
+                              ? "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30"
+                              : t.chain === "ethereum"
+                              ? "bg-foreground/10 text-foreground/70 dark:text-foreground/80 border-foreground/20"
+                              : "bg-primary/25 text-emerald-800 dark:text-emerald-300 border-primary/40"
                           )}>
                             {t.chain === "ethereum" ? "ETH" : (t.chain || "SOL").toUpperCase()}
                           </span>

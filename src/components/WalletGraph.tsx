@@ -541,7 +541,7 @@ function Tooltip({
 
         {/* Target badge */}
         {node.data.is_target && (
-          <div className="text-xs text-amber-400/80 font-medium mt-1">
+          <div className="text-xs text-amber-700 dark:text-amber-400/90 font-medium mt-1">
             Target wallet
           </div>
         )}

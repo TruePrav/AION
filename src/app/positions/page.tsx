@@ -346,7 +346,7 @@ function PositionCard({ pos, isEditing, tempSL, tempTP, onTempSL, onTempTP, onSt
         {/* Big P&L */}
         <div
           className={cn(
-            "flex-shrink-0 rounded-2xl px-5 py-3 text-right border backdrop-blur-md",
+            "flex-shrink-0 rounded-2xl px-5 py-3 text-right border",
             hasPnl
               ? isProfit
                 ? "bg-primary/20 border-primary/40 shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.35)]"

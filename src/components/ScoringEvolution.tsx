@@ -134,7 +134,7 @@ export default function ScoringEvolution({
             Scoring Weights
           </h3>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-400/25">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-400/25">
               v{weights.version}
             </span>
             <span className="text-[10px] text-foreground/40">
@@ -186,7 +186,7 @@ export default function ScoringEvolution({
             </h3>
             <div className="flex items-center gap-2">
               {latest_evaluation.scoring_effective ? (
-                <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+                <span className="flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400">
                   <svg
                     width="14"
                     height="14"
@@ -202,7 +202,7 @@ export default function ScoringEvolution({
                   Scoring Effective
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[11px] text-red-400">
+                <span className="flex items-center gap-1 text-[11px] text-red-700 dark:text-red-400">
                   <svg
                     width="14"
                     height="14"
@@ -235,8 +235,8 @@ export default function ScoringEvolution({
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.high_score_avg_return >= 0
-                        ? "text-emerald-400"
-                        : "text-red-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-red-700 dark:text-red-400"
                     }`}
                   >
                     {formatReturn(latest_evaluation.high_score_avg_return)}
@@ -247,8 +247,8 @@ export default function ScoringEvolution({
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.low_score_avg_return >= 0
-                        ? "text-emerald-400"
-                        : "text-red-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-red-700 dark:text-red-400"
                     }`}
                   >
                     {formatReturn(latest_evaluation.low_score_avg_return)}
@@ -268,8 +268,8 @@ export default function ScoringEvolution({
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.tier_passed_avg_return >= 0
-                        ? "text-emerald-400"
-                        : "text-red-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-red-700 dark:text-red-400"
                     }`}
                   >
                     {formatReturn(latest_evaluation.tier_passed_avg_return)}
@@ -280,8 +280,8 @@ export default function ScoringEvolution({
                   <p
                     className={`text-lg font-bold tabular-nums ${
                       latest_evaluation.tier_failed_avg_return >= 0
-                        ? "text-emerald-400"
-                        : "text-red-400"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-red-700 dark:text-red-400"
                     }`}
                   >
                     {formatReturn(latest_evaluation.tier_failed_avg_return)}
@@ -296,13 +296,13 @@ export default function ScoringEvolution({
             <div className="flex items-center justify-between text-[10px] text-foreground/50 mb-1">
               <span>
                 Winners{" "}
-                <span className="text-emerald-400 font-medium">
+                <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                   {latest_evaluation.winners}
                 </span>
               </span>
               <span>
                 Losers{" "}
-                <span className="text-red-400 font-medium">
+                <span className="text-red-700 dark:text-red-400 font-medium">
                   {latest_evaluation.losers}
                 </span>
               </span>
@@ -358,7 +358,7 @@ export default function ScoringEvolution({
           {/* Recommendation */}
           {latest_evaluation.recommendation && (
             <div className="rounded-lg bg-cyan-500/5 border border-cyan-500/15 px-4 py-3">
-              <p className="text-[10px] text-cyan-400/60 uppercase tracking-wider mb-1 font-semibold">
+              <p className="text-[10px] text-cyan-700 dark:text-cyan-400/80 uppercase tracking-wider mb-1 font-semibold">
                 Recommendation
               </p>
               <p className="text-xs text-foreground/80 leading-relaxed">

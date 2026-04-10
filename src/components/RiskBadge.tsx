@@ -8,19 +8,19 @@ interface RiskBadgeProps {
 const TIER_STYLES: Record<RiskTier, { bg: string; text: string; border: string; label: string }> = {
   low: {
     bg: "bg-emerald-500/15",
-    text: "text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-400",
     border: "border-emerald-500/30",
     label: "Low Risk",
   },
   medium: {
     bg: "bg-yellow-500/15",
-    text: "text-yellow-400",
+    text: "text-yellow-700 dark:text-yellow-400",
     border: "border-yellow-500/30",
     label: "Medium Risk",
   },
   high: {
     bg: "bg-red-500/15",
-    text: "text-red-400",
+    text: "text-red-700 dark:text-red-400",
     border: "border-red-500/30",
     label: "High Risk",
   },

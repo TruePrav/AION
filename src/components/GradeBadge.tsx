@@ -62,7 +62,6 @@ const TIER_CLASSES: Record<Grade, string> = {
     "font-semibold",
     "border border-foreground/25",
     "rounded-md",
-    "backdrop-blur-sm",
   ].join(" "),
 
   // ── D: muted, buried.

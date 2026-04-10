@@ -36,7 +36,7 @@ function CopyBtn({ text }: { text: string }) {
       title="Copy command"
     >
       {copied ? (
-        <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       ) : (
@@ -87,7 +87,7 @@ export default function PipelineCommands({ commands, creditsUsed, creditsBefore,
           {commands.length} steps
         </span>
 
-        <span className="ml-auto text-xs font-mono text-emerald-400/80 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+        <span className="ml-auto text-xs font-mono text-emerald-700 dark:text-emerald-400/90 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
           {creditsUsed} credits used
         </span>
       </button>
@@ -106,7 +106,7 @@ export default function PipelineCommands({ commands, creditsUsed, creditsBefore,
                   <div className="flex flex-col items-center flex-shrink-0">
                     {/* Step circle */}
                     <div className="h-7 w-7 rounded-full bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
-                      <span className="text-[11px] font-bold text-emerald-400 font-mono">{cmd.step}</span>
+                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 font-mono">{cmd.step}</span>
                     </div>
                     {/* Connecting line */}
                     {!isLast && (
@@ -119,7 +119,7 @@ export default function PipelineCommands({ commands, creditsUsed, creditsBefore,
                     {/* Step name + badges */}
                     <div className="flex items-center gap-2 flex-wrap mb-2">
                       <span className="text-sm font-semibold text-foreground">{cmd.name}</span>
-                      <span className="text-[10px] font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/15">
+                      <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/15">
                         {cmd.credits} cr
                       </span>
                       <span className="text-[10px] font-mono text-foreground/50 bg-foreground/5 px-1.5 py-0.5 rounded border border-foreground/10">
@@ -129,7 +129,7 @@ export default function PipelineCommands({ commands, creditsUsed, creditsBefore,
 
                     {/* Command block */}
                     <div className="flex items-start gap-1 rounded-lg bg-foreground/5 border border-foreground/[0.06] p-3 mb-2">
-                      <code className="flex-1 text-xs font-mono text-emerald-300/90 dark:text-emerald-300/90 text-emerald-700/90 break-all leading-relaxed select-all">
+                      <code className="flex-1 text-xs font-mono text-emerald-800 dark:text-emerald-300/90 break-all leading-relaxed select-all">
                         {cmd.command}
                       </code>
                       <CopyBtn text={cmd.command} />
@@ -153,7 +153,7 @@ export default function PipelineCommands({ commands, creditsUsed, creditsBefore,
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
                 <span className="text-foreground font-semibold">{creditsAfter}</span>
-                <span className="text-red-400/70">(-{creditsUsed})</span>
+                <span className="text-red-700 dark:text-red-400/80">(-{creditsUsed})</span>
               </div>
             </div>
             <div className="w-full h-2 rounded-full bg-foreground/5 overflow-hidden">

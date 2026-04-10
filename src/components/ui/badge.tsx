@@ -25,7 +25,7 @@ const badgeVariants = cva(
         destructive:
           "h-5 rounded-full px-2 text-[10px] font-semibold tracking-wide bg-destructive/20 text-foreground border border-destructive/40",
         outline:
-          "h-5 rounded-full px-2 text-[10px] font-semibold tracking-wide bg-white/60 text-foreground/80 border border-foreground/15 backdrop-blur-md",
+          "h-5 rounded-full px-2 text-[10px] font-semibold tracking-wide bg-foreground/5 text-foreground/80 border border-foreground/15",
         ghost:
           "h-5 rounded-full px-2 text-[10px] font-semibold tracking-wide text-foreground/60",
         link:

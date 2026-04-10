@@ -284,7 +284,7 @@ export default function WalletPage() {
                 {tradeResult && (
                   <div
                     className={cn(
-                      "rounded-2xl p-4 mb-5 border backdrop-blur-md",
+                      "rounded-2xl p-4 mb-5 border",
                       tradeResult.success
                         ? "bg-profit/15 border-profit/40"
                         : "bg-destructive/15 border-destructive/40"

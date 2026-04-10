@@ -95,7 +95,7 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
 
       {/* ── Panel ── */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl border border-foreground/15 bg-background/95 backdrop-blur-2xl shadow-2xl shadow-black/20 overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl border border-foreground/15 bg-background shadow-2xl shadow-black/20 overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-foreground/10 bg-foreground/[0.03]">
             <div className="h-8 w-8 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center">

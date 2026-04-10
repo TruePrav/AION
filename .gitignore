@@ -39,3 +39,6 @@ next-env.d.ts
 CONTRACT.md
 SKILL.md
 public/SKILL.md
+
+# working-copy snapshots pulled down from VPS for editing
+vps-snapshot/

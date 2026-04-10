@@ -5,9 +5,11 @@ const NAV_LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/discovery", label: "Discovery" },
   { href: "/wallets", label: "Wallets" },
+  { href: "/polymarket", label: "Polymarket" },
   { href: "/positions", label: "Positions" },
   { href: "/trades", label: "Trades" },
   { href: "/grading", label: "Grading" },
+  { href: "/knowledge", label: "Wiki" },
   { href: "/settings", label: "Settings" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/roadmap", label: "Roadmap" },
@@ -21,7 +23,7 @@ const CHAINS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-foreground/10 mt-auto bg-background/50 backdrop-blur-xl">
+    <footer className="border-t border-foreground/10 mt-auto bg-background/80">
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mb-10">
           {/* Brand */}

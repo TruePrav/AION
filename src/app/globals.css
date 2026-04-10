@@ -202,10 +202,20 @@
    dark mode automatically when .dark is set on <html>.
    ════════════════════════════════════════════════════════════════ */
 
+/*
+ * NOTE: backdrop-filter was previously applied to every .glass-* element.
+ * On pages like /discovery this created 20+ compositor layers that all
+ * had to resample the background on every frame, dragging the main
+ * thread down to ~1 FPS and hanging Chrome.
+ *
+ * We now use solid translucent fills on repeating elements and keep
+ * real backdrop-blur only on the nav bar, footer, popover, and chat
+ * panel — surfaces where it actually reads as glass over scrollable
+ * content and there is at most one or two on screen at a time.
+ */
+
 .glass-card {
-  background: hsl(0 0% 100% / 0.72);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: hsl(var(--card) / 0.72);
   border: 1px solid hsl(0 0% 0% / 0.08);
   border-radius: 1rem;
   box-shadow:
@@ -214,9 +224,7 @@
     0 2px 6px -2px hsl(0 0% 0% / 0.06);
 }
 .dark .glass-card {
-  background: hsl(0 0% 100% / 0.05);
-  backdrop-filter: blur(28px) saturate(150%);
-  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  background: hsl(var(--card) / 0.55);
   border-color: hsl(0 0% 100% / 0.12);
   box-shadow:
     0 1px 0 0 hsl(0 0% 100% / 0.08) inset,
@@ -226,9 +234,7 @@
 }
 
 .glass-card-sm {
-  background: hsl(0 0% 100% / 0.65);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: hsl(var(--card) / 0.65);
   border: 1px solid hsl(0 0% 0% / 0.08);
   border-radius: 0.75rem;
   box-shadow:
@@ -236,8 +242,7 @@
     0 4px 16px -8px hsl(0 0% 0% / 0.1);
 }
 .dark .glass-card-sm {
-  background: hsl(0 0% 100% / 0.04);
-  backdrop-filter: blur(20px) saturate(150%);
+  background: hsl(var(--card) / 0.5);
   border-color: hsl(0 0% 100% / 0.1);
   box-shadow:
     0 1px 0 0 hsl(0 0% 100% / 0.06) inset,
@@ -245,14 +250,12 @@
 }
 
 .glass-panel {
-  background: hsl(0 0% 100% / 0.55);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  background: hsl(var(--card) / 0.55);
   border: 1px solid hsl(0 0% 0% / 0.06);
   border-radius: 0.875rem;
 }
 .dark .glass-panel {
-  background: hsl(0 0% 100% / 0.035);
+  background: hsl(var(--card) / 0.45);
   border-color: hsl(0 0% 100% / 0.08);
 }
 
@@ -261,9 +264,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
-  background: hsl(0 0% 100% / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.7);
   border: 1px solid hsl(0 0% 0% / 0.1);
   border-radius: 9999px;
   font-size: 0.6875rem;
@@ -272,7 +273,7 @@
   color: hsl(var(--foreground));
 }
 .dark .glass-chip {
-  background: hsl(0 0% 100% / 0.08);
+  background: hsl(var(--card) / 0.55);
   border-color: hsl(0 0% 100% / 0.14);
 }
 
@@ -281,9 +282,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: hsl(0 0% 100% / 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.75);
   color: hsl(var(--foreground));
   border: 1px solid hsl(0 0% 0% / 0.12);
   border-radius: 0.625rem;
@@ -307,14 +306,14 @@
   transform: translateY(0);
 }
 .dark .glass-btn {
-  background: hsl(0 0% 100% / 0.06);
+  background: hsl(var(--card) / 0.6);
   border-color: hsl(0 0% 100% / 0.14);
   box-shadow:
     0 1px 0 0 hsl(0 0% 100% / 0.08) inset,
     0 4px 14px -4px hsl(0 0% 0% / 0.5);
 }
 .dark .glass-btn:hover {
-  background: hsl(0 0% 100% / 0.1);
+  background: hsl(var(--card) / 0.75);
   box-shadow:
     0 1px 0 0 hsl(0 0% 100% / 0.1) inset,
     0 8px 20px -4px hsl(0 0% 0% / 0.6);
@@ -336,9 +335,7 @@
 }
 
 .glass-input {
-  background: hsl(0 0% 100% / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.7);
   border: 1px solid hsl(0 0% 0% / 0.12);
   border-radius: 0.5rem;
   color: hsl(var(--foreground));
@@ -352,7 +349,7 @@
   box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
 }
 .dark .glass-input {
-  background: hsl(0 0% 100% / 0.05);
+  background: hsl(var(--card) / 0.55);
   border-color: hsl(0 0% 100% / 0.14);
 }
 

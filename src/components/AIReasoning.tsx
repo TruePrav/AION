@@ -28,22 +28,22 @@ const VERDICT: Record<
 > = {
   strong_buy: {
     label: "Strong Buy",
-    pill: "bg-primary/25 text-[hsl(120_70%_25%)] border-primary/50",
+    pill: "bg-primary/25 text-emerald-800 dark:text-emerald-300 border-primary/50",
     bar: "bg-primary",
   },
   buy: {
     label: "Buy",
-    pill: "bg-primary/15 text-[hsl(120_65%_30%)] border-primary/35",
+    pill: "bg-primary/15 text-emerald-700 dark:text-emerald-300 border-primary/35",
     bar: "bg-primary/80",
   },
   watch: {
     label: "Watch",
-    pill: "bg-accent/40 text-[hsl(38_85%_30%)] border-accent/70",
+    pill: "bg-accent/40 text-amber-800 dark:text-amber-300 border-accent/70",
     bar: "bg-accent",
   },
   avoid: {
     label: "Avoid",
-    pill: "bg-destructive/20 text-[hsl(0_75%_40%)] border-destructive/40",
+    pill: "bg-destructive/20 text-red-700 dark:text-red-300 border-destructive/40",
     bar: "bg-destructive",
   },
 };
@@ -51,7 +51,7 @@ const VERDICT: Record<
 function SignalPill({ signal }: { signal: "bullish" | "bearish" | "neutral" }) {
   if (signal === "bullish") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-1.5 py-0.5 text-[10px] font-bold text-[hsl(120_70%_28%)]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
         <TrendingUp className="h-2.5 w-2.5" strokeWidth={3} />
         BULL
       </span>
@@ -59,7 +59,7 @@ function SignalPill({ signal }: { signal: "bullish" | "bearish" | "neutral" }) {
   }
   if (signal === "bearish") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-1.5 py-0.5 text-[10px] font-bold text-[hsl(0_75%_42%)]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-300">
         <TrendingDown className="h-2.5 w-2.5" strokeWidth={3} />
         BEAR
       </span>
@@ -190,7 +190,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
                   </span>
 
                   {r.risk_flags.length > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-2 py-0.5 text-[10px] font-bold text-[hsl(0_75%_40%)]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-300">
                       <AlertTriangle className="h-2.5 w-2.5" strokeWidth={3} />
                       {r.risk_flags.length} risk{r.risk_flags.length > 1 ? "s" : ""}
                     </span>
@@ -255,7 +255,7 @@ export default function AIReasoning({ reasoning, loading }: AIReasoningProps) {
                           {r.risk_flags.map((flag, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-2.5 py-0.5 text-[11px] font-semibold text-[hsl(0_75%_38%)]"
+                              className="inline-flex items-center gap-1 rounded-full bg-destructive/20 border border-destructive/40 px-2.5 py-0.5 text-[11px] font-semibold text-red-700 dark:text-red-300"
                             >
                               <AlertTriangle className="h-2.5 w-2.5" strokeWidth={3} />
                               {flag}
