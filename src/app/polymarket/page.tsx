@@ -295,7 +295,7 @@ export default function PolymarketPage() {
   const [tab, setTab] = useState<"markets" | "whales" | "convergence" | "bets" | "contrarian" | "early-movers">("markets");
   const [expandedMarket, setExpandedMarket] = useState<string | null>(null);
   const [expandedWhale, setExpandedWhale] = useState<string | null>(null);
-  const [whaleSort, setWhaleSort] = useState<"score" | "win_rate" | "pnl" | "position" | "unrealized">("score");
+  const [whaleSort, setWhaleSort] = useState<"score" | "win_rate" | "pnl" | "position" | "unrealized">("pnl");
   const [whaleSortDir, setWhaleSortDir] = useState<"desc" | "asc">("desc");
   const [whaleFilter, setWhaleFilter] = useState<"all" | "profiled" | "S" | "A" | "B" | "C" | "D">("all");
   const [bets, setBets] = useState<PMBetsResponse | null>(null);
