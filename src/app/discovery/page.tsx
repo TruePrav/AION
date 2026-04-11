@@ -8,6 +8,7 @@ import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
 import WalletGraph from "@/components/WalletGraph";
 import AIReasoning, { type TokenReasoning } from "@/components/AIReasoning";
+import PersonaPanel from "@/components/PersonaPanel";
 import PipelineCommands, { type PipelineCommand } from "@/components/PipelineCommands";
 import ScoringEvolution, { type EvolutionStatus } from "@/components/ScoringEvolution";
 import { cn } from "@/lib/utils";
@@ -742,6 +743,22 @@ export default function DiscoveryPage() {
                                 </div>
                               ) : null;
                             })()}
+
+                            {/* ── Persona Panel ── */}
+                            <PersonaPanel
+                              token={{
+                                symbol: t.symbol,
+                                chain: t.chain,
+                                market_cap: t.market_cap,
+                                token_age_days: t.token_age_days,
+                                trader_count: t.trader_count,
+                                net_flow_7d: t.net_flow_7d,
+                                accumulation_grade: t.accumulation.grade,
+                                accumulation_score: t.accumulation.score,
+                                tier: t.tier_filter.tier,
+                                sectors: t.sectors,
+                              }}
+                            />
 
                             {/* ── Quick Buy ── */}
                             {!READONLY_MODE ? (

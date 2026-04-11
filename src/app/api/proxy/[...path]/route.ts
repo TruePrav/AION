@@ -31,6 +31,7 @@ const READ_ALLOWLIST: RegExp[] = [
   /^blocklist$/,
   /^ratings/,
   /^evolution\//,
+  /^personas\//,
 ];
 
 function isAllowed(path: string): boolean {
