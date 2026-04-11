@@ -282,18 +282,24 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
               {expanded ? "Collapse" : "Expand"}
             </button>
           )}
-          {!result && !loading && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors"
-            >
-              <Brain className="h-3 w-3" />
-              Run Panel Analysis
-            </button>
-          )}
         </div>
       </div>
+
+      {/* Run Analysis CTA — centered, prominent */}
+      {!result && !loading && (
+        <div className="flex justify-center py-5">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
+            className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          >
+            <div className="absolute inset-0 rounded-xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
+            <Brain className="h-5 w-5 relative z-10" />
+            <span className="relative z-10">Run Panel Analysis</span>
+            <span className="relative z-10 text-[10px] font-medium opacity-70 bg-primary-foreground/15 rounded-full px-2 py-0.5">7 investors</span>
+          </button>
+        </div>
+      )}
 
       {/* Loading state — terminal-style step-by-step */}
       {loading && <TerminalLoader symbol={token.symbol} />}
