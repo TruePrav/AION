@@ -269,6 +269,17 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
               <p className="text-xs text-foreground/75 leading-relaxed mt-1">{result.summary}</p>
             </div>
           )}
+
+          {/* Attribution */}
+          <div className="flex items-center gap-3 text-[10px] text-foreground/30 pt-1">
+            <span>Data powered by{" "}
+              <a href="https://www.coingecko.com?utm_source=aion&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/50">CoinGecko</a>
+            </span>
+            <span className="text-foreground/15">|</span>
+            <span>Security by GoPlus</span>
+            <span className="text-foreground/15">|</span>
+            <span>TVL by DefiLlama</span>
+          </div>
         </div>
       )}
     </div>
