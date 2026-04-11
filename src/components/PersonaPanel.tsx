@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock, Terminal, CheckCircle2, Loader2 } from "lucide-react";
 import type { PanelResult, PersonaSignal } from "@/lib/personas";
 
 /** Format ISO timestamp to relative time (e.g. "2h ago") */
@@ -57,6 +57,121 @@ function ConvictionBar({ value }: { value: number }) {
         />
       </div>
       <span className="text-[10px] font-mono font-bold text-foreground/60 tabular-nums">{value}/10</span>
+    </div>
+  );
+}
+
+/** Terminal-style loading steps */
+const LOADING_STEPS = [
+  { label: "Connecting to AION research pipeline", delay: 400 },
+  { label: "Fetching on-chain accumulation data (Nansen)", delay: 800 },
+  { label: "Pulling smart money wallet profiles", delay: 600 },
+  { label: "Loading market data from CoinGecko", delay: 700 },
+  { label: "Scanning contract security via GoPlus", delay: 600 },
+  { label: "Checking DEX liquidity on DexScreener", delay: 500 },
+  { label: "Fetching protocol TVL from DefiLlama", delay: 600 },
+  { label: "Checking GitHub developer activity", delay: 500 },
+  { label: "Scanning X/Twitter sentiment & mentions", delay: 700 },
+  { label: "Mapping converging smart money wallets", delay: 500 },
+  { label: "Building investor briefing document", delay: 400 },
+  { label: "Warren Buffett reviewing fundamentals", delay: 800 },
+  { label: "Michael Burry checking for red flags", delay: 700 },
+  { label: "Stanley Druckenmiller analyzing macro", delay: 600 },
+  { label: "Aswath Damodaran running valuation model", delay: 600 },
+  { label: "Cathie Wood evaluating disruption potential", delay: 600 },
+  { label: "Bill Ackman hunting for catalysts", delay: 500 },
+  { label: "Rakesh Jhunjhunwala gauging momentum", delay: 500 },
+  { label: "Panel deliberating final verdict", delay: 1000 },
+];
+
+function TerminalLoader({ symbol }: { symbol: string }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (currentStep >= LOADING_STEPS.length) return;
+
+    const timer = setTimeout(() => {
+      setCompletedSteps((prev) => [...prev, currentStep]);
+      setCurrentStep((prev) => prev + 1);
+    }, LOADING_STEPS[currentStep].delay);
+
+    return () => clearTimeout(timer);
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [currentStep]);
+
+  return (
+    <div className="rounded-lg bg-[#0a0a0f] border border-foreground/10 overflow-hidden">
+      {/* Terminal header */}
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-foreground/[0.04] border-b border-foreground/10">
+        <Terminal className="h-3 w-3 text-primary" />
+        <span className="text-[10px] font-mono font-semibold text-foreground/50">
+          aion research — {symbol}
+        </span>
+        <div className="flex-1" />
+        <div className="flex items-center gap-1">
+          <div className="h-2 w-2 rounded-full bg-red-500/60" />
+          <div className="h-2 w-2 rounded-full bg-yellow-500/60" />
+          <div className="h-2 w-2 rounded-full bg-green-500/60" />
+        </div>
+      </div>
+
+      {/* Terminal body */}
+      <div ref={scrollRef} className="px-3 py-2.5 max-h-[260px] overflow-y-auto space-y-0.5 scrollbar-thin">
+        {LOADING_STEPS.map((step, i) => {
+          const isCompleted = completedSteps.includes(i);
+          const isActive = i === currentStep;
+          const isVisible = i <= currentStep;
+
+          if (!isVisible) return null;
+
+          return (
+            <div
+              key={i}
+              className={cn(
+                "flex items-center gap-2 font-mono text-[11px] leading-relaxed transition-opacity duration-200",
+                isCompleted ? "opacity-60" : "opacity-100",
+              )}
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="h-3 w-3 text-profit flex-shrink-0" />
+              ) : isActive ? (
+                <Loader2 className="h-3 w-3 text-primary flex-shrink-0 animate-spin" />
+              ) : null}
+              <span className={cn(
+                isCompleted ? "text-foreground/40" : "text-foreground/80",
+              )}>
+                <span className="text-primary/60">$</span> {step.label}
+              </span>
+              {isCompleted && (
+                <span className="text-profit/60 text-[9px]">done</span>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Blinking cursor at the end */}
+        {currentStep < LOADING_STEPS.length && (
+          <div className="h-3 flex items-center">
+            <span className="inline-block w-1.5 h-3 bg-primary/70 animate-pulse" />
+          </div>
+        )}
+
+        {/* All done — waiting for response */}
+        {currentStep >= LOADING_STEPS.length && (
+          <div className="flex items-center gap-2 font-mono text-[11px] text-primary pt-1">
+            <div className="h-3 w-3 rounded-full border border-primary/40 border-t-primary animate-spin flex-shrink-0" />
+            <span>Generating panel verdict...</span>
+            <span className="inline-block w-1.5 h-3 bg-primary/70 animate-pulse" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -180,13 +295,8 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
         </div>
       </div>
 
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center gap-3 py-6 justify-center">
-          <div className="h-5 w-5 rounded-full border-2 border-foreground/20 border-t-primary animate-spin" />
-          <span className="text-xs text-foreground/60">7 legendary investors are analyzing {token.symbol}...</span>
-        </div>
-      )}
+      {/* Loading state — terminal-style step-by-step */}
+      {loading && <TerminalLoader symbol={token.symbol} />}
 
       {/* Error state */}
       {error && (
