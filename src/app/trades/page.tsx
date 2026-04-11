@@ -24,6 +24,8 @@ interface Trade {
   recommended?: boolean;
   grade?: string;
   exit_reason?: string | null;
+  current_price?: number;
+  accum_score?: number;
 }
 
 interface TradeStats {
@@ -354,8 +356,16 @@ export default function TradesPage() {
                       )}
                     </td>
                     <td className="px-3 py-3 text-right whitespace-nowrap font-mono text-foreground/60 text-xs tabular-nums">
-                      {trade.exit_price !== null && trade.exit_price !== undefined ? (
+                      {trade.exit_price !== null && trade.exit_price !== undefined && trade.exit_price > 0 ? (
                         formatPrice(trade.exit_price)
+                      ) : trade.status === "open" && trade.current_price ? (
+                        <span className="text-primary" title="Live price">
+                          {formatPrice(trade.current_price)}
+                        </span>
+                      ) : trade.exit_reason ? (
+                        <span className="text-foreground/30 text-[10px] font-sans" title={trade.exit_reason}>
+                          {trade.exit_reason.replace(/_/g, " ")}
+                        </span>
                       ) : (
                         <span className="text-foreground/30">—</span>
                       )}
