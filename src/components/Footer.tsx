@@ -8,7 +8,6 @@ const NAV_LINKS = [
   { href: "/polymarket", label: "Polymarket" },
   { href: "/positions", label: "Positions" },
   { href: "/trades", label: "Trades" },
-  { href: "/grading", label: "Grading" },
   { href: "/knowledge", label: "Wiki" },
   { href: "/settings", label: "Settings" },
   { href: "/how-it-works", label: "How it works" },

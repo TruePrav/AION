@@ -190,6 +190,25 @@ const ACCUM_FACTORS = [
 ];
 
 // ─────────────────────────────────────────────
+// Accumulation signals
+// ─────────────────────────────────────────────
+const ACCUM_SIGNALS = [
+  { name: "Wallet convergence", desc: "Multiple high-grade wallets buying the same token within a short window." },
+  { name: "Volume anomaly", desc: "Unusual volume spike relative to the 30-day average." },
+  { name: "Whale accumulation", desc: "Large wallets increasing positions — high-conviction bets." },
+  { name: "Smart money consensus", desc: "3+ S/A-grade wallets aligned on the same token — strongest confluence signal." },
+];
+
+// ─────────────────────────────────────────────
+// Risk tiers
+// ─────────────────────────────────────────────
+const RISK_TIERS = [
+  { tier: "Low", range: "1–3", color: "text-profit", dot: "bg-profit", desc: "High liquidity, established project, multiple audits." },
+  { tier: "Medium", range: "4–6", color: "text-[hsl(38_95%_62%)]", dot: "bg-[hsl(38_95%_62%)]", desc: "Moderate liquidity, growing community, some risk factors." },
+  { tier: "High", range: "7–10", color: "text-loss", dot: "bg-loss", desc: "Low liquidity, new/unaudited, high volatility." },
+];
+
+// ─────────────────────────────────────────────
 // Differentiator table
 // ─────────────────────────────────────────────
 type CheckValue = boolean | "raw" | "partial";
@@ -376,6 +395,60 @@ export default function HowItWorksPage() {
                 <p className="text-[11px] text-foreground/60 font-medium leading-snug">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ── Accumulation Signals ── */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground tracking-tight">Accumulation signals</h2>
+            <p className="text-sm text-foreground/65 font-medium leading-relaxed max-w-2xl">
+              When multiple signals fire simultaneously, the conviction score increases. These are the
+              patterns AION watches for.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {ACCUM_SIGNALS.map((s) => (
+              <div key={s.name} className="glass-card p-4 hover:bg-foreground/[0.04] transition-colors">
+                <h3 className="text-sm font-bold text-foreground mb-1">{s.name}</h3>
+                <p className="text-[11px] text-foreground/65 font-medium leading-snug">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Risk Tiers ── */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground tracking-tight">Risk tiers</h2>
+            <p className="text-sm text-foreground/65 font-medium leading-relaxed max-w-2xl">
+              Every token is assigned a risk tier based on liquidity, project maturity, and audit status.
+            </p>
+          </div>
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-foreground/10">
+                  <th className="px-5 py-3 text-[10px] font-bold text-foreground/55 uppercase tracking-wider text-left">Tier</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-foreground/55 uppercase tracking-wider text-left">Score</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-foreground/55 uppercase tracking-wider text-left">Characteristics</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-foreground/5">
+                {RISK_TIERS.map((r) => (
+                  <tr key={r.tier} className="hover:bg-foreground/[0.04] transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("inline-block h-2.5 w-2.5 rounded-full", r.dot)} />
+                        <span className={cn("font-bold", r.color)}>{r.tier}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 font-mono text-[11px] font-bold text-foreground/70 tabular-nums">{r.range}</td>
+                    <td className="px-5 py-3 text-[11px] text-foreground/70 font-medium">{r.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

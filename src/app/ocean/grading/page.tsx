@@ -1,5 +1,5 @@
-"use client";
-import GradingPage from "../../grading/page";
+import { redirect } from "next/navigation";
+
 export default function OceanGradingPage() {
-  return <GradingPage />;
+  redirect("/how-it-works#wallet-grading");
 }

@@ -21,7 +21,6 @@ const OCEAN_NAV: { href: string; label: string }[] = [
   { href: "/ocean/polymarket", label: "Polymarket" },
   { href: "/ocean/positions", label: "Positions" },
   { href: "/ocean/trades", label: "Trades" },
-  { href: "/ocean/grading", label: "Grading" },
   { href: "/ocean/knowledge", label: "Wiki" },
 ];
 
