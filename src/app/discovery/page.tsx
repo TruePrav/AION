@@ -11,8 +11,33 @@ import AIReasoning, { type TokenReasoning } from "@/components/AIReasoning";
 import PipelineCommands, { type PipelineCommand } from "@/components/PipelineCommands";
 import ScoringEvolution, { type EvolutionStatus } from "@/components/ScoringEvolution";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info, Zap, Check, X, Lock } from "lucide-react";
+import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info, Zap, Check, X, Lock, Users } from "lucide-react";
 import ChainIcon, { normalizeChain, chainLabel, dsSlug, type ChainKey } from "@/components/ChainIcon";
+
+/** Styled info popover — replaces native browser title tooltips */
+function InfoPopover({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
+        aria-label="More info"
+      >
+        <Info className="h-2.5 w-2.5" />
+      </button>
+      {open && (
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 px-3 py-2 rounded-lg bg-background border border-foreground/20 shadow-xl text-[11px] text-foreground/80 leading-relaxed pointer-events-none">
+          {text}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 rotate-45 bg-background border-r border-b border-foreground/20" />
+        </div>
+      )}
+    </span>
+  );
+}
 
 interface TokenRating {
   address: string;
@@ -405,27 +430,13 @@ export default function DiscoveryPage() {
                   <th className="text-center px-3 py-3 font-semibold">
                     <span className="inline-flex items-center gap-1">
                       Accum
-                      <span
-                        tabIndex={0}
-                        title="Accumulation grade (S/A/B/C/D) scored from buy/sell ratio, unique buyers, smart-money presence and volume consistency."
-                        aria-label="Accumulation grade explainer"
-                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
-                      >
-                        <Info className="h-2.5 w-2.5" />
-                      </span>
+                      <InfoPopover text="Accumulation grade (S/A/B/C/D) scored from buy/sell ratio, unique buyers, smart-money presence and volume consistency." />
                     </span>
                   </th>
                   <th className="text-center px-3 py-3 font-semibold">
                     <span className="inline-flex items-center gap-1">
                       Tier
-                      <span
-                        tabIndex={0}
-                        title="Risk gate (degen / balanced / conservative). ✓ means the token passed your current tier's mcap, age and buyer thresholds."
-                        aria-label="Tier explainer"
-                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
-                      >
-                        <Info className="h-2.5 w-2.5" />
-                      </span>
+                      <InfoPopover text="Risk gate (degen / balanced / conservative). ✓ means the token passed your current tier's mcap, age and buyer thresholds." />
                     </span>
                   </th>
                   <th className="text-center px-5 py-3 font-semibold">Rating</th>
@@ -689,6 +700,48 @@ export default function DiscoveryPage() {
                                 )}
                               </div>
                             </div>
+
+                            {/* ── Convergence Signals ── */}
+                            {(() => {
+                              const convergingWallets = wallets.filter((w) =>
+                                w.top_tokens?.some((tt) => tt.address === t.address)
+                              );
+                              return convergingWallets.length > 0 ? (
+                                <div className="sm:col-span-3 pt-4 mt-2 border-t border-foreground/10">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Users className="h-3.5 w-3.5 text-primary" />
+                                    <span className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">
+                                      Wallet convergence
+                                    </span>
+                                    <span className="inline-flex items-center rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[10px] font-bold text-primary tabular-nums">
+                                      {convergingWallets.length} wallet{convergingWallets.length > 1 ? "s" : ""} buying
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {convergingWallets
+                                      .sort((a, b) => b.score - a.score)
+                                      .slice(0, 8)
+                                      .map((w) => (
+                                        <a
+                                          key={w.address}
+                                          href={nansenWallet(w.address, t.chain)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1.5 rounded-lg bg-foreground/5 border border-foreground/10 px-2.5 py-1.5 text-[11px] hover:bg-foreground/10 transition-colors"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <GradeBadge grade={w.grade as Grade} size="sm" />
+                                          <span className="font-mono text-foreground/70">{truncAddr(w.address)}</span>
+                                          <span className="text-foreground/40">·</span>
+                                          <span className="font-semibold text-foreground/80">{w.score}/100</span>
+                                          <span className="text-foreground/40">·</span>
+                                          <span className={cn("font-semibold", w.win_rate >= 0.5 ? "text-primary" : "text-destructive")}>{fmtPct(w.win_rate)}</span>
+                                        </a>
+                                      ))}
+                                  </div>
+                                </div>
+                              ) : null;
+                            })()}
 
                             {/* ── Quick Buy ── */}
                             {!READONLY_MODE ? (

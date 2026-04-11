@@ -5,7 +5,7 @@ import { apiUrl } from "@/lib/api";
 import { fmtUsd, truncAddr, cn } from "@/lib/utils";
 import GradeBadge from "@/components/GradeBadge";
 import CopyButton from "@/components/CopyButton";
-import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Zap, Layers, RefreshCw, Info, Filter, AlertTriangle, Eye, ArrowRight } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // Category normalization
@@ -847,9 +847,14 @@ export default function PolymarketPage() {
                         const fetchAddr = w.proxy_wallet || w.owner_address;
                         if (next) loadFullPositions(fetchAddr);
                       }}
-                      className="text-[11px] font-bold text-primary hover:text-primary/80 transition-colors"
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors",
+                        expanded
+                          ? "bg-foreground/10 text-foreground hover:bg-foreground/15"
+                          : "bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30"
+                      )}
                     >
-                      {expanded ? "Hide" : "Positions"} →
+                      {expanded ? "Hide" : "View Positions"} <ArrowRight className="h-3 w-3" />
                     </button>
                   </div>
                   {/* Profiler stats row */}
