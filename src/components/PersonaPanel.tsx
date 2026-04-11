@@ -228,12 +228,47 @@ interface PersonaPanelProps {
 export default function PersonaPanel({ token }: PersonaPanelProps) {
   const [result, setResult] = useState<PanelResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingCache, setCheckingCache] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(true);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
+
+  // Auto-check for cached results on mount / token change
+  useEffect(() => {
+    let cancelled = false;
+    setResult(null);
+    setCachedAt(null);
+    setCheckingCache(true);
+    setError(null);
+
+    async function checkCache() {
+      try {
+        const res = await fetch("/api/personas/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, cacheOnly: true }),
+        });
+        if (!res.ok) { setCheckingCache(false); return; }
+        const data = await res.json();
+        if (!cancelled && data.cached && data.result) {
+          setResult(data.result);
+          setCachedAt(data.cached_at || null);
+        }
+      } catch {
+        // Silently fail — just show the button
+      } finally {
+        if (!cancelled) setCheckingCache(false);
+      }
+    }
+
+    checkCache();
+    return () => { cancelled = true; };
+  }, [token.symbol, token.chain]);
 
   async function runAnalysis() {
     setLoading(true);
     setError(null);
+    setCachedAt(null);
     try {
       const res = await fetch("/api/personas/analyze", {
         method: "POST",
@@ -243,6 +278,7 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed");
       setResult(data.result);
+      if (data.cached) setCachedAt(data.cached_at || null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -272,6 +308,11 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {result && cachedAt && (
+            <span className="text-[9px] text-foreground/30 font-mono">
+              cached {timeAgo(cachedAt)}
+            </span>
+          )}
           {result && (
             <button
               type="button"
@@ -285,8 +326,16 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
         </div>
       </div>
 
+      {/* Checking cache indicator */}
+      {checkingCache && !result && !loading && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <div className="h-3 w-3 rounded-full border-2 border-foreground/20 border-t-primary animate-spin" />
+          <span className="text-[11px] text-foreground/40 font-mono">checking for recent analysis...</span>
+        </div>
+      )}
+
       {/* Run Analysis CTA — centered, prominent */}
-      {!result && !loading && (
+      {!result && !loading && !checkingCache && (
         <div className="flex justify-center py-5">
           <button
             type="button"
