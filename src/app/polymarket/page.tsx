@@ -105,6 +105,7 @@ interface PMWhaleMarket {
   side: string;
   position_usd: number;
   unrealized_pnl_usd: number;
+  slug?: string;
 }
 
 interface PMFullPositionsResponse {
@@ -197,6 +198,7 @@ interface PMWhaleProfile {
     redemption: number;
     unrealized: number;
     resolved: boolean;
+    slug?: string;
   }[];
 }
 
@@ -282,7 +284,23 @@ function polyscanAddr(addr: string): string {
 }
 
 function polymarketUrl(slug: string): string {
+  if (!slug) return "https://polymarket.com";
   return `https://polymarket.com/event/${slug}`;
+}
+
+/** Build a market_id → slug lookup from top-level market arrays */
+function buildSlugMap(markets: PMMarket[], hotMarkets: PMHotMarket[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const m of markets) if (m.slug) map.set(m.market_id, m.slug);
+  for (const m of hotMarkets) if (m.slug) map.set(m.market_id, m.slug);
+  return map;
+}
+
+/** Get the best Polymarket link for a position — use slug if available, fall back to search */
+function pmPositionUrl(slug?: string, question?: string): string {
+  if (slug) return `https://polymarket.com/event/${slug}`;
+  if (question) return `https://polymarket.com/event/${encodeURIComponent(question.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))}`;
+  return "https://polymarket.com";
 }
 
 // ─────────────────────────────────────────────
@@ -328,7 +346,16 @@ export default function PolymarketPage() {
         if (!r.ok) throw new Error(`API ${r.status}`);
         return r.json();
       })
-      .then((d: PMData) => setData(d))
+      .then((d: PMData) => {
+        // Enrich whale market positions with slugs from top-level markets
+        const slugMap = buildSlugMap(d.markets || [], d.hot_markets || []);
+        for (const w of d.whales || []) {
+          for (const m of w.markets || []) {
+            if (!m.slug && slugMap.has(m.market_id)) m.slug = slugMap.get(m.market_id);
+          }
+        }
+        setData(d);
+      })
       .catch((e) => setError(e.message || "Failed to load Polymarket data"))
       .finally(() => setLoading(false));
 
@@ -1383,7 +1410,7 @@ function WhaleExpanded({
         <div key={`${walletAddress}-${i}`} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex-1 min-w-0">
             <a
-              href={`https://polymarket.com/search?query=${encodeURIComponent(wm.question || "")}`}
+              href={pmPositionUrl(wm.slug, wm.question)}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
@@ -1435,7 +1462,7 @@ function WhaleExpanded({
             <div key={`past-${walletAddress}-${i}`} className="text-xs text-foreground/65 flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0 truncate">
                 <a
-                  href={`https://polymarket.com/search?query=${encodeURIComponent(tm.question || "")}`}
+                  href={pmPositionUrl(tm.slug, tm.question)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-foreground/75 hover:text-primary transition-colors underline-offset-2 hover:underline"
