@@ -272,13 +272,19 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
 
           {/* Attribution */}
           <div className="flex items-center gap-3 text-[10px] text-foreground/30 pt-1">
-            <span>Data powered by{" "}
-              <a href="https://www.coingecko.com?utm_source=aion&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/50">CoinGecko</a>
+            <a href="https://www.coingecko.com?utm_source=aion&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-foreground/50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/coingecko-logo.svg" alt="CoinGecko" className="h-4 w-auto inline-block" />
+              <span className="underline">Data powered by CoinGecko</span>
+            </a>
+            <span className="text-foreground/15">|</span>
+            <span>Security by{" "}
+              <a href="https://gopluslabs.io" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/50">GoPlus</a>
             </span>
             <span className="text-foreground/15">|</span>
-            <span>Security by GoPlus</span>
-            <span className="text-foreground/15">|</span>
-            <span>TVL by DefiLlama</span>
+            <span>TVL by{" "}
+              <a href="https://defillama.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/50">DefiLlama</a>
+            </span>
           </div>
         </div>
       )}

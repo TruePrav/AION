@@ -503,10 +503,11 @@ export default function HowItWorksPage() {
             ))}
           </div>
 
-          <div className="text-center text-[11px] text-foreground/50 font-medium">
-            Data powered by{" "}
-            <a href="https://www.coingecko.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">
-              CoinGecko
+          <div className="flex items-center justify-center gap-2 text-[11px] text-foreground/50 font-medium">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/coingecko-logo.svg" alt="CoinGecko" className="h-4 w-auto" />
+            <a href="https://www.coingecko.com?utm_source=aion&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">
+              Data powered by CoinGecko
             </a>
           </div>
         </section>
