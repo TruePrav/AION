@@ -27,6 +27,15 @@ export interface PersonaSignal {
   reason: string;
 }
 
+export interface XSentiment {
+  raw_count: number;
+  total_likes: number;
+  total_retweets: number;
+  total_views: number;
+  tweets: { text: string; author: string; likes: number; retweets: number }[];
+  error?: string;
+}
+
 export interface PanelResult {
   approved: boolean;
   buyVotes: number;
@@ -34,6 +43,7 @@ export interface PanelResult {
   passVotes: number;
   signals: PersonaSignal[];
   summary: string;
+  xSentiment?: XSentiment | null;
 }
 
 // ─── The 7 Legendary Personas ─────────────────────────────────────────────

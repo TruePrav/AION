@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye } from "lucide-react";
 import type { PanelResult, PersonaSignal } from "@/lib/personas";
 
 /** Map persona name to icon + color theme */
@@ -50,11 +50,15 @@ function ConvictionBar({ value }: { value: number }) {
 }
 
 function PersonaCard({ signal }: { signal: PersonaSignal }) {
+  const [cardExpanded, setCardExpanded] = useState(false);
   const meta = PERSONA_META[signal.persona] ?? { icon: Brain, color: "text-foreground/60", initials: "??" };
   const Icon = meta.icon;
 
   return (
-    <div className="flex items-start gap-2.5 rounded-lg bg-foreground/[0.03] border border-foreground/10 px-3 py-2.5 hover:bg-foreground/[0.06] transition-colors">
+    <div
+      className="flex items-start gap-2.5 rounded-lg bg-foreground/[0.03] border border-foreground/10 px-3 py-2.5 hover:bg-foreground/[0.06] transition-colors cursor-pointer"
+      onClick={(e) => { e.stopPropagation(); setCardExpanded(!cardExpanded); }}
+    >
       {/* Avatar */}
       <div className={cn("flex items-center justify-center h-8 w-8 rounded-lg bg-foreground/5 border border-foreground/15 flex-shrink-0", meta.color)}>
         <Icon className="h-4 w-4" />
@@ -64,10 +68,13 @@ function PersonaCard({ signal }: { signal: PersonaSignal }) {
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-bold text-foreground truncate">{signal.persona}</span>
-          <SignalBadge signal={signal.signal} />
+          <div className="flex items-center gap-1.5">
+            <SignalBadge signal={signal.signal} />
+            {cardExpanded ? <ChevronUp className="h-3 w-3 text-foreground/40" /> : <ChevronDown className="h-3 w-3 text-foreground/40" />}
+          </div>
         </div>
         <ConvictionBar value={signal.conviction} />
-        <p className="text-[11px] text-foreground/65 leading-relaxed line-clamp-2">{signal.reason}</p>
+        <p className={cn("text-[11px] text-foreground/65 leading-relaxed", !cardExpanded && "line-clamp-2")}>{signal.reason}</p>
       </div>
     </div>
   );
@@ -201,6 +208,29 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
               <span className="font-bold text-foreground tabular-nums">{result.passVotes}</span>
             </span>
           </div>
+
+          {/* X/Twitter sentiment */}
+          {result.xSentiment && result.xSentiment.raw_count > 0 && (
+            <div className="rounded-lg bg-foreground/[0.03] border border-foreground/10 px-3 py-2.5">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="h-3.5 w-3.5 text-sky-400" />
+                <span className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">X/Twitter Sentiment</span>
+                <span className="text-[10px] text-foreground/40">{result.xSentiment.raw_count} recent mentions</span>
+              </div>
+              <div className="flex items-center gap-4 text-[11px] text-foreground/60 mb-2">
+                <span className="flex items-center gap-1"><Heart className="h-3 w-3 text-pink-400" /> {result.xSentiment.total_likes.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><Repeat2 className="h-3 w-3 text-emerald-400" /> {result.xSentiment.total_retweets.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><Eye className="h-3 w-3 text-foreground/40" /> {result.xSentiment.total_views.toLocaleString()}</span>
+              </div>
+              {result.xSentiment.tweets.slice(0, 3).map((tw, i) => (
+                <div key={i} className="text-[11px] text-foreground/60 leading-relaxed py-1 border-t border-foreground/5 first:border-t-0">
+                  <span className="font-semibold text-foreground/80">@{tw.author}</span>{" "}
+                  <span>{tw.text.length > 180 ? tw.text.slice(0, 180) + "..." : tw.text}</span>
+                  <span className="text-foreground/30 ml-1">({tw.likes} likes)</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Persona cards grid */}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
