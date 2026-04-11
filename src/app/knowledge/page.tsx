@@ -498,6 +498,7 @@ export default function KnowledgePage() {
       ]);
       if (!treeRes.ok) throw new Error(`tree: ${treeRes.status}`);
       const treeData = (await treeRes.json()) as KnowledgeTree;
+      if (!treeData?.root || !Array.isArray(treeData.root)) throw new Error("Invalid tree data");
       setTree(treeData);
       if (statsRes.ok) setStats((await statsRes.json()) as KnowledgeStats);
       // Auto-select index.md or first file
@@ -524,9 +525,19 @@ export default function KnowledgePage() {
     setLoading(true);
     setPage(null);
     fetch(apiUrl(`/api/knowledge/page?path=${encodeURIComponent(selected)}`), { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`page: ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
-        if (!cancelled) setPage(data);
+        if (!cancelled) {
+          // Validate expected shape before setting state
+          if (data && typeof data.content === "string") {
+            setPage({ path: data.path ?? selected, content: data.content, size: data.size ?? data.content.length });
+          } else {
+            setError(data?.error ?? "Unexpected page response");
+          }
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "page load failed");
@@ -550,8 +561,8 @@ export default function KnowledgePage() {
       try {
         const res = await fetch(apiUrl(`/api/knowledge/search?q=${encodeURIComponent(query)}`), { cache: "no-store" });
         if (res.ok) setSearchResults((await res.json()) as SearchResponse);
-      } catch {
-        /* swallow */
+      } catch (_e) {
+        /* swallow search errors */
       } finally {
         setSearching(false);
       }
@@ -728,7 +739,7 @@ export default function KnowledgePage() {
                     <FileText className="h-3 w-3" strokeWidth={2.5} />
                     <span className="font-mono">{page.path}</span>
                   </div>
-                  <span className="text-[10px] text-foreground/40">{page.size.toLocaleString()} chars</span>
+                  <span className="text-[10px] text-foreground/40">{(page.size ?? 0).toLocaleString()} chars</span>
                 </div>
                 <div className="prose-like">{renderedBody}</div>
               </>
