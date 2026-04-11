@@ -95,11 +95,14 @@ function PersonaCard({ signal }: { signal: PersonaSignal }) {
 interface PersonaPanelProps {
   token: {
     symbol: string;
+    address?: string;
     chain: string;
     market_cap: number;
     token_age_days: number;
     trader_count: number;
     net_flow_7d: number;
+    net_flow_24h?: number;
+    net_flow_30d?: number;
     accumulation_grade: string;
     accumulation_score: number;
     tier: string;

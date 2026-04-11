@@ -748,11 +748,14 @@ export default function DiscoveryPage() {
                             <PersonaPanel
                               token={{
                                 symbol: t.symbol,
+                                address: t.address,
                                 chain: t.chain,
                                 market_cap: t.market_cap,
                                 token_age_days: t.token_age_days,
                                 trader_count: t.trader_count,
                                 net_flow_7d: t.net_flow_7d,
+                                net_flow_24h: t.net_flow_24h,
+                                net_flow_30d: t.net_flow_30d,
                                 accumulation_grade: t.accumulation.grade,
                                 accumulation_score: t.accumulation.score,
                                 tier: t.tier_filter.tier,
