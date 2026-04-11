@@ -32,7 +32,7 @@ export interface XSentiment {
   total_likes: number;
   total_retweets: number;
   total_views: number;
-  tweets: { text: string; author: string; likes: number; retweets: number }[];
+  tweets: { text: string; author: string; likes: number; retweets: number; created_at?: string }[];
   error?: string;
 }
 

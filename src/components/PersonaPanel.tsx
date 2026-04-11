@@ -2,8 +2,20 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock } from "lucide-react";
 import type { PanelResult, PersonaSignal } from "@/lib/personas";
+
+/** Format ISO timestamp to relative time (e.g. "2h ago") */
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 /** Map persona name to icon + color theme */
 const PERSONA_META: Record<string, { icon: typeof Brain; color: string; initials: string }> = {
@@ -223,10 +235,18 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
                 <span className="flex items-center gap-1"><Eye className="h-3 w-3 text-foreground/40" /> {result.xSentiment.total_views.toLocaleString()}</span>
               </div>
               {result.xSentiment.tweets.slice(0, 3).map((tw, i) => (
-                <div key={i} className="text-[11px] text-foreground/60 leading-relaxed py-1 border-t border-foreground/5 first:border-t-0">
-                  <span className="font-semibold text-foreground/80">@{tw.author}</span>{" "}
-                  <span>{tw.text.length > 180 ? tw.text.slice(0, 180) + "..." : tw.text}</span>
-                  <span className="text-foreground/30 ml-1">({tw.likes} likes)</span>
+                <div key={i} className="text-[11px] text-foreground/60 leading-relaxed py-1.5 border-t border-foreground/5 first:border-t-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="font-semibold text-foreground/80">@{tw.author}</span>
+                    {tw.created_at && (
+                      <span className="flex items-center gap-0.5 text-foreground/30 text-[10px]">
+                        <Clock className="h-2.5 w-2.5" />
+                        {timeAgo(tw.created_at)}
+                      </span>
+                    )}
+                    <span className="text-foreground/30 text-[10px]">{tw.likes} likes · {tw.retweets} RTs</span>
+                  </div>
+                  <span>{tw.text.length > 200 ? tw.text.slice(0, 200) + "..." : tw.text}</span>
                 </div>
               ))}
             </div>
