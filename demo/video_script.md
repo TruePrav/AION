@@ -28,7 +28,7 @@
 
 **[Screen: Show the panel with 7 investor personas]**
 
-"Seven investors, each with their win rate, PnL, related wallets, and a persona label. You can see exactly who's accumulating, who's a flipper, who's a long-term holder. This is your edge - knowing who is behind the trades, not just that trades happened."
+"Seven AI personas modeled after legendary investors — Buffett, Burry, Druckenmiller, and more — each analyzing the token through their own philosophy using live data. Results are cached and every verdict is tracked against actual price performance, so the panel learns over time which signals actually work."
 
 ---
 

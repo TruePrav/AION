@@ -39,6 +39,9 @@ AION monitors smart money wallets across **Solana, Base, and Ethereum**, profile
 - Multi-source research: pulls live data from CoinGecko, GoPlus Security, DexScreener, DefiLlama, GitHub, and X/Twitter
 - X/Twitter sentiment integration for social signal detection
 - Produces independent buy/hold/avoid verdicts with reasoning
+- Results cached in SQLite (6-hour window) to avoid redundant API calls
+- Forward price tracking: every analysis records the entry price, then price_tracker fills in 24h/7d returns automatically
+- Persona accuracy loop: compares panel verdicts against actual price performance to measure if APPROVED tokens outperform REJECTED ones
 
 **Polymarket Intelligence**
 - Market screener - top 100 markets by 24h volume, deep-dived for whale positions
@@ -301,6 +304,9 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
 - `ANTHROPIC_API_KEY` is server-side only (no `NEXT_PUBLIC_` prefix)
 - `.env.local` files are gitignored
 - No private keys, wallet secrets, or credentials in this repo
+- **Prompt injection hardening** - all token names, tweet text, and external API strings are sanitized before LLM prompts; system prompt includes explicit anti-injection rules
+- **SQL injection prevention** - dynamic column updates use an allowlist of permitted column names
+- **LLM output validation** - persona signals validated against enum (BUY/HOLD/PASS), conviction clamped 1-10, HTML stripped from reasoning text
 
 ---
 

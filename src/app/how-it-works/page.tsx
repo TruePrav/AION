@@ -463,7 +463,9 @@ export default function HowItWorksPage() {
                   <span className="font-bold text-foreground">DefiLlama</span> (TVL, protocol data),{" "}
                   <span className="font-bold text-foreground">GitHub</span> (development activity), and{" "}
                   <span className="font-bold text-foreground">X/Twitter</span> (sentiment, mentions, influencer signals).
-                  No opinions without evidence.
+                  No opinions without evidence. Results are cached for 6 hours (instant on repeat lookups),
+                  and every verdict is tracked against actual forward price performance so the panel&apos;s accuracy
+                  can be measured and improved over time.
                 </p>
               </div>
             </div>

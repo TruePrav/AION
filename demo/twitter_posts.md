@@ -27,7 +27,7 @@ New feature: Persona Panel.
 
 Click any token, run panel analysis, and see exactly who's behind the trades.
 
-7 real investor profiles with win rate, PnL, wallet clusters, and persona labels. You're not guessing - you're seeing the actual smart money players and how they operate.
+7 AI personas (Buffett, Burry, Druckenmiller + 4 more) each analyze the token with live data from 6 sources. Results cached, verdicts tracked against price performance. The panel learns what works.
 
 **Tweet 4 (Polymarket):**
 Full Polymarket intelligence layer using Nansen's prediction market CLI endpoints.
