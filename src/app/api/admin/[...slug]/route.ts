@@ -41,7 +41,7 @@ function isAllowedPath(joined: string): boolean {
   return PATH_ALLOWLIST.some((re) => re.test(joined));
 }
 
-async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
+async function proxy(req: NextRequest, ctx: { params: Promise<{ slug: string[] }> }) {
   if (!KEY) {
     return NextResponse.json(
       { success: false, error: "Admin mutations disabled on this deployment (read-only mode)" },
@@ -56,8 +56,8 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
     );
   }
 
-  const { path } = await ctx.params;
-  const joined = path.join("/");
+  const { slug } = await ctx.params;
+  const joined = slug.join("/");
 
   // Reject path-traversal attempts and anything not on the allowlist.
   if (joined.includes("..") || !isAllowedPath(joined)) {

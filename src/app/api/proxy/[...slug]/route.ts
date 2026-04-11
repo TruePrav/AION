@@ -40,10 +40,10 @@ function isAllowed(path: string): boolean {
 
 async function handler(
   req: NextRequest,
-  ctx: { params: Promise<{ path: string[] }> }
+  ctx: { params: Promise<{ slug: string[] }> }
 ) {
-  const { path } = await ctx.params;
-  const joined = path.join("/");
+  const { slug } = await ctx.params;
+  const joined = slug.join("/");
 
   if (joined.includes("..") || !isAllowed(joined)) {
     return NextResponse.json({ error: "Path not allowed" }, { status: 403 });

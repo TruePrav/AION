@@ -15,6 +15,9 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mon
 export const metadata: Metadata = {
   title: "AION — Smart Money Intelligence",
   description: "Multi-chain smart money tracking, wallet grading, and automated token discovery.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 // Runs before React hydrates — prevents a light/dark flash on first paint.
