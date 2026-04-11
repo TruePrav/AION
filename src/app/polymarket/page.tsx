@@ -109,6 +109,11 @@ interface PMWhaleMarket {
   hedged?: boolean;
   hedge_amount?: number;
   net_position?: number;
+  multi_bet?: boolean;
+  multi_bet_count?: number;
+  multi_bet_total?: number;
+  multi_bet_pnl?: number;
+  multi_bet_positions?: PMWhaleMarket[];
 }
 
 interface PMFullPositionsResponse {
@@ -1359,6 +1364,103 @@ function Metric({
   );
 }
 
+/** Single position row — handles multi-bet expansion and hedge badges */
+function PositionRow({ wm }: { wm: PMWhaleMarket }) {
+  const [expanded, setExpanded] = useState(false);
+  const isMulti = wm.multi_bet && (wm.multi_bet_count || 0) > 1;
+
+  return (
+    <div>
+      <div className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <a
+            href={pmPositionUrl(wm.slug, wm.question)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >{wm.question || "(unknown market)"}</a>
+          {wm.side && (
+            <span
+              className={cn(
+                "ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded",
+                wm.side.toLowerCase().startsWith("y")
+                  ? "bg-primary/20 text-primary"
+                  : "bg-destructive/20 text-destructive",
+              )}
+            >
+              {wm.side.toUpperCase()}
+            </span>
+          )}
+          {wm.hedged && (
+            <span
+              className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30"
+              title={`Hedged: ${fmtCompact(wm.hedge_amount || 0)} on opposite side`}
+            >
+              HEDGED
+            </span>
+          )}
+          {isMulti && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-colors"
+              title={`${wm.multi_bet_count} picks in this event · Total: ${fmtCompact(wm.multi_bet_total || 0)}`}
+            >
+              {expanded ? "▾" : "▸"} {wm.multi_bet_count} PICKS
+            </button>
+          )}
+        </div>
+        <div className="font-mono tabular-nums" title={isMulti ? `This pick: ${fmtCompact(wm.position_usd)} · All picks: ${fmtCompact(wm.multi_bet_total || 0)}` : "Position size"}>
+          {isMulti ? fmtCompact(wm.multi_bet_total || 0) : fmtCompact(wm.position_usd)}
+          {wm.hedged && !isMulti && (
+            <div className="text-[9px] text-amber-400/70">net {fmtCompact(wm.net_position || 0)}</div>
+          )}
+        </div>
+        <div
+          className={cn(
+            "font-mono tabular-nums text-[11px] w-16 text-right",
+            (isMulti ? (wm.multi_bet_pnl || 0) : wm.unrealized_pnl_usd) >= 0 ? "text-primary" : "text-destructive",
+          )}
+          title="Unrealized PnL"
+        >
+          {(isMulti ? (wm.multi_bet_pnl || 0) : wm.unrealized_pnl_usd) >= 0 ? "+" : ""}
+          {fmtCompact(isMulti ? (wm.multi_bet_pnl || 0) : wm.unrealized_pnl_usd)}
+        </div>
+      </div>
+      {/* Expanded sub-positions for multi-bet events */}
+      {isMulti && expanded && (
+        <div className="ml-4 mt-1 mb-2 pl-3 border-l-2 border-blue-500/20 space-y-1">
+          {/* Show lead position first */}
+          <div className="text-[11px] text-foreground/60 flex items-center justify-between gap-2">
+            <span className="flex-1 min-w-0 truncate">
+              <span className="text-foreground/80 font-medium">{wm.question}</span>
+              <span className={cn("ml-1.5 text-[9px] font-bold", wm.side.toLowerCase().startsWith("y") ? "text-primary" : "text-destructive")}>{wm.side.toUpperCase()}</span>
+              {wm.hedged && <span className="ml-1 text-[8px] text-amber-400">HEDGED</span>}
+            </span>
+            <span className="font-mono tabular-nums">{fmtCompact(wm.position_usd)}</span>
+            <span className={cn("font-mono tabular-nums w-14 text-right", wm.unrealized_pnl_usd >= 0 ? "text-primary/70" : "text-destructive/70")}>
+              {wm.unrealized_pnl_usd >= 0 ? "+" : ""}{fmtCompact(wm.unrealized_pnl_usd)}
+            </span>
+          </div>
+          {/* Other positions in this event */}
+          {(wm.multi_bet_positions || []).map((sub, j) => (
+            <div key={j} className="text-[11px] text-foreground/60 flex items-center justify-between gap-2">
+              <span className="flex-1 min-w-0 truncate">
+                <span className="text-foreground/80 font-medium">{sub.question}</span>
+                <span className={cn("ml-1.5 text-[9px] font-bold", sub.side.toLowerCase().startsWith("y") ? "text-primary" : "text-destructive")}>{sub.side.toUpperCase()}</span>
+                {sub.hedged && <span className="ml-1 text-[8px] text-amber-400">HEDGED</span>}
+              </span>
+              <span className="font-mono tabular-nums">{fmtCompact(sub.position_usd)}</span>
+              <span className={cn("font-mono tabular-nums w-14 text-right", sub.unrealized_pnl_usd >= 0 ? "text-primary/70" : "text-destructive/70")}>
+                {sub.unrealized_pnl_usd >= 0 ? "+" : ""}{fmtCompact(sub.unrealized_pnl_usd)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * WhaleExpanded — body that appears under a whale row when expanded.
  * Renders the on-demand full position book if it has loaded, otherwise
@@ -1410,52 +1512,7 @@ function WhaleExpanded({
         <span className="w-16 text-right">Unrl. PnL</span>
       </div>
       {list.map((wm, i) => (
-        <div key={`${walletAddress}-${i}`} className="text-xs text-foreground/75 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <a
-              href={pmPositionUrl(wm.slug, wm.question)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
-            >{wm.question || "(unknown market)"}</a>
-            {wm.side && (
-              <span
-                className={cn(
-                  "ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded",
-                  wm.side.toLowerCase().startsWith("y")
-                    ? "bg-primary/20 text-primary"
-                    : "bg-destructive/20 text-destructive",
-                )}
-              >
-                {wm.side.toUpperCase()}
-              </span>
-            )}
-            {wm.hedged && (
-              <span
-                className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                title={`Hedged: $${fmtCompact(wm.hedge_amount || 0)} on opposite side · Net: $${fmtCompact(wm.net_position || 0)}`}
-              >
-                HEDGED
-              </span>
-            )}
-          </div>
-          <div className="font-mono tabular-nums" title={wm.hedged ? `Gross: ${fmtCompact(wm.position_usd)} · Hedge: ${fmtCompact(wm.hedge_amount || 0)} · Net: ${fmtCompact(wm.net_position || 0)}` : "Position size in USD"}>
-            {fmtCompact(wm.position_usd)}
-            {wm.hedged && (
-              <div className="text-[9px] text-amber-400/70">net {fmtCompact(wm.net_position || 0)}</div>
-            )}
-          </div>
-          <div
-            className={cn(
-              "font-mono tabular-nums text-[11px] w-16 text-right",
-              wm.unrealized_pnl_usd >= 0 ? "text-primary" : "text-destructive",
-            )}
-            title="Unrealized PnL"
-          >
-            {wm.unrealized_pnl_usd >= 0 ? "+" : ""}
-            {fmtCompact(wm.unrealized_pnl_usd)}
-          </div>
-        </div>
+        <PositionRow key={`${walletAddress}-${i}`} wm={wm} />
       ))}
       </div>{/* end active positions section */}
 
