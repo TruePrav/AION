@@ -1,4 +1,4 @@
-# AION Twitter Posts — Nansen CLI Competition Week 4
+# AION Twitter Posts - Nansen CLI Competition Week 4
 
 ---
 
@@ -7,45 +7,46 @@
 **Tweet 1 (Hook):**
 Built an autonomous smart money tracker for the @naborso CLI competition.
 
-It finds what the best wallets are buying, grades them, reasons about WHY, and can execute trades — all from the command line.
+It finds what the best wallets are buying, profiles the investors behind every trade, and lets you buy directly via Nansen's purchase skill.
 
 Meet AION.
 
 aionchain.app
 
-**Tweet 2 (How it works):**
-Every 4 hours, AION runs a full pipeline:
+**Tweet 2 (Discovery + Research):**
+Every 4 hours, AION runs a full scan:
 
 1. Pulls smart money netflow across Solana + Base
-2. Deep-dives each hot token (who bought, accumulation patterns)
-3. Grades every wallet by win rate and PnL
-4. Flags convergence — multiple S-tier wallets on the same token
+2. Grades every token S through F by accumulation pattern
+3. Researches each one from 5 free APIs: CoinGecko, GoPlus security, DefiLlama TVL, GitHub activity, X/Twitter sentiment
 
-All via Nansen CLI.
+All powered by Nansen CLI.
 
-**Tweet 3 (Polymarket):**
-We also built a full Polymarket intelligence layer using Nansen's new prediction market CLI endpoints.
+**Tweet 3 (Persona Panel):**
+New feature: Persona Panel.
 
-- Screens markets for whale activity
-- Profiles top holders by PnL
-- Tracks trades by market
+Click any token, run panel analysis, and see exactly who's behind the trades.
 
-Find the sharpest bettors, see what they're positioned on.
+7 real investor profiles with win rate, PnL, wallet clusters, and persona labels. You're not guessing - you're seeing the actual smart money players and how they operate.
 
-**Tweet 4 (Trading):**
-AION doesn't just find signals — it acts on them.
+**Tweet 4 (Polymarket):**
+Full Polymarket intelligence layer using Nansen's prediction market CLI endpoints.
 
-Using Nansen's purchase skill (`trade quote` + `trade execute`), you can buy tokens directly from the dashboard.
+- Screen markets for whale activity
+- Profile top holders by PnL
+- Track trades by market
 
-Positions tracked with live P&L. Telegram alerts with one-tap buy buttons.
+Find the sharpest bettors. See what they're positioned on.
 
-**Tweet 5 (AI + Self-evolving):**
-Claude AI is the reasoning layer — it doesn't just flag tokens, it explains WHY they're interesting based on all the data.
+**Tweet 5 (Trading + Execution):**
+AION doesn't just find signals. It acts on them.
 
-The system also self-evolves: it tracks which scoring weights produce winners and adjusts automatically over time.
+Using Nansen's purchase skill (trade quote + trade execute), buy tokens directly from the dashboard.
+
+Positions tracked with live P&L. Telegram alerts with one-tap buy buttons. X/Twitter sentiment baked into every signal.
 
 **Tweet 6 (Tech + CTA):**
-13 Nansen CLI endpoints. Claude AI reasoning. Autonomous 4-hour scan cycles. Self-evolving scoring. Live on-chain trading.
+12 Nansen CLI endpoints. 5 free research APIs. Claude AI reasoning. Autonomous scans. Investor persona profiling. Live on-chain trading.
 
 Scaling to all 18 chains Nansen supports.
 
@@ -54,13 +55,13 @@ Live demo: aionchain.app
 
 ---
 
-## POST 2: Shorter Single Tweet (if you want a standalone)
+## POST 2: Shorter Single Tweet (standalone)
 
-Built AION for the @naborso CLI competition — an autonomous smart money intelligence platform.
+Built AION for the @naborso CLI competition - autonomous smart money intelligence.
 
-Scans Solana + Base every 4h, grades wallets, uses Nansen's new Polymarket + purchase skill endpoints, and trades directly via CLI.
+Scans Solana + Base every 4h, grades wallets, profiles investors with persona panels, pulls research from 5 free APIs (including X sentiment), and trades via Nansen's purchase skill.
 
-AI-powered reasoning. Self-evolving scores. Fully open source.
+AI-powered. Fully open source.
 
 aionchain.app
 
@@ -70,9 +71,7 @@ aionchain.app
 
 Demo time for @naborso CLI competition Week 4.
 
-AION scans smart money across chains, grades wallets, profiles Polymarket whales, and executes trades — all through the Nansen CLI.
-
-12+ endpoints. Claude AI reasoning. Fully autonomous.
+AION scans smart money across chains, profiles every investor behind the trades, pulls X/Twitter sentiment + 4 other free research sources, and executes trades via Nansen's purchase skill.
 
 Full walkthrough below.
 

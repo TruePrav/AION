@@ -1,76 +1,66 @@
 # AION Demo Video Script
-### Target: ~2-3 minutes | Nansen CLI Competition Week 4
+### Target: 2-3 minutes | Nansen CLI Competition Week 4
 
 ---
 
-## INTRO (15s)
+## INTRO (10s)
 **[Screen: AION landing page]**
 
-"This is AION — an autonomous smart money intelligence platform built entirely on the Nansen CLI. It scans chains, finds what smart money is buying, grades wallets, and can execute trades — all automatically."
+"This is AION. Smart money intelligence across Solana and Base. It finds what the best wallets are buying, researches every token from 5 free sources, and lets you trade directly. Let me show you."
 
 ---
 
-## DISCOVERY PIPELINE (30s)
-**[Screen: Click into Discovery page, show token cards]**
+## DISCOVERY (25s)
+**[Screen: Click into Discovery page, tokens already loaded]**
 
-"Every 4 hours, AION runs a full discovery cycle. It pulls smart money netflow data across Solana and Base using `nansen research smart-money netflow`, identifies the hottest tokens, then deep-dives each one."
+"Every 4 hours, AION scans smart money netflow and surfaces the hottest tokens. Each one gets an accumulation grade from S to F based on who's buying and how aggressively."
 
-**[Scroll through tokens, point at SM trader counts and accumulation grades]**
+**[Click into a token card, show the detail view with AI summary]**
 
-"For every token, it checks who's buying using `token who-bought-sold`, scores accumulation patterns, and grades them S through F. Right now we're running in degen mode — minimum $100K market cap, at least one smart money trader."
-
----
-
-## WALLET GRADING (20s)
-**[Screen: Click into Wallets page, show graded wallets]**
-
-"It doesn't stop at tokens. AION grades every wallet it finds using `profiler pnl` and `related-wallets` — looking at win rate, PnL, and how wallets cluster together. S-tier wallets get tracked for convergence signals."
+"Click any token and you get the full picture. CoinGecko market data, GoPlus security scan, DefiLlama TVL, GitHub dev activity, and X/Twitter sentiment. Five research sources, all free APIs, all pulled automatically."
 
 ---
 
-## CONVERGENCE + AI REASONING (20s)
-**[Screen: Show a token detail with convergence data and AI summary]**
+## PERSONA PANEL (30s)
+**[Screen: Click "Run Panel Analysis" on a token]**
 
-"When multiple high-grade wallets converge on the same token, that's our strongest signal. AION uses Claude as its reasoning layer to synthesize all this data and explain WHY a token is interesting — not just that it is."
+"Here's where it gets interesting. Hit panel analysis and AION profiles every smart money wallet that touched this token. Real data, real investors."
+
+**[Screen: Show the panel with 7 investor personas]**
+
+"Seven investors, each with their win rate, PnL, related wallets, and a persona label. You can see exactly who's accumulating, who's a flipper, who's a long-term holder. This is your edge - knowing who is behind the trades, not just that trades happened."
 
 ---
 
-## POLYMARKET WHALES (20s)
-**[Screen: Click into Polymarket page]**
+## CONVERGENCE + AI REASONING (15s)
+**[Screen: Show convergence indicator on a token]**
 
-"We also built a full Polymarket intelligence module using Nansen's new prediction market endpoints — `market-screener`, `top-holders`, `trades-by-market`, `pnl-by-address`. It finds the sharpest bettors and shows you exactly what they're positioned on."
+"When multiple high-grade wallets pile into the same token, AION flags it as a convergence signal. Claude AI synthesizes all the data and tells you WHY it matters."
+
+---
+
+## POLYMARKET WHALES (15s)
+**[Screen: Click into Polymarket page, show whale positions]**
+
+"Same intelligence layer for Polymarket. Find the sharpest bettors, see their positions, track their PnL. All built on Nansen's prediction market endpoints."
 
 ---
 
 ## LIVE TRADING (20s)
-**[Screen: Go to Discovery, expand a token, show Quick Buy UI]**
+**[Screen: Expand a token, show Quick Buy UI, execute a trade]**
 
-"When you see a signal you like, you can buy directly from the dashboard using Nansen's `trade quote` and `trade execute` — the purchase skill. Set your amount, hit buy, and AION handles the execution on-chain."
+"See a signal, act on it. Nansen's purchase skill handles execution on-chain. Set your amount, buy directly from the dashboard."
 
-**[Screen: Show Positions page with open trades and P&L]**
+**[Screen: Show Positions page with live P&L]**
 
-"All positions are tracked with live P&L, and you can view charts directly on DexScreener."
-
----
-
-## SETTINGS + CONTROL (15s)
-**[Screen: Settings page — show risk tier, scan controls, credit tracking]**
-
-"Everything is configurable — risk tier, how many wallets to grade, scan frequency. You can trigger scans manually and watch them run in real-time. Credit usage is tracked so you always know your burn rate."
+"Every position is tracked with live P&L. Telegram alerts fire instantly with one-tap buy buttons."
 
 ---
 
-## TELEGRAM + SELF-EVOLVING (15s)
-**[Screen: Show Telegram bot notification on phone or desktop]**
+## CLOSE (10s)
+**[Screen: Back to landing page]**
 
-"Signals get pushed to Telegram instantly with one-tap buy buttons. And the system self-evolves — it tracks which scoring weights produce winning trades and adjusts automatically over time."
-
----
-
-## CLOSE (15s)
-**[Screen: Back to landing page or roadmap]**
-
-"AION uses 12 Nansen CLI endpoints, Claude AI for reasoning, and runs fully autonomously. It's built to scale to all 18 chains Nansen supports. Everything is open source — link in the description."
+"AION. 12 Nansen CLI endpoints, 5 free research APIs, Claude AI reasoning, fully autonomous. Check the how-it-works page for every command, or try the live demo. Link below."
 
 ---
 

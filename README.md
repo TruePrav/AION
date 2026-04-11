@@ -1,6 +1,6 @@
-# AION — Smart Money Intelligence Platform
+# AION - Smart Money Intelligence Platform
 
-Multi-chain smart money tracking, Polymarket whale analysis, wallet grading, and automated token discovery. Built with the Nansen CLI.
+Multi-chain smart money tracking, AI investor persona panel, Polymarket whale analysis, wallet grading, and automated token discovery. Built with the Nansen CLI.
 
 **Live site:** [aion-plum.vercel.app](https://aion-plum.vercel.app)
 
@@ -8,32 +8,55 @@ Multi-chain smart money tracking, Polymarket whale analysis, wallet grading, and
 
 ## What it does
 
-AION monitors smart money wallets across **Solana, Base, and Ethereum**, profiles **Polymarket whales** by historical win rate, and surfaces actionable trading signals — all powered by the Nansen CLI. Every 4 hours it runs a full discovery pipeline, grades wallets, scores token accumulation patterns, and pushes alerts to Telegram.
+AION monitors smart money wallets across **Solana, Base, and Ethereum**, profiles **Polymarket whales** by historical win rate, runs every token through a **7-investor persona panel** pulling live data from six sources, and surfaces actionable trading signals. Every 4 hours it runs a full discovery pipeline, grades wallets, scores token accumulation patterns, and pushes alerts to Telegram.
+
+### Data sources
+
+| Source | What AION uses it for |
+|--------|----------------------|
+| **Nansen CLI** | Smart money netflow, wallet profiling, trade history, Polymarket screener |
+| **CoinGecko** | Market data, price history, volume, market cap |
+| **GoPlus Security** | Honeypot detection, rug pull checks, contract risk scanning |
+| **DexScreener** | Real-time DEX prices, pair data, liquidity metrics |
+| **DefiLlama** | TVL, protocol analytics, yield data |
+| **GitHub** | Project activity, commit frequency, contributor counts |
+| **X (Twitter) API** | Sentiment analysis, mention tracking, influencer signals |
+
+> Data powered by [CoinGecko](https://www.coingecko.com/)
 
 ### Key features
 
 **Token Discovery (EVM)**
-- Multi-chain scanning — Solana, Base, Ethereum with per-chain token caps at Nansen SM-netflow ceilings
-- Wallet grading — S/A/B/C/D system based on win rate, PnL, ROI, consistency, convergence
-- Accumulation scoring — buy/sell ratio, buyer concentration, SM buyer percentage
-- Risk tier filtering — degen / balanced / conservative presets by mcap, age, trader count
-- Auto-buy — dry-run or live position entry on top-scoring tokens per chain
+- Multi-chain scanning - Solana, Base, Ethereum with per-chain token caps at Nansen SM-netflow ceilings
+- Wallet grading - S/A/B/C/D system based on win rate, PnL, ROI, consistency, convergence
+- Accumulation scoring - buy/sell ratio, buyer concentration, SM buyer percentage
+- Risk tier filtering - degen / balanced / conservative presets by mcap, age, trader count
+- Auto-buy - dry-run or live position entry on top-scoring tokens per chain
+
+**7-Investor Persona Panel**
+- Seven AI personas modeled after legendary investors: Buffett, Burry, Druckenmiller, Damodaran, Wood, Ackman, Jhunjhunwala
+- Each persona analyzes tokens through their own investment philosophy
+- Multi-source research: pulls live data from CoinGecko, GoPlus Security, DexScreener, DefiLlama, GitHub, and X/Twitter
+- X/Twitter sentiment integration for social signal detection
+- Produces independent buy/hold/avoid verdicts with reasoning
 
 **Polymarket Intelligence**
-- Market screener — top 100 markets by 24h volume, deep-dived for whale positions
-- Whale profiling — historical win rate, realized PnL, resolved record via `prediction-market pnl-by-address`
-- Convergence detection — wallets appearing as top holders across multiple markets
-- Contrarian edge signals — markets where whale positioning diverges from market price
-- Early mover detection — whales entering markets before major price moves
-- Paper betting engine — AION's own model bets tracked for performance
+- Market screener - top 100 markets by 24h volume, deep-dived for whale positions
+- Whale profiling - historical win rate, realized PnL, resolved record via `prediction-market pnl-by-address`
+- Multi-bet grouping - detects whales placing coordinated bets across related markets
+- Hedge detection - identifies offsetting positions that reveal a whale's true directional conviction
+- Convergence detection - wallets appearing as top holders across multiple markets
+- Contrarian edge signals - markets where whale positioning diverges from market price
+- Early mover detection - whales entering markets before major price moves
+- Paper betting engine - AION's own model bets tracked for performance
 
 **Platform**
-- Ask AION — AI chat (Claude) that answers questions about live discovery data
-- Telegram bot — real-time alerts with AI reasoning for each signal
-- Copy trading — one-click trade execution via Nansen wallet
-- Wallet graph mapping — related-wallet discovery to detect clusters and syndicates
-- Self-learning weights — scoring parameters evolve based on realized trade outcomes
-- Wiki/Knowledge base — auto-generated Karpathy-style entity pages for wallets, tokens, markets
+- Ask AION - AI chat (Claude) that answers questions about live discovery data
+- Telegram bot - real-time alerts with AI reasoning for each signal
+- Copy trading - one-click trade execution via Nansen wallet
+- Wallet graph mapping - related-wallet discovery to detect clusters and syndicates
+- Self-learning weights - scoring parameters evolve based on realized trade outcomes
+- Wiki/Knowledge base - auto-generated Karpathy-style entity pages for wallets, tokens, markets
 
 ---
 
@@ -68,13 +91,13 @@ cp .env.example .env.local
 Edit `.env.local`:
 
 ```env
-# Required — points to your backend API
+# Required - points to your backend API
 NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:5001
 
 # Required for trade execution and settings changes
 AION_API_KEY=your-api-key-here
 
-# Optional — enables "Ask AION" AI chat
+# Optional - enables "Ask AION" AI chat
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
@@ -88,7 +111,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### 5. Set up the backend
 
-The backend is a Python Flask API that wraps the Nansen CLI. You can run it **locally** or on a **VPS** — the setup is the same.
+The backend is a Python Flask API that wraps the Nansen CLI. You can run it **locally** or on a **VPS** - the setup is the same.
 
 #### Option A: Run everything locally
 
@@ -157,13 +180,13 @@ The dashboard will populate with data after the first run. Each run takes 2-5 mi
 ### 7. (Optional) Set up cron jobs for automated discovery
 
 ```bash
-# Every 4 hours — EVM token discovery + auto-buy
+# Every 4 hours - EVM token discovery + auto-buy
 0 */4 * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py evm >> /tmp/evm_cron.log 2>&1
 
-# Every 6 hours — Polymarket market scanning + whale analysis
+# Every 6 hours - Polymarket market scanning + whale analysis
 0 */6 * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py polymarket >> /tmp/pm_cron.log 2>&1
 
-# Every hour — check stop-loss / take-profit on open positions
+# Every hour - check stop-loss / take-profit on open positions
 0 * * * * cd /path/to/vps-snapshot && python3 run_discovery_cron.py auto_exit >> /tmp/exit_cron.log 2>&1
 ```
 
@@ -210,10 +233,20 @@ python3 pm_whale_profiler.py 350 5000
 │  - Discovery (tokens)        │      │  Cron-based pipelines        │
 │  - Polymarket (markets)      │      │  Self-learning weights       │
 │  - Wallets (grid + list)     │      │  Wiki/knowledge curator      │
-│  - Positions / Trades        │      │                              │
-│  - Settings / Alerts         │      │  Key files:                  │
-│  - How It Works              │      │  - webhook_server.py (API)   │
-│  - Ask AION (AI chat)        │      │  - pipeline.py (EVM)         │
+│  - Positions / Trades        │      │  7-investor persona panel    │
+│  - Settings / Alerts         │      │                              │
+│  - How It Works              │      │  Data sources:               │
+│  - Ask AION (AI chat)        │      │  - Nansen CLI                │
+│  - Persona Panel             │      │  - CoinGecko                 │
+│                              │      │  - GoPlus Security           │
+│                              │      │  - DexScreener               │
+│                              │      │  - DefiLlama                 │
+│                              │      │  - GitHub                    │
+│                              │      │  - X (Twitter) API           │
+│                              │      │                              │
+│                              │      │  Key files:                  │
+│                              │      │  - webhook_server.py (API)   │
+│                              │      │  - pipeline.py (EVM)         │
 │                              │      │  - polymarket_pipeline.py    │
 │                              │      │  - pm_whale_profiler.py      │
 │                              │      │  - run_discovery_cron.py     │
@@ -229,14 +262,14 @@ python3 pm_whale_profiler.py 350 5000
 | Route | Description |
 |-------|-------------|
 | `/` | Dashboard home with stats, quick actions |
-| `/discovery` | Token table — SM inflow, accumulation grades, sortable columns, community voting |
-| `/wallets` | Smart money wallet directory — grid and list views, grade/sort/filter |
-| `/wallet/[address]` | Wallet detail — top tokens, copy trade, wallet graph |
-| `/polymarket` | Polymarket intelligence — markets, whales, convergence, contrarian, early movers |
+| `/discovery` | Token table - SM inflow, accumulation grades, sortable columns, community voting |
+| `/wallets` | Smart money wallet directory - grid and list views, grade/sort/filter |
+| `/wallet/[address]` | Wallet detail - top tokens, copy trade, wallet graph, persona panel analysis |
+| `/polymarket` | Polymarket intelligence - markets, whales, convergence, contrarian, early movers |
 | `/positions` | Open positions with live PnL tracking |
 | `/trades` | Trade history with status/side/type filters |
 | `/grading` | Scoring methodology, accumulation signals, risk tier explainer |
-| `/settings` | Pipeline config — stop loss, take profit, scan interval, alert controls |
+| `/settings` | Pipeline config - stop loss, take profit, scan interval, alert controls |
 | `/knowledge` | Auto-generated wiki pages for wallets, tokens, markets |
 | `/how-it-works` | Visual pipeline walkthrough |
 | `/roadmap` | Feature roadmap with phase tracking |
@@ -262,9 +295,9 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
 
 ## Security
 
-- API keys are **server-side only** — the admin proxy at `/api/admin/[...path]` keeps credentials off the client
+- API keys are **server-side only** - the admin proxy at `/api/admin/[...path]` keeps credentials off the client
 - Write endpoints (`POST /api/alerts/settings`, trade execution, etc.) require `@require_api_key` authentication
-- Admin proxy uses a `PATH_ALLOWLIST` — only approved backend paths are reachable from the frontend
+- Admin proxy uses a `PATH_ALLOWLIST` - only approved backend paths are reachable from the frontend
 - `ANTHROPIC_API_KEY` is server-side only (no `NEXT_PUBLIC_` prefix)
 - `.env.local` files are gitignored
 - No private keys, wallet secrets, or credentials in this repo
@@ -282,7 +315,7 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
    - `AION_API_KEY` = your API key (server-side only)
    - `ANTHROPIC_API_KEY` = your Anthropic key (server-side only)
    - `ADMIN_ALLOW_MUTATIONS` = `1` (if you want write access from the live site)
-4. Deploy — automatic on every push
+4. Deploy - automatic on every push
 
 **Important:** Do NOT set `NEXT_PUBLIC_API_URL` on Vercel. When it's omitted, all API calls automatically route through the server-side proxy (`/api/proxy/*`), keeping your VPS IP hidden from the browser. For local dev, set `NEXT_PUBLIC_API_URL=http://localhost:5001` in `.env.local` for direct access.
 
@@ -318,6 +351,14 @@ Minimum specs: 2 GB RAM, 1 vCPU, Ubuntu 22.04+.
 | Polymarket scan (100 markets) | ~601 | Every 6h |
 | Whale profiler (per whale) | 1-10 | On demand |
 | Auto-exit price checks | 0 (Jupiter API) | Hourly |
+
+---
+
+## Attribution
+
+- Market data powered by [CoinGecko](https://www.coingecko.com/)
+- Smart money data powered by [Nansen](https://www.nansen.ai/)
+- Security data powered by [GoPlus](https://gopluslabs.io/)
 
 ---
 

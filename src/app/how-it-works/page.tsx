@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import GradeBadge from "@/components/GradeBadge";
-import { ArrowRight, Send, Search, Layers, Zap, Shield, Activity, Target, Brain, LineChart, Check, X, ChevronDown, Vote, RefreshCw, Terminal } from "lucide-react";
+import { ArrowRight, Send, Search, Layers, Zap, Shield, Activity, Target, Brain, LineChart, Check, X, ChevronDown, Vote, RefreshCw, Terminal, Users, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────
@@ -104,7 +104,8 @@ const PIPELINE = [
     icon: Vote,
     bullets: [
       "Same wallet+convergence pipeline applied to prediction markets",
-      "Top 60 hot markets, deep-dive 5",
+      "Multi-bet grouping detects coordinated wagers across related markets",
+      "Hedge detection reveals true directional conviction behind offsetting positions",
       "Free Polymarket data-api fetches the full position book per whale",
     ],
     cost: "~31 cr/run",
@@ -207,6 +208,9 @@ const DIFF_ROWS: DiffRow[] = [
   { feature: "Risk filter (honeypot / rug check)", nansen: false, aion: true, note: "GoPlus integration + blocklist" },
   { feature: "AI verdict + reasoning", nansen: false, aion: true, note: "LLM summary of raw signals" },
   { feature: "Self-evolving scoring", nansen: false, aion: "partial", note: "Records snapshots, evaluates forward returns" },
+  { feature: "7-investor persona panel", nansen: false, aion: true, note: "Buffett, Burry, Druckenmiller + 4 more analyze every token" },
+  { feature: "Multi-source research (6 APIs)", nansen: false, aion: true, note: "CoinGecko, GoPlus, DexScreener, DefiLlama, GitHub, X" },
+  { feature: "Polymarket multi-bet / hedge detection", nansen: false, aion: true, note: "Groups coordinated bets, reveals true conviction" },
 ];
 
 // ─────────────────────────────────────────────
@@ -412,6 +416,96 @@ export default function HowItWorksPage() {
             (<span className="font-mono text-foreground text-[11px]">data/evolution.json</span> + <span className="font-mono text-foreground text-[11px]">data/scoring_weights.json</span>).
             No database needed at this scale — a snapshot every 4 hours is ~6 records/day.
             The design mirrors Karpathy&apos;s markdown-wiki approach: append-only, git-friendly, human-readable.
+          </div>
+        </section>
+
+        {/* ── Persona Panel ── */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground tracking-tight">7-investor persona panel</h2>
+            <p className="text-sm text-foreground/65 font-medium leading-relaxed max-w-2xl">
+              Every token AION surfaces gets analyzed by seven AI personas, each modeled after a legendary investor
+              with a distinct philosophy. They pull live data from six external sources and deliver independent verdicts.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { name: "Buffett", style: "Value investing, moats, fundamentals" },
+              { name: "Burry", style: "Contrarian deep-value, macro shorts" },
+              { name: "Druckenmiller", style: "Macro momentum, position sizing" },
+              { name: "Damodaran", style: "Quantitative valuation, risk models" },
+              { name: "Wood", style: "Disruptive innovation, long-term growth" },
+              { name: "Ackman", style: "Activist conviction, catalyst-driven" },
+              { name: "Jhunjhunwala", style: "Emerging market growth, high conviction" },
+            ].map((p) => (
+              <div key={p.name} className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 border border-primary/40">
+                    <Users className="h-3.5 w-3.5 text-foreground" strokeWidth={2.5} />
+                  </span>
+                  <span className="text-sm font-bold text-foreground">{p.name}</span>
+                </div>
+                <p className="text-[11px] text-foreground/65 font-medium leading-snug">{p.style}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="glass-card p-5 bg-primary/5 border-primary/30">
+            <div className="flex items-start gap-3">
+              <Brain className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+              <div>
+                <div className="text-sm font-bold text-foreground mb-1">Multi-source research</div>
+                <p className="text-[13px] text-foreground/75 font-medium leading-relaxed">
+                  Each persona pulls live data from <span className="font-bold text-foreground">CoinGecko</span> (price, volume, market cap),{" "}
+                  <span className="font-bold text-foreground">GoPlus Security</span> (contract risk),{" "}
+                  <span className="font-bold text-foreground">DexScreener</span> (DEX liquidity),{" "}
+                  <span className="font-bold text-foreground">DefiLlama</span> (TVL, protocol data),{" "}
+                  <span className="font-bold text-foreground">GitHub</span> (development activity), and{" "}
+                  <span className="font-bold text-foreground">X/Twitter</span> (sentiment, mentions, influencer signals).
+                  No opinions without evidence.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Data Sources & Attribution ── */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-foreground tracking-tight">Data sources</h2>
+            <p className="text-sm text-foreground/65 font-medium leading-relaxed max-w-2xl">
+              AION aggregates intelligence from seven data providers to build a complete picture of every token and market.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { name: "Nansen CLI", desc: "Smart money netflow, wallet profiling, trade history, Polymarket screener" },
+              { name: "CoinGecko", desc: "Market data, price history, volume, market cap rankings" },
+              { name: "GoPlus Security", desc: "Honeypot detection, rug pull checks, contract risk scanning" },
+              { name: "DexScreener", desc: "Real-time DEX prices, pair data, liquidity metrics" },
+              { name: "DefiLlama", desc: "TVL tracking, protocol analytics, yield data" },
+              { name: "GitHub", desc: "Project activity, commit frequency, contributor metrics" },
+              { name: "X (Twitter) API", desc: "Sentiment analysis, mention tracking, influencer signals" },
+            ].map((s) => (
+              <div key={s.name} className="glass-card p-4 flex items-start gap-3">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-foreground/15 bg-foreground/[0.04] flex-shrink-0">
+                  <Database className="h-4 w-4 text-foreground" strokeWidth={2.5} />
+                </span>
+                <div>
+                  <div className="text-[13px] font-bold text-foreground">{s.name}</div>
+                  <p className="text-[11px] text-foreground/60 font-medium leading-snug mt-0.5">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center text-[11px] text-foreground/50 font-medium">
+            Data powered by{" "}
+            <a href="https://www.coingecko.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">
+              CoinGecko
+            </a>
           </div>
         </section>
 
