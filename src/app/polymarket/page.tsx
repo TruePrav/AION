@@ -106,6 +106,9 @@ interface PMWhaleMarket {
   position_usd: number;
   unrealized_pnl_usd: number;
   slug?: string;
+  hedged?: boolean;
+  hedge_amount?: number;
+  net_position?: number;
 }
 
 interface PMFullPositionsResponse {
@@ -1427,9 +1430,20 @@ function WhaleExpanded({
                 {wm.side.toUpperCase()}
               </span>
             )}
+            {wm.hedged && (
+              <span
+                className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                title={`Hedged: $${fmtCompact(wm.hedge_amount || 0)} on opposite side · Net: $${fmtCompact(wm.net_position || 0)}`}
+              >
+                HEDGED
+              </span>
+            )}
           </div>
-          <div className="font-mono tabular-nums" title="Position size in USD">
+          <div className="font-mono tabular-nums" title={wm.hedged ? `Gross: ${fmtCompact(wm.position_usd)} · Hedge: ${fmtCompact(wm.hedge_amount || 0)} · Net: ${fmtCompact(wm.net_position || 0)}` : "Position size in USD"}>
             {fmtCompact(wm.position_usd)}
+            {wm.hedged && (
+              <div className="text-[9px] text-amber-400/70">net {fmtCompact(wm.net_position || 0)}</div>
+            )}
           </div>
           <div
             className={cn(
