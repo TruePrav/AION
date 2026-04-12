@@ -65,7 +65,10 @@ export default function HomePage() {
         if (scanRes?.finished_at && settingsRes?.scan_interval_minutes) {
           const finished = new Date(scanRes.finished_at).getTime();
           const intervalMs = settingsRes.scan_interval_minutes * 60 * 1000;
-          setNextRunMs(finished + intervalMs);
+          // Roll forward past missed cycles so countdown is always future
+          let next = finished + intervalMs;
+          while (next < Date.now()) next += intervalMs;
+          setNextRunMs(next);
         }
       } catch (_e) { /* swallow */ }
     };
