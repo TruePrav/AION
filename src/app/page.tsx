@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { apiFetch, type Status, type DiscoveryToken, type ScoutResult, type Trade, type Settings } from "@/lib/api";
+import { apiFetch, type Status, type DiscoveryToken, type DiscoveryWallet, type Trade, type Settings } from "@/lib/api";
 import { fmtUsd, fmtPct, truncAddr, cn } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
 import GradeBadge from "@/components/GradeBadge";
@@ -19,7 +19,7 @@ interface ScanStatus {
 export default function HomePage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [tokens, setTokens] = useState<DiscoveryToken[]>([]);
-  const [scout, setScout] = useState<ScoutResult | null>(null);
+  const [topWallets, setTopWallets] = useState<DiscoveryWallet[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,15 +30,17 @@ export default function HomePage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, t, sc, tr] = await Promise.all([
+        const [s, t, w, tr] = await Promise.all([
           apiFetch<Status>("/api/status"),
           apiFetch<DiscoveryToken[]>("/api/discovery/tokens").catch(() => []),
-          apiFetch<ScoutResult>("/api/scout/latest").catch(() => null),
+          apiFetch<DiscoveryWallet[]>("/api/discovery/wallets").catch(() => []),
           apiFetch<Trade[]>("/api/trades?status=closed&limit=5").catch(() => []),
         ]);
         setStatus(s);
         setTokens(t);
-        setScout(sc);
+        setTopWallets(
+          [...w].sort((a, b) => b.score - a.score).slice(0, 3)
+        );
         setTrades(tr);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to connect to AION API");
@@ -293,25 +295,27 @@ export default function HomePage() {
           <Panel
             title="Highest Scoring Wallets"
             href="/wallets"
-            empty={!scout}
-            emptyText="No scout data yet."
-            emptyHint="Run /scout on Telegram to find top wallets."
+            empty={topWallets.length === 0}
+            emptyText="No wallet data yet."
+            emptyHint="Run a discovery scan to grade wallets."
           >
-            {scout && (
-              <div className="space-y-4">
+            <div className="space-y-2">
+              {topWallets.map((w) => (
                 <Link
-                  href={`/wallet/${scout.wallet.address}`}
-                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] border border-foreground/10 p-4 hover:bg-foreground/[0.08] transition-colors"
+                  key={w.address}
+                  href={`/wallet/${w.address}`}
+                  className="flex items-center justify-between rounded-xl bg-foreground/[0.04] border border-foreground/10 p-3 hover:bg-foreground/[0.08] transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <GradeBadge grade={scout.wallet.grade as "S" | "A" | "B" | "C" | "D"} size="lg" />
+                    <GradeBadge grade={w.grade as "S" | "A" | "B" | "C" | "D"} size="sm" />
                     <div className="min-w-0">
                       <div className="font-bold text-foreground text-sm truncate">
-                        {scout.wallet.label || truncAddr(scout.wallet.address)}
+                        {w.label || truncAddr(w.address)}
                       </div>
                       <div className="text-[11px] text-foreground/55 tabular-nums font-mono">
-                        SCORE <span className="font-bold text-foreground/80">{scout.wallet.score}</span> ·{" "}
-                        {scout.wallet.win_rate > 0 ? fmtPct(scout.wallet.win_rate) : "—"} WIN
+                        SCORE <span className="font-bold text-foreground/80">{w.score}</span> ·{" "}
+                        {w.win_rate > 0 ? fmtPct(w.win_rate) : "-"} WIN ·{" "}
+                        {w.total_trades} trades
                       </div>
                     </div>
                   </div>
@@ -319,43 +323,21 @@ export default function HomePage() {
                     <div
                       className={cn(
                         "inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums",
-                        scout.wallet.total_pnl_realized >= 0
+                        w.total_pnl_realized >= 0
                           ? "text-profit bg-profit/15"
                           : "text-loss bg-loss/15"
                       )}
                     >
-                      {scout.wallet.total_pnl_realized >= 0 ? "+" : ""}
-                      {fmtUsd(scout.wallet.total_pnl_realized)}
+                      {w.total_pnl_realized >= 0 ? "+" : ""}
+                      {fmtUsd(w.total_pnl_realized)}
                     </div>
                     <div className="text-[9px] font-bold uppercase tracking-wider text-foreground/45 mt-0.5">
-                      Realized
+                      Realized PnL
                     </div>
                   </div>
                 </Link>
-                {scout.recent_buys && scout.recent_buys.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold text-foreground/50 mb-2 uppercase tracking-wider">
-                      Latest Buys
-                    </p>
-                    <div className="space-y-1.5">
-                      {scout.recent_buys.slice(0, 3).map((b, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between rounded-lg bg-foreground/[0.035] border border-foreground/10 px-3 py-2 text-xs"
-                        >
-                          <span className="font-semibold text-foreground">
-                            {b.token || truncAddr(b.token_address || "")}
-                          </span>
-                          <span className="font-mono font-bold text-foreground/80 tabular-nums">
-                            {fmtUsd(b.value)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+              ))}
+            </div>
           </Panel>
         </div>
 
