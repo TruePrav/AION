@@ -94,8 +94,8 @@ cp .env.example .env.local
 Edit `.env.local`:
 
 ```env
-# Required - points to your backend API
-NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:5001
+# Backend URL (server-side only — never exposed to browser)
+AION_BACKEND_URL=http://YOUR_VPS_IP:5001
 
 # Required for trade execution and settings changes
 AION_API_KEY=your-api-key-here
@@ -103,6 +103,8 @@ AION_API_KEY=your-api-key-here
 # Optional - enables "Ask AION" AI chat
 ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+> **Security note:** Never use `NEXT_PUBLIC_API_URL` with a remote VPS IP — the `NEXT_PUBLIC_` prefix exposes it in the browser. Use `AION_BACKEND_URL` instead, which routes through a server-side proxy and keeps your VPS IP private.
 
 ### 4. Run the dashboard
 
@@ -144,6 +146,7 @@ gunicorn webhook_server:app -b 0.0.0.0:5001 --workers 2 --timeout 120
 
 Then set your frontend `.env.local`:
 ```env
+# Local dev only — direct connection (safe because it's localhost)
 NEXT_PUBLIC_API_URL=http://localhost:5001
 ```
 
@@ -160,7 +163,9 @@ gunicorn webhook_server:app -b 0.0.0.0:5001 --workers 2 --timeout 120
 
 Then set your frontend `.env.local`:
 ```env
-NEXT_PUBLIC_API_URL=http://YOUR_VPS_IP:5001
+# Server-side only — keeps your VPS IP private
+AION_BACKEND_URL=http://YOUR_VPS_IP:5001
+AION_API_KEY=your-api-key-here
 ```
 
 ### 6. Run your first discovery
@@ -211,7 +216,8 @@ python3 pm_whale_profiler.py 350 5000
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | Backend API URL (`http://localhost:5001` for local, or `http://your-vps:5001`) |
+| `AION_BACKEND_URL` | Yes | Backend API URL (server-side only, keeps VPS IP private). Use `http://your-vps:5001` |
+| `NEXT_PUBLIC_API_URL` | No | **Local dev only.** Set to `http://localhost:5001` for direct access. Never use with a remote IP. |
 | `AION_API_KEY` | Yes | API key for write operations (trading, settings). Without this, dashboard is read-only. |
 | `ANTHROPIC_API_KEY` | No | Enables "Ask AION" AI chat. Server-side only. |
 | `NANSEN_API_KEY` | Yes (backend) | Your Nansen API key for CLI calls |
