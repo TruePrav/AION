@@ -42,5 +42,19 @@ public/SKILL.md
 NANSEN_CLI_COMPETITION_NOTES.md
 DRY_RUN_TRACKER.md
 
+# Backend reference scripts (live on VPS, not needed in frontend repo)
+backend_*.py
+create_dryruns.py
+patch_auth.py
+
+# Internal dev tools
+src/app/styles-preview/
+
+# Sample/mock data
+public/data/
+
+# Demo content
+demo/
+
 # working-copy snapshots pulled down from VPS for editing
 vps-snapshot/
