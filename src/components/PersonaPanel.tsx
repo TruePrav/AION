@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock, Terminal, CheckCircle2, Loader2, Lock } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock, Terminal, CheckCircle2, Loader2 } from "lucide-react";
 import type { PanelResult, PersonaSignal } from "@/lib/personas";
-import { READONLY_MODE } from "@/lib/api";
 
 /** Format ISO timestamp to relative time (e.g. "2h ago") */
 function timeAgo(iso: string): string {
@@ -72,16 +71,10 @@ const LOADING_STEPS = [
   { label: "Checking DEX liquidity on DexScreener", delay: 800 },
   { label: "Fetching protocol TVL from DefiLlama", delay: 900 },
   { label: "Checking GitHub developer activity", delay: 800 },
-  { label: "Scanning X/Twitter sentiment (20 recent posts)", delay: 1100 },
+  { label: "Scanning X/Twitter sentiment (1 recent post — demo limit)", delay: 1100 },
   { label: "Mapping converging smart money wallets", delay: 700 },
   { label: "Building investor briefing document", delay: 600 },
-  { label: "Warren Buffett reviewing fundamentals", delay: 1200 },
-  { label: "Michael Burry checking for red flags", delay: 1000 },
-  { label: "Stanley Druckenmiller analyzing macro", delay: 900 },
-  { label: "Aswath Damodaran running valuation model", delay: 900 },
-  { label: "Cathie Wood evaluating disruption potential", delay: 800 },
-  { label: "Bill Ackman hunting for catalysts", delay: 800 },
-  { label: "Rakesh Jhunjhunwala gauging momentum", delay: 700 },
+  { label: "Running 7 investor personas via Claude Haiku (demo)", delay: 1200 },
   { label: "Panel deliberating final verdict", delay: 1500 },
 ];
 
@@ -243,7 +236,6 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
     setError(null);
 
     async function checkCache() {
-      if (READONLY_MODE) { setCheckingCache(false); return; }
       try {
         const res = await fetch("/api/personas/analyze", {
           method: "POST",
@@ -278,7 +270,10 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
         body: JSON.stringify({ token }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Analysis failed");
+      if (!res.ok) {
+        // Use friendly message from backend if available
+        throw new Error(data.message || data.error || "Analysis failed");
+      }
       setResult(data.result);
       if (data.cached) setCachedAt(data.cached_at || null);
     } catch (e) {
@@ -336,27 +331,23 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
         </div>
       )}
 
-      {/* Run Analysis CTA — centered, prominent (admin only) */}
+      {/* Run Analysis CTA */}
       {!result && !loading && !checkingCache && (
-        READONLY_MODE ? (
-          <div className="flex items-center justify-center gap-2 py-4 text-foreground/40">
-            <Lock className="h-3 w-3" />
-            <span className="text-[11px]">Panel analysis available in admin mode</span>
-          </div>
-        ) : (
-          <div className="flex justify-center py-5">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
-              className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-            >
-              <div className="absolute inset-0 rounded-xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
-              <Brain className="h-5 w-5 relative z-10" />
-              <span className="relative z-10">Run Panel Analysis</span>
-              <span className="relative z-10 text-[10px] font-medium opacity-70 bg-primary-foreground/15 rounded-full px-2 py-0.5">7 investors</span>
-            </button>
-          </div>
-        )
+        <div className="flex flex-col items-center gap-3 py-5">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
+            className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          >
+            <div className="absolute inset-0 rounded-xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
+            <Brain className="h-5 w-5 relative z-10" />
+            <span className="relative z-10">Run Panel Analysis</span>
+            <span className="relative z-10 text-[10px] font-medium opacity-70 bg-primary-foreground/15 rounded-full px-2 py-0.5">7 investors</span>
+          </button>
+          <p className="text-[10px] text-foreground/35 text-center max-w-xs">
+            Demo mode: Claude Haiku + 1 X/Twitter post. Clone repo for full Sonnet + unlimited X.
+          </p>
+        </div>
       )}
 
       {/* Loading state — terminal-style step-by-step */}
@@ -364,15 +355,50 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
 
       {/* Error state */}
       {error && (
-        <div className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 text-xs text-destructive flex items-center gap-2">
-          <span>Error: {error}</span>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
-            className="underline hover:no-underline"
-          >
-            Retry
-          </button>
+        <div className={cn(
+          "rounded-lg border px-4 py-3 text-xs",
+          error.includes("credits") || error.includes("exhausted")
+            ? "bg-accent/10 border-accent/30 text-foreground/70"
+            : error.includes("rate limit") || error.includes("wait")
+              ? "bg-primary/10 border-primary/30 text-foreground/70"
+              : "bg-destructive/10 border-destructive/30 text-destructive"
+        )}>
+          {error.includes("credits") || error.includes("exhausted") ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🔋</span>
+                <span className="font-semibold text-foreground">Demo AI credits temporarily exhausted</span>
+              </div>
+              <p className="text-foreground/50">
+                Clone the repo and add your own Anthropic API key to run unlimited analyses!
+              </p>
+              <a
+                href="https://github.com/TruePrav/AION"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+                onClick={(e) => e.stopPropagation()}
+              >
+                github.com/TruePrav/AION →
+              </a>
+            </div>
+          ) : error.includes("rate limit") || error.includes("wait") ? (
+            <div className="flex items-center gap-2">
+              <span className="text-base">⏳</span>
+              <span>Demo rate limit reached (3/min). Please wait a moment and try again.</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span>Error: {error}</span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
+                className="underline hover:no-underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
         </div>
       )}
 
