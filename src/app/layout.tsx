@@ -8,6 +8,8 @@ import { Toaster } from "sonner";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AIChatLoader from "@/components/AIChatLoader";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -32,6 +34,12 @@ const NO_FLASH_SCRIPT = `
 }catch(e){}})();
 `;
 
+// Microsoft Clarity — free heatmaps & session recordings
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || "";
+const CLARITY_SCRIPT = CLARITY_ID
+  ? `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","${CLARITY_ID}");`
+  : "";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,6 +49,7 @@ export default function RootLayout({
     <html lang="en" className={cn(inter.variable, jetbrainsMono.variable, "ocean-theme")} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+        {CLARITY_SCRIPT && <script dangerouslySetInnerHTML={{ __html: CLARITY_SCRIPT }} />}
       </head>
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
         <ThemeProvider>
@@ -49,6 +58,8 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
             <Footer />
             <AIChatLoader />
+            <Analytics />
+            <SpeedInsights />
           </ConfirmProvider>
           <Toaster
             position="bottom-right"
