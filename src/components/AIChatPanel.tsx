@@ -21,24 +21,15 @@ const SUGGESTED = [
   "Which wallets are most active across multiple tokens?",
 ];
 
-const DEMO_LIMIT = 1; // messages per user in demo mode
-
 export default function AIChatPanel({ context }: AIChatPanelProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rateLimited, setRateLimited] = useState(false);
+  const [errorType, setErrorType] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Check demo rate limit on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const used = parseInt(localStorage.getItem("aion_chat_used") || "0", 10);
-    if (used >= DEMO_LIMIT) setRateLimited(true);
-  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -57,10 +48,11 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
   const send = useCallback(
     async (text?: string) => {
       const msg = (text || input).trim();
-      if (!msg || loading || rateLimited) return;
+      if (!msg || loading) return;
 
       setInput("");
       setError(null);
+      setErrorType(null);
       const newMessages: Message[] = [...messages, { role: "user", content: msg }];
       setMessages(newMessages);
       setLoading(true);
@@ -76,13 +68,10 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error || `Error ${res.status}`);
+          setErrorType(data.error || null);
+          setError(data.message || data.error || `Error ${res.status}`);
         } else {
           setMessages([...newMessages, { role: "assistant", content: data.message }]);
-          // Track usage for demo rate limit
-          const used = parseInt(localStorage.getItem("aion_chat_used") || "0", 10) + 1;
-          localStorage.setItem("aion_chat_used", String(used));
-          if (used >= DEMO_LIMIT) setRateLimited(true);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Network error");
@@ -90,8 +79,11 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
         setLoading(false);
       }
     },
-    [input, loading, messages, context, rateLimited]
+    [input, loading, messages, context]
   );
+
+  const isCreditsExhausted = errorType === "demo_credits_exhausted";
+  const isRateLimited = errorType === "demo_rate_limit";
 
   return (
     <>
@@ -117,12 +109,12 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-bold text-foreground">Ask AION</h3>
-              <p className="text-[10px] text-foreground/50">AI-powered smart money analysis</p>
+              <p className="text-[10px] text-foreground/50">Demo mode · Claude Haiku · 3 msg/min</p>
             </div>
             {messages.length > 0 && (
               <button
                 type="button"
-                onClick={() => { setMessages([]); setError(null); }}
+                onClick={() => { setMessages([]); setError(null); setErrorType(null); }}
                 className="h-7 w-7 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground hover:bg-foreground/10 transition-colors"
                 aria-label="Clear chat"
               >
@@ -180,7 +172,37 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
               </div>
             )}
 
-            {error && (
+            {/* Error states */}
+            {error && isCreditsExhausted && (
+              <div className="px-4 py-4 rounded-xl bg-accent/10 border border-accent/30 text-xs space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔋</span>
+                  <span className="font-semibold text-foreground">Demo AI credits temporarily exhausted</span>
+                </div>
+                <p className="text-foreground/50">
+                  Clone the repo and add your own Anthropic API key to chat unlimited with AION!
+                </p>
+                <a
+                  href="https://github.com/TruePrav/AION"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+                >
+                  github.com/TruePrav/AION →
+                </a>
+              </div>
+            )}
+
+            {error && isRateLimited && (
+              <div className="px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">⏳</span>
+                  <span className="text-foreground/70">Demo rate limit reached (3 messages/min). Please wait a moment and try again.</span>
+                </div>
+              </div>
+            )}
+
+            {error && !isCreditsExhausted && !isRateLimited && (
               <div className="px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/30 text-xs text-destructive">
                 {error}
               </div>
@@ -189,10 +211,10 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
 
           {/* Input */}
           <div className="border-t border-foreground/10 px-4 py-3 bg-foreground/[0.02]">
-            {rateLimited ? (
+            {isCreditsExhausted ? (
               <div className="text-center space-y-2 py-1">
                 <p className="text-xs text-foreground/70">
-                  This is in demo mode right now. To continue asking questions, clone the repo and insert your own API key!
+                  Demo credits exhausted. Clone the repo to continue!
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   <a
@@ -212,7 +234,6 @@ export default function AIChatPanel({ context }: AIChatPanelProps) {
                     Setup guide
                   </a>
                 </div>
-                <p className="text-[10px] text-foreground/40">We hope to be live soon — thanks for trying out AION!</p>
               </div>
             ) : (
               <div className="flex items-end gap-2">
