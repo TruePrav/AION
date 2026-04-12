@@ -130,6 +130,7 @@ interface PMWhale {
   total_position_usd: number;
   total_unrealized_pnl: number;
   position_count: number;
+  event_count?: number;
   markets: PMWhaleMarket[];
   grade: "S" | "A" | "B" | "C" | "D";
 }
@@ -912,7 +913,7 @@ export default function PolymarketPage() {
                   <div className="flex items-center gap-3 flex-wrap mb-3">
                     <GradeBadge grade={w.grade} />
                     <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full border bg-accent/25 text-accent border-accent/50">
-                      CONVERGENCE × {w.position_count}
+                      CONVERGENCE × {w.event_count ?? w.position_count}
                     </span>
                     <a
                       href={polyscanAddr(w.owner_address)}
