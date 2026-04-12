@@ -146,24 +146,6 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
         {/* ══ HERO ══ */}
         <section className="py-6 space-y-6">
-          {countdown && (
-            <div className={cn(
-              "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 border",
-              scanRunning
-                ? "bg-primary/20 border-primary/40"
-                : "bg-foreground/[0.06] border-foreground/15"
-            )}>
-              <Timer className={cn("h-3.5 w-3.5", scanRunning ? "text-primary animate-pulse" : "text-cyan-400")} strokeWidth={2.5} />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">
-                {scanRunning ? "Scan in progress" : "Next scan in"}
-              </span>
-              {!scanRunning && (
-                <span className="text-[12px] font-mono font-bold text-cyan-400 tabular-nums tracking-wide">
-                  {countdown}
-                </span>
-              )}
-            </div>
-          )}
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] max-w-4xl text-foreground">
             Smart Money.
             <br />
@@ -212,6 +194,28 @@ export default function HomePage() {
             </div>
           );
         })()}
+
+        {/* ══ NEXT SCAN COUNTDOWN ══ */}
+        {countdown && (
+          <div className="flex justify-center">
+            <div className={cn(
+              "inline-flex items-center gap-2.5 rounded-full px-4 py-2 border",
+              scanRunning
+                ? "bg-primary/20 border-primary/40"
+                : "bg-foreground/[0.06] border-foreground/15"
+            )}>
+              <Timer className={cn("h-3.5 w-3.5", scanRunning ? "text-primary animate-pulse" : "text-cyan-400")} strokeWidth={2.5} />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">
+                {scanRunning ? "Scan in progress" : "Next scan in"}
+              </span>
+              {!scanRunning && (
+                <span className="text-[13px] font-mono font-bold text-cyan-400 tabular-nums tracking-wide">
+                  {countdown}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ══ HOT TOKENS + TOP WALLETS ══ */}
         <div className="grid gap-6 lg:grid-cols-2">
