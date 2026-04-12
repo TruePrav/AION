@@ -5,9 +5,9 @@
 ## POST 1: Main Announcement Thread
 
 **Tweet 1 (Hook):**
-Built an autonomous smart money tracker for the @naborso CLI competition.
+Built an autonomous alpha engine for the @naborso CLI competition.
 
-It finds what the best wallets are buying, profiles the investors behind every trade, and lets you buy directly via Nansen's purchase skill.
+It discovers tokens, grades wallets, analyzes with AI personas, trades on-chain, and learns from every outcome.
 
 Meet AION.
 
@@ -27,7 +27,7 @@ New feature: Persona Panel.
 
 Click any token, run panel analysis, and see exactly who's behind the trades.
 
-7 AI personas (Buffett, Burry, Druckenmiller + 4 more) each analyze the token with live data from 6 sources. Results cached, verdicts tracked against price performance. The panel learns what works.
+7 AI personas (Buffett, Burry, Druckenmiller + 4 more) each analyze the token with live data from 6 sources. Results are cached, verdicts tracked against price performance. The panel learns what works.
 
 **Tweet 4 (Polymarket):**
 Full Polymarket intelligence layer using Nansen's prediction market CLI endpoints.
@@ -57,7 +57,7 @@ Live demo: aionchain.app
 
 ## POST 2: Shorter Single Tweet (standalone)
 
-Built AION for the @naborso CLI competition - autonomous smart money intelligence.
+Built AION for the @naborso CLI competition. Autonomous alpha engine that discovers, grades, analyzes, trades, and learns.
 
 Scans Solana + Base every 4h, grades wallets, profiles investors with persona panels, pulls research from 5 free APIs (including X sentiment), and trades via Nansen's purchase skill.
 

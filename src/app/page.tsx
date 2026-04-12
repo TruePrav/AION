@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { apiFetch, type Status, type DiscoveryToken, type ScoutResult, type Trade } from "@/lib/api";
+import { apiFetch, type Status, type DiscoveryToken, type ScoutResult, type Trade, type Settings } from "@/lib/api";
 import { fmtUsd, fmtPct, truncAddr, cn } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
 import GradeBadge from "@/components/GradeBadge";
-import { ArrowRight, Activity, Wallet, TrendingUp, Trophy, BarChart3, Send, Zap, AlertTriangle } from "lucide-react";
+import { ArrowRight, Activity, Wallet, TrendingUp, Trophy, BarChart3, Send, AlertTriangle, Timer } from "lucide-react";
+
+interface ScanStatus {
+  running: boolean;
+  finished_at?: string;
+  started_at?: string;
+  step?: string;
+  progress?: number;
+}
 
 export default function HomePage() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -15,6 +23,9 @@ export default function HomePage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<string | null>(null);
+  const [scanRunning, setScanRunning] = useState(false);
+  const [nextRunMs, setNextRunMs] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -36,6 +47,53 @@ export default function HomePage() {
     };
     load();
   }, []);
+
+  // Fetch scan status + settings to compute next run time
+  useEffect(() => {
+    const fetchScanInfo = async () => {
+      try {
+        const [scanRes, settingsRes] = await Promise.all([
+          apiFetch<ScanStatus>("/api/discovery/scan-status").catch(() => null),
+          apiFetch<Settings>("/api/settings").catch(() => null),
+        ]);
+        if (scanRes?.running) {
+          setScanRunning(true);
+          setNextRunMs(null);
+          return;
+        }
+        setScanRunning(false);
+        if (scanRes?.finished_at && settingsRes?.scan_interval_minutes) {
+          const finished = new Date(scanRes.finished_at).getTime();
+          const intervalMs = settingsRes.scan_interval_minutes * 60 * 1000;
+          setNextRunMs(finished + intervalMs);
+        }
+      } catch (_e) { /* swallow */ }
+    };
+    fetchScanInfo();
+  }, []);
+
+  // Tick the countdown every second
+  useEffect(() => {
+    if (scanRunning) {
+      setCountdown("Scanning now...");
+      return;
+    }
+    if (!nextRunMs) return;
+    const tick = () => {
+      const diff = nextRunMs - Date.now();
+      if (diff <= 0) {
+        setCountdown("Starting soon...");
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [nextRunMs, scanRunning]);
 
   if (loading) {
     return (
@@ -88,12 +146,24 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
         {/* ══ HERO ══ */}
         <section className="py-6 space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 border border-primary/40 px-3 py-1">
-            <Zap className="h-3.5 w-3.5 text-foreground" fill="currentColor" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">
-              Live Tracking
-            </span>
-          </div>
+          {countdown && (
+            <div className={cn(
+              "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 border",
+              scanRunning
+                ? "bg-primary/20 border-primary/40"
+                : "bg-foreground/[0.06] border-foreground/15"
+            )}>
+              <Timer className={cn("h-3.5 w-3.5", scanRunning ? "text-primary animate-pulse" : "text-cyan-400")} strokeWidth={2.5} />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">
+                {scanRunning ? "Scan in progress" : "Next scan in"}
+              </span>
+              {!scanRunning && (
+                <span className="text-[12px] font-mono font-bold text-cyan-400 tabular-nums tracking-wide">
+                  {countdown}
+                </span>
+              )}
+            </div>
+          )}
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] max-w-4xl text-foreground">
             Smart Money.
             <br />

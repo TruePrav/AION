@@ -6,7 +6,7 @@
 ## INTRO (10s)
 **[Screen: AION landing page]**
 
-"This is AION. Smart money intelligence across Solana and Base. It finds what the best wallets are buying, researches every token from 5 free sources, and lets you trade directly. Let me show you."
+"This is AION. An autonomous alpha engine that discovers tokens, grades wallets, analyzes with AI personas, trades on-chain, and learns from every outcome. Let me show you."
 
 ---
 
@@ -28,7 +28,7 @@
 
 **[Screen: Show the panel with 7 investor personas]**
 
-"Seven AI personas modeled after legendary investors — Buffett, Burry, Druckenmiller, and more — each analyzing the token through their own philosophy using live data. Results are cached and every verdict is tracked against actual price performance, so the panel learns over time which signals actually work."
+"Seven AI personas modeled after legendary investors like Buffett, Burry, and Druckenmiller, each analyzing the token through their own philosophy using live data. Results are cached and every verdict is tracked against actual price performance, so the panel learns over time which signals actually work."
 
 ---
 
