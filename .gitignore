@@ -39,6 +39,8 @@ next-env.d.ts
 CONTRACT.md
 SKILL.md
 public/SKILL.md
+NANSEN_CLI_COMPETITION_NOTES.md
+DRY_RUN_TRACKER.md
 
 # working-copy snapshots pulled down from VPS for editing
 vps-snapshot/

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, useRef, Fragment } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { apiFetch, apiUrl, Discovery, copyTrade, type CopyTradeResult, READONLY_MODE } from "@/lib/api";
 import { fmtUsd, truncAddr, nansenToken, nansenWallet, fmtPct } from "@/lib/utils";
@@ -9,34 +10,49 @@ import CopyButton from "@/components/CopyButton";
 import WalletGraph from "@/components/WalletGraph";
 import AIReasoning, { type TokenReasoning } from "@/components/AIReasoning";
 import PersonaPanel from "@/components/PersonaPanel";
-import PipelineCommands, { type PipelineCommand } from "@/components/PipelineCommands";
-import ScoringEvolution, { type EvolutionStatus } from "@/components/ScoringEvolution";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, ThumbsUp, ThumbsDown, ExternalLink, ArrowUp, ArrowDown, ArrowUpDown, Info, Zap, Check, X, Lock, Users } from "lucide-react";
 import ChainIcon, { normalizeChain, chainLabel, dsSlug, type ChainKey } from "@/components/ChainIcon";
 
-/** Styled info popover — replaces native browser title tooltips */
+/** Styled info popover — uses fixed positioning to escape overflow containers */
 function InfoPopover({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  function show() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
+    }
+    setOpen(true);
+  }
+  function hide() { setOpen(false); }
+
   return (
-    <span className="relative inline-flex">
+    <>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(!open)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onClick={() => (open ? hide() : show())}
+        onMouseEnter={show}
+        onMouseLeave={hide}
         className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/60 hover:text-foreground hover:bg-foreground/15 cursor-help transition-colors focus:outline-none focus:ring-1 focus:ring-foreground/30"
         aria-label="More info"
       >
         <Info className="h-2.5 w-2.5" />
       </button>
-      {open && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 px-3 py-2 rounded-lg bg-background border border-foreground/20 shadow-xl text-[11px] text-foreground/80 leading-relaxed pointer-events-none">
+      {open && pos && createPortal(
+        <div
+          className="fixed z-[9999] w-64 px-3 py-2 rounded-lg bg-background border border-foreground/20 shadow-xl text-[11px] text-foreground/80 leading-relaxed pointer-events-none"
+          style={{ top: pos.top, left: pos.left, transform: "translateX(-50%)" }}
+        >
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-[-1px] w-2 h-2 rotate-45 bg-background border-l border-t border-foreground/20" />
           {text}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 rotate-45 bg-background border-r border-b border-foreground/20" />
-        </div>
+        </div>,
+        document.body,
       )}
-    </span>
+    </>
   );
 }
 
@@ -66,7 +82,9 @@ type TokenSortField =
   | "inflow_7d"
   | "inflow_24h"
   | "inflow_30d"
-  | "traders";
+  | "traders"
+  | "accum"
+  | "convergence";
 type SortDirection = "asc" | "desc";
 
 export default function DiscoveryPage() {
@@ -110,9 +128,6 @@ export default function DiscoveryPage() {
   const [error, setError] = useState<string | null>(null);
   const [reasoning, setReasoning] = useState<TokenReasoning[] | null>(null);
   const [reasoningLoading, setReasoningLoading] = useState(true);
-  const [commands, setCommands] = useState<PipelineCommand[] | null>(null);
-  const [evolution, setEvolution] = useState<EvolutionStatus | null>(null);
-  const [evolutionLoading, setEvolutionLoading] = useState(true);
 
   useEffect(() => {
     apiFetch<Discovery>("/api/discovery/latest")
@@ -137,15 +152,6 @@ export default function DiscoveryPage() {
       .then((d: { reasoning: TokenReasoning[] }) => setReasoning(d.reasoning || null))
       .catch(() => {})
       .finally(() => setReasoningLoading(false));
-    fetch(apiUrl("/api/discovery/commands"))
-      .then((r) => r.json())
-      .then((d: { commands: PipelineCommand[] }) => setCommands(d.commands || null))
-      .catch(() => {});
-    fetch(apiUrl("/api/evolution/status"))
-      .then((r) => r.json())
-      .then((d: EvolutionStatus) => setEvolution(d))
-      .catch(() => {})
-      .finally(() => setEvolutionLoading(false));
   }, [userId]);
 
   async function rateToken(address: string, direction: "up" | "down") {
@@ -228,6 +234,14 @@ export default function DiscoveryPage() {
     new Set(rawTokens.map((t) => normalizeChain(t.chain))),
   );
 
+  // Precompute convergence: how many wallets have each token in their top_tokens
+  const convergenceMap: Record<string, number> = {};
+  for (const t of rawTokens) {
+    convergenceMap[t.address] = wallets.filter((w) =>
+      w.top_tokens?.some((tt) => tt.address === t.address)
+    ).length;
+  }
+
   const filteredByChain =
     chainFilter === null
       ? rawTokens
@@ -248,6 +262,10 @@ export default function DiscoveryPage() {
           return t.net_flow_30d || 0;
         case "traders":
           return t.trader_count || 0;
+        case "accum":
+          return t.accumulation?.score || 0;
+        case "convergence":
+          return convergenceMap[t.address] || 0;
       }
     };
     const diff = getVal(a) - getVal(b);
@@ -428,12 +446,22 @@ export default function DiscoveryPage() {
                     sortDir={sortDir}
                     onClick={toggleSort}
                   />
-                  <th className="text-center px-3 py-3 font-semibold">
-                    <span className="inline-flex items-center gap-1">
-                      Accum
-                      <InfoPopover text="Accumulation grade (S/A/B/C/D) scored from buy/sell ratio, unique buyers, smart-money presence and volume consistency." />
-                    </span>
-                  </th>
+                  <SortableHeader
+                    label="Accum"
+                    field="accum"
+                    sortField={sortField}
+                    sortDir={sortDir}
+                    onClick={toggleSort}
+                    extra={<InfoPopover text="Accumulation grade (S/A/B/C/D) scored from buy/sell ratio, unique buyers, smart-money presence and volume consistency." />}
+                  />
+                  <SortableHeader
+                    label="Conv"
+                    field="convergence"
+                    sortField={sortField}
+                    sortDir={sortDir}
+                    onClick={toggleSort}
+                    extra={<InfoPopover text="Wallet convergence: how many graded wallets are buying this same token. Higher = stronger consensus signal." />}
+                  />
                   <th className="text-center px-3 py-3 font-semibold">
                     <span className="inline-flex items-center gap-1">
                       Tier
@@ -538,6 +566,24 @@ export default function DiscoveryPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3 text-center">
+                        {(() => {
+                          const count = convergenceMap[t.address] || 0;
+                          return count > 0 ? (
+                            <span className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums",
+                              count >= 3 ? "bg-primary/25 border border-primary/50 text-primary" :
+                              count >= 2 ? "bg-accent/30 border border-accent/50 text-foreground" :
+                              "bg-foreground/5 border border-foreground/15 text-foreground/60"
+                            )}>
+                              <Users className="h-2.5 w-2.5" />
+                              {count}
+                            </span>
+                          ) : (
+                            <span className="text-foreground/20 text-[10px]">0</span>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-3 py-3 text-center">
                         <span
                           className={cn(
                             "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums",
@@ -594,7 +640,7 @@ export default function DiscoveryPage() {
                     </tr>
                     {expandedToken === t.address && (
                       <tr>
-                        <td colSpan={10} className="bg-accent/10 px-6 py-5 border-t border-accent/25">
+                        <td colSpan={11} className="bg-accent/10 px-6 py-5 border-t border-accent/25">
                           <div className="grid gap-6 sm:grid-cols-3">
                             <div className="space-y-3">
                               <h4 className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">
@@ -1097,33 +1143,6 @@ export default function DiscoveryPage() {
           </section>
         )}
 
-        {/* ── Scoring Evolution ── */}
-        <section>
-          <ScoringEvolution
-            status={evolution}
-            loading={evolutionLoading}
-            onEvaluate={async () => {
-              setEvolutionLoading(true);
-              try {
-                await fetch(apiUrl("/api/evolution/evaluate"), { method: "POST" });
-                const res = await fetch(apiUrl("/api/evolution/status"));
-                const d: EvolutionStatus = await res.json();
-                setEvolution(d);
-              } catch { /* ignore */ }
-              setEvolutionLoading(false);
-            }}
-          />
-        </section>
-
-        {/* ── Pipeline Commands ── */}
-        <section>
-          <PipelineCommands
-            commands={commands}
-            creditsUsed={data.credits?.used ?? 0}
-            creditsBefore={data.credits?.before ?? 0}
-            creditsAfter={data.credits?.after ?? 0}
-          />
-        </section>
       </div>
     </div>
   );
@@ -1137,16 +1156,19 @@ function SortableHeader({
   sortField,
   sortDir,
   onClick,
+  extra,
 }: {
   label: string;
   field: TokenSortField;
   sortField: TokenSortField;
   sortDir: SortDirection;
   onClick: (f: TokenSortField) => void;
+  extra?: JSX.Element;
 }) {
   const active = sortField === field;
   return (
     <th className="text-right px-3 py-3 font-semibold">
+      <span className="inline-flex items-center gap-1">
       <button
         type="button"
         onClick={() => onClick(field)}
@@ -1168,6 +1190,8 @@ function SortableHeader({
           <ArrowUpDown className="h-3 w-3 opacity-50" strokeWidth={2} />
         )}
       </button>
+      {extra}
+      </span>
     </th>
   );
 }

@@ -11,10 +11,17 @@ export const USE_PROXY = !process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * True on public/read-only deployments — hides admin controls (edit SL/TP,
- * close position, copy trade, settings writes). Set NEXT_PUBLIC_READONLY_MODE=1
- * in Vercel env to enable. Unset locally so you keep full admin access.
+ * close position, copy trade, settings writes).
+ *
+ * Defaults to TRUE on production (proxy-mode / Vercel) to protect credits.
+ * Set NEXT_PUBLIC_READONLY_MODE=0 in .env.local to unlock admin locally.
  */
-export const READONLY_MODE = process.env.NEXT_PUBLIC_READONLY_MODE === "1";
+export const READONLY_MODE =
+  process.env.NEXT_PUBLIC_READONLY_MODE === "0"
+    ? false
+    : process.env.NEXT_PUBLIC_READONLY_MODE === "1"
+      ? true
+      : USE_PROXY; // proxy mode = Vercel deployment = read-only by default
 
 /**
  * Resolve an API path to a full URL. Handles proxy routing automatically.

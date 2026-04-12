@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock, Terminal, CheckCircle2, Loader2 } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Shield, TrendingUp, Target, BarChart3, Lightbulb, Flame, Crown, MessageCircle, Heart, Repeat2, Eye, Clock, Terminal, CheckCircle2, Loader2, Lock } from "lucide-react";
 import type { PanelResult, PersonaSignal } from "@/lib/personas";
+import { READONLY_MODE } from "@/lib/api";
 
 /** Format ISO timestamp to relative time (e.g. "2h ago") */
 function timeAgo(iso: string): string {
@@ -242,6 +243,7 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
     setError(null);
 
     async function checkCache() {
+      if (READONLY_MODE) { setCheckingCache(false); return; }
       try {
         const res = await fetch("/api/personas/analyze", {
           method: "POST",
@@ -334,20 +336,27 @@ export default function PersonaPanel({ token }: PersonaPanelProps) {
         </div>
       )}
 
-      {/* Run Analysis CTA — centered, prominent */}
+      {/* Run Analysis CTA — centered, prominent (admin only) */}
       {!result && !loading && !checkingCache && (
-        <div className="flex justify-center py-5">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
-            className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-          >
-            <div className="absolute inset-0 rounded-xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
-            <Brain className="h-5 w-5 relative z-10" />
-            <span className="relative z-10">Run Panel Analysis</span>
-            <span className="relative z-10 text-[10px] font-medium opacity-70 bg-primary-foreground/15 rounded-full px-2 py-0.5">7 investors</span>
-          </button>
-        </div>
+        READONLY_MODE ? (
+          <div className="flex items-center justify-center gap-2 py-4 text-foreground/40">
+            <Lock className="h-3 w-3" />
+            <span className="text-[11px]">Panel analysis available in admin mode</span>
+          </div>
+        ) : (
+          <div className="flex justify-center py-5">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); runAnalysis(); }}
+              className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+            >
+              <div className="absolute inset-0 rounded-xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300" />
+              <Brain className="h-5 w-5 relative z-10" />
+              <span className="relative z-10">Run Panel Analysis</span>
+              <span className="relative z-10 text-[10px] font-medium opacity-70 bg-primary-foreground/15 rounded-full px-2 py-0.5">7 investors</span>
+            </button>
+          </div>
+        )
       )}
 
       {/* Loading state — terminal-style step-by-step */}

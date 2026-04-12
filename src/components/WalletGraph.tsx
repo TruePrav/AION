@@ -205,15 +205,19 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
   // Drag handlers (convert screen coords to viewBox coords)
   const toSvg = useCallback(
     (clientX: number, clientY: number) => {
-      const svg = svgRef.current;
-      if (!svg) return { x: 0, y: 0 };
-      const pt = svg.createSVGPoint();
-      pt.x = clientX;
-      pt.y = clientY;
-      const ctm = svg.getScreenCTM();
-      if (!ctm) return { x: 0, y: 0 };
-      const svgPt = pt.matrixTransform(ctm.inverse());
-      return { x: svgPt.x, y: svgPt.y };
+      try {
+        const svg = svgRef.current;
+        if (!svg) return { x: 0, y: 0 };
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        const svgPt = pt.matrixTransform(ctm.inverse());
+        return { x: svgPt.x, y: svgPt.y };
+      } catch {
+        return { x: 0, y: 0 };
+      }
     },
     [],
   );
@@ -221,7 +225,10 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
   const onPointerDown = useCallback(
     (id: string, e: React.PointerEvent) => {
       e.preventDefault();
-      (e.target as Element).setPointerCapture(e.pointerId);
+      // Capture on the SVG root — SVG child elements can throw on setPointerCapture
+      try {
+        svgRef.current?.setPointerCapture(e.pointerId);
+      } catch { /* ignore — drag still works via onPointerMove on svg */ }
       const pt = toSvg(e.clientX, e.clientY);
       const node = nodeMap.get(id);
       if (!node) return;
@@ -252,7 +259,10 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
     [dragId, toSvg],
   );
 
-  const onPointerUp = useCallback(() => {
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    try {
+      svgRef.current?.releasePointerCapture(e.pointerId);
+    } catch { /* ignore */ }
     setDragId(null);
     dragStartRef.current = null;
   }, []);
@@ -277,8 +287,8 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
         style={{ minHeight: 400 }}
         className="select-none"
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        onPointerUp={(e) => onPointerUp(e)}
+        onPointerLeave={(e) => onPointerUp(e)}
       >
         {/* Defs: radial gradients per grade + pulse animation */}
         <defs>

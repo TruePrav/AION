@@ -11,7 +11,7 @@ It discovers tokens, grades wallets, analyzes with AI personas, trades on-chain,
 
 Meet AION.
 
-aionchain.app
+https://www.aionchain.app/
 
 **Tweet 2 (Discovery + Research):**
 Every 4 hours, AION runs a full scan:
@@ -51,7 +51,7 @@ Positions tracked with live P&L. Telegram alerts with one-tap buy buttons. X/Twi
 Scaling to all 18 chains Nansen supports.
 
 Open source: github.com/TruePrav/AION
-Live demo: aionchain.app
+Live demo: https://www.aionchain.app/
 
 ---
 
@@ -63,7 +63,7 @@ Scans Solana + Base every 4h, grades wallets, profiles investors with persona pa
 
 AI-powered. Fully open source.
 
-aionchain.app
+https://www.aionchain.app/
 
 ---
 

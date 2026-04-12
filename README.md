@@ -2,7 +2,7 @@
 
 Multi-chain smart money tracking, AI investor persona panel, Polymarket whale analysis, wallet grading, and automated token discovery. Built with the Nansen CLI.
 
-**Live site:** [aion-plum.vercel.app](https://aion-plum.vercel.app)
+**Live site:** [aionchain.app](https://www.aionchain.app/)
 
 ---
 
@@ -264,17 +264,16 @@ python3 pm_whale_profiler.py 350 5000
 
 | Route | Description |
 |-------|-------------|
-| `/` | Dashboard home with stats, quick actions |
+| `/` | Dashboard home with stats, top wallets, countdown timer to next scan |
 | `/discovery` | Token table - SM inflow, accumulation grades, sortable columns, community voting |
 | `/wallets` | Smart money wallet directory - grid and list views, grade/sort/filter |
 | `/wallet/[address]` | Wallet detail - top tokens, copy trade, wallet graph, persona panel analysis |
 | `/polymarket` | Polymarket intelligence - markets, whales, convergence, contrarian, early movers |
 | `/positions` | Open positions with live PnL tracking |
 | `/trades` | Trade history with status/side/type filters |
-| `/grading` | Scoring methodology, accumulation signals, risk tier explainer |
+| `/how-it-works` | Scoring methodology, accumulation signals, risk tiers, persona panel, visual pipeline walkthrough |
 | `/settings` | Pipeline config - stop loss, take profit, scan interval, alert controls |
 | `/knowledge` | Auto-generated wiki pages for wallets, tokens, markets |
-| `/how-it-works` | Visual pipeline walkthrough |
 | `/roadmap` | Feature roadmap with phase tracking |
 
 ---
@@ -298,7 +297,7 @@ Auto-exit (stop-loss / take-profit) runs hourly via cron and manages all open po
 
 ## Security
 
-- API keys are **server-side only** - the admin proxy at `/api/admin/[...path]` keeps credentials off the client
+- API keys are **server-side only** - the admin proxy at `/api/admin/[...slug]` keeps credentials off the client
 - Write endpoints (`POST /api/alerts/settings`, trade execution, etc.) require `@require_api_key` authentication
 - Admin proxy uses a `PATH_ALLOWLIST` - only approved backend paths are reachable from the frontend
 - `ANTHROPIC_API_KEY` is server-side only (no `NEXT_PUBLIC_` prefix)

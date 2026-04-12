@@ -17,7 +17,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND = process.env.AION_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 const KEY = process.env.AION_API_KEY || "";
-const MUTATIONS_ENABLED = process.env.ADMIN_ALLOW_MUTATIONS === "1";
+/**
+ * Mutations require BOTH:
+ *  1. ADMIN_ALLOW_MUTATIONS=1  (server env)
+ *  2. NOT in public readonly mode (NEXT_PUBLIC_READONLY_MODE != "1", or explicitly "0")
+ *
+ * On Vercel the readonly default is "1" unless overridden, so mutations are
+ * blocked even if ADMIN_ALLOW_MUTATIONS was accidentally left on.
+ */
+const IS_LOCAL = !!process.env.NEXT_PUBLIC_API_URL; // local dev points directly at VPS
+const MUTATIONS_ENABLED =
+  process.env.ADMIN_ALLOW_MUTATIONS === "1" &&
+  (process.env.NEXT_PUBLIC_READONLY_MODE === "0" || IS_LOCAL);
 
 /**
  * Allowlist of backend paths the proxy is permitted to forward to.
