@@ -163,6 +163,7 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const dragIdRef = useRef<string | null>(null);
   const dragStartRef = useRef<{ mx: number; my: number; nx: number; ny: number } | null>(null);
 
   // Layout dimensions (viewBox-based)
@@ -233,6 +234,7 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
       const node = nodeMap.get(id);
       if (!node) return;
       dragStartRef.current = { mx: pt.x, my: pt.y, nx: node.x, ny: node.y };
+      dragIdRef.current = id;
       setDragId(id);
     },
     [toSvg, nodeMap],
@@ -240,31 +242,34 @@ export default function WalletGraph({ nodes, edges }: WalletGraphProps) {
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!dragId || !dragStartRef.current) return;
+      const currentDragId = dragIdRef.current;
+      const start = dragStartRef.current;
+      if (!currentDragId || !start) return;
       const pt = toSvg(e.clientX, e.clientY);
-      const dx = pt.x - dragStartRef.current.mx;
-      const dy = pt.y - dragStartRef.current.my;
+      const dx = pt.x - start.mx;
+      const dy = pt.y - start.my;
       setSimNodes((prev) =>
         prev.map((n) =>
-          n.id === dragId
+          n.id === currentDragId
             ? {
                 ...n,
-                x: Math.max(n.r, Math.min(W - n.r, dragStartRef.current!.nx + dx)),
-                y: Math.max(n.r, Math.min(H - n.r, dragStartRef.current!.ny + dy)),
+                x: Math.max(n.r, Math.min(W - n.r, start.nx + dx)),
+                y: Math.max(n.r, Math.min(H - n.r, start.ny + dy)),
               }
             : n,
         ),
       );
     },
-    [dragId, toSvg],
+    [toSvg],
   );
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
     try {
       svgRef.current?.releasePointerCapture(e.pointerId);
     } catch { /* ignore */ }
-    setDragId(null);
+    dragIdRef.current = null;
     dragStartRef.current = null;
+    setDragId(null);
   }, []);
 
   // Hovered node for tooltip

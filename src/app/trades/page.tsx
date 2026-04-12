@@ -229,7 +229,7 @@ export default function TradesPage() {
             />
             <StatCard
               label="W / L"
-              value={`${stats.wins}W / ${stats.losses}L`}
+              value={stats.total > 0 ? `${stats.wins}W / ${stats.losses}L` : "—"}
               icon={<Activity className="h-3.5 w-3.5" />}
               tone="white"
             />
