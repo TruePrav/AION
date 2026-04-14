@@ -89,7 +89,7 @@ const DEFAULT_SETTINGS: Settings = {
   take_profit_tiers: [0.5, 1.0, 2.0],
   max_position_pct: 0.1,
   min_convergence_wallets: 3,
-  scan_interval_minutes: 240, // 4 hours (matches cron)
+  scan_interval_minutes: 1440, // 24 hours (1 scan per day)
   max_wallets: 30,
   pm_deep_dive: 5,
   mode: "dry_run",
